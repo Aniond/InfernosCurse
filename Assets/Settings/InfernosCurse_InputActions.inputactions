@@ -1,0 +1,27 @@
+{
+    "name": "InfernosCurse_InputActions",
+    "maps": [
+        {
+            "name": "Player",
+            "actions": [
+                { "name": "Move", "type": "Value", "expectedControlType": "Vector2" },
+                { "name": "Run",  "type": "Button" }
+            ],
+            "bindings": [
+                { "name": "WASD", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": true, "isPartOfComposite": false },
+                { "name": "Up",    "path": "<Keyboard>/w",          "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Down",  "path": "<Keyboard>/s",          "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Left",  "path": "<Keyboard>/a",          "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Right", "path": "<Keyboard>/d",          "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Arrows", "path": "2DVector", "action": "Move", "isComposite": true, "isPartOfComposite": false },
+                { "name": "Up",    "path": "<Keyboard>/upArrow",    "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Down",  "path": "<Keyboard>/downArrow",  "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Left",  "path": "<Keyboard>/leftArrow",  "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "Right", "path": "<Keyboard>/rightArrow", "action": "Move", "isComposite": false, "isPartOfComposite": true },
+                { "name": "",      "path": "<Gamepad>/leftStick",   "action": "Move", "isComposite": false, "isPartOfComposite": false },
+                { "name": "",      "path": "<Keyboard>/leftShift",  "action": "Run",  "isComposite": false, "isPartOfComposite": false },
+                { "name": "",      "path": "<Gamepad>/leftStickPress", "action": "Run", "isComposite": false, "isPartOfComposite": false }
+            ]
+        }
+    ]
+}
