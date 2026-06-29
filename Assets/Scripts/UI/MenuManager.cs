@@ -11,6 +11,7 @@ public class MenuManager : MonoBehaviour
     public GameObject settingsPanel;
     public GameObject savePanel;
     public GameObject loadPanel;
+    public GameObject partyPanel;
 
     [Header("Settings Controls")]
     public Slider masterVolumeSlider;
@@ -124,11 +125,18 @@ public class MenuManager : MonoBehaviour
         Resume();
     }
 
+    public void OpenParty()
+    {
+        pausePanel.SetActive(false);
+        partyPanel.SetActive(true);
+    }
+
     public void BackToPause()
     {
         settingsPanel.SetActive(false);
         savePanel.SetActive(false);
         loadPanel.SetActive(false);
+        if (partyPanel) partyPanel.SetActive(false);
         pausePanel.SetActive(true);
     }
 
@@ -148,5 +156,6 @@ public class MenuManager : MonoBehaviour
         if (settingsPanel) settingsPanel.SetActive(false);
         if (savePanel)     savePanel.SetActive(false);
         if (loadPanel)     loadPanel.SetActive(false);
+        if (partyPanel)    partyPanel.SetActive(false);
     }
 }
