@@ -16,6 +16,14 @@ public class WeatherSystem : MonoBehaviour
     public WeatherType current = WeatherType.None;
     public float transitionSpeed = 2f;  // seconds to cross-fade
 
+    [Header("Preview Cycle")]
+    public bool previewCycle = false;   // enable in Inspector to auto-cycle all weather
+    public float previewDuration = 10f; // seconds per weather type
+    private float _previewTimer;
+    private int _previewIndex;
+    private static readonly WeatherType[] _cycleOrder =
+        { WeatherType.Rain, WeatherType.Snow, WeatherType.Sleet, WeatherType.Hail, WeatherType.Wind, WeatherType.None };
+
     [Header("Audio (optional)")]
     public AudioSource weatherAudio;
     public AudioClip rainClip;
@@ -47,6 +55,17 @@ public class WeatherSystem : MonoBehaviour
         {
             _blend = Mathf.MoveTowards(_blend, 1f, Time.deltaTime / transitionSpeed);
             CrossFadeEmission(_blend);
+        }
+
+        if (previewCycle && Application.isPlaying)
+        {
+            _previewTimer -= Time.deltaTime;
+            if (_previewTimer <= 0f)
+            {
+                _previewIndex = (_previewIndex + 1) % _cycleOrder.Length;
+                SetWeather(_cycleOrder[_previewIndex]);
+                _previewTimer = previewDuration;
+            }
         }
     }
 

@@ -14,7 +14,7 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
+  m_Fog: 1
   m_FogColor: {r: 0.7583327, g: 0.8, b: 0.8833346, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.0012592594
@@ -17439,6 +17439,8 @@ MonoBehaviour:
   windGusts: {fileID: 333465342}
   current: 0
   transitionSpeed: 2
+  previewCycle: 1
+  previewDuration: 10
   weatherAudio: {fileID: 0}
   rainClip: {fileID: 0}
   windClip: {fileID: 0}
