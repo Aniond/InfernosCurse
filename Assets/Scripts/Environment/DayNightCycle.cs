@@ -88,7 +88,15 @@ public class DayNightCycle : MonoBehaviour
     void CacheBackdropMat()
     {
         if (backdropRenderer != null && _backdropMat == null)
+        {
+#if UNITY_EDITOR
+            _backdropMat = Application.isPlaying
+                ? backdropRenderer.material
+                : backdropRenderer.sharedMaterial;
+#else
             _backdropMat = backdropRenderer.material;
+#endif
+        }
     }
 
     void ApplyBackdropAlpha(float hour)
