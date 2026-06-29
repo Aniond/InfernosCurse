@@ -125,8 +125,10 @@ public class MenuManager : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            TogglePause();
+        // Support both input systems
+        bool escPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                       || Input.GetKeyDown(KeyCode.Escape);
+        if (escPressed) TogglePause();
     }
 
     public void TogglePause()
