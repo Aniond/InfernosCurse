@@ -38,7 +38,7 @@ public class WeatherSystem : MonoBehaviour
 
     void Awake()
     {
-        _dnc = FindFirstObjectByType<DayNightCycle>();
+        _dnc = FindAnyObjectByType<DayNightCycle>();
         SetWeatherImmediate(current);
     }
 

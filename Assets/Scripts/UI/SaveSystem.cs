@@ -36,10 +36,10 @@ public static class SaveSystem
             data.playerZ = player.transform.position.z;
         }
 
-        var dnc = UnityEngine.Object.FindFirstObjectByType<DayNightCycle>();
+        var dnc = UnityEngine.Object.FindAnyObjectByType<DayNightCycle>();
         if (dnc != null) data.timeOfDay = dnc.timeOfDay;
 
-        var ws = UnityEngine.Object.FindFirstObjectByType<WeatherSystem>();
+        var ws = UnityEngine.Object.FindAnyObjectByType<WeatherSystem>();
         if (ws != null) data.weatherType = ws.current.ToString();
 
         File.WriteAllText(SlotPath(slot), JsonUtility.ToJson(data, true));
@@ -59,12 +59,12 @@ public static class SaveSystem
         if (player != null)
             player.transform.position = new Vector3(data.playerX, data.playerY, data.playerZ);
 
-        var dnc = UnityEngine.Object.FindFirstObjectByType<DayNightCycle>();
+        var dnc = UnityEngine.Object.FindAnyObjectByType<DayNightCycle>();
         if (dnc != null) dnc.timeOfDay = data.timeOfDay;
 
         if (!string.IsNullOrEmpty(data.weatherType))
         {
-            var ws = UnityEngine.Object.FindFirstObjectByType<WeatherSystem>();
+            var ws = UnityEngine.Object.FindAnyObjectByType<WeatherSystem>();
             if (ws != null && Enum.TryParse<WeatherType>(data.weatherType, out var wt))
                 ws.SetWeatherImmediate(wt);
         }

@@ -25,7 +25,7 @@ public class TorchFlicker : MonoBehaviour
         _light = GetComponent<Light>();
         _noise = Random.Range(0f, 100f);
         if (dayNight == null)
-            dayNight = FindFirstObjectByType<DayNightCycle>();
+            dayNight = FindAnyObjectByType<DayNightCycle>();
 
         var flameGO = transform.Find("Flame");
         if (flameGO != null)

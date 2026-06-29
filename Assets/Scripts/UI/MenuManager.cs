@@ -41,17 +41,17 @@ public class MenuManager : MonoBehaviour
     void WireButtons()
     {
         WirePausePanel();
-        WirePanel(settingsPanel, "Save", SaveSettings, "Back", BackToPause);
-        WirePanel(savePanel,     "Back", BackToPause);
-        WirePanel(loadPanel,     "Back", BackToPause);
-        WirePanel(partyPanel,    "Back", BackToPause);
+        WireBackButton(settingsPanel);
+        WireBackButton(savePanel);
+        WireBackButton(loadPanel);
+        WireBackButton(partyPanel);
+        WireSettingsSaveButton();
         WireSaveLoadSlots();
     }
 
     void WirePausePanel()
     {
         if (pausePanel == null) return;
-        // Pause panel buttons are inside PausePanel child of the overlay
         var pp = pausePanel.transform.Find("PausePanel") ?? pausePanel.transform;
         foreach (Transform ch in pp)
         {
@@ -72,7 +72,7 @@ public class MenuManager : MonoBehaviour
         }
     }
 
-    void WirePanel(GameObject panel, params object[] labelMethodPairs)
+    void WireBackButton(GameObject panel)
     {
         if (panel == null) return;
         foreach (Transform ch in panel.transform)
@@ -81,14 +81,20 @@ public class MenuManager : MonoBehaviour
             var btn = ch.GetComponent<Button>();
             if (btn == null) continue;
             var lbl = ch.Find("Lbl")?.GetComponent<TMP_Text>()?.text ?? "";
-            for (int i = 0; i < labelMethodPairs.Length - 1; i += 2)
-            {
-                if (lbl == (string)labelMethodPairs[i])
-                {
-                    btn.onClick.RemoveAllListeners();
-                    btn.onClick.AddListener((UnityEngine.Events.UnityAction)labelMethodPairs[i + 1]);
-                }
-            }
+            if (lbl == "Back") { btn.onClick.RemoveAllListeners(); btn.onClick.AddListener(BackToPause); }
+        }
+    }
+
+    void WireSettingsSaveButton()
+    {
+        if (settingsPanel == null) return;
+        foreach (Transform ch in settingsPanel.transform)
+        {
+            if (!ch.name.StartsWith("Btn_")) continue;
+            var btn = ch.GetComponent<Button>();
+            if (btn == null) continue;
+            var lbl = ch.Find("Lbl")?.GetComponent<TMP_Text>()?.text ?? "";
+            if (lbl == "Save") { btn.onClick.RemoveAllListeners(); btn.onClick.AddListener(SaveSettings); }
         }
     }
 

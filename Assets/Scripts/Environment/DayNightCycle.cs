@@ -38,7 +38,7 @@ public class DayNightCycle : MonoBehaviour
     void OnEnable()
     {
         if (sun == null)
-            sun = FindFirstObjectByType<Light>();
+            sun = FindAnyObjectByType<Light>();
         if (mainCamera == null)
             mainCamera = Camera.main;
         CacheBackdropMat();
