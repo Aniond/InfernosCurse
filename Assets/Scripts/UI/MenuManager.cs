@@ -34,7 +34,87 @@ public class MenuManager : MonoBehaviour
 
     void Start()
     {
+        WireButtons();
         CloseAll();
+    }
+
+    void WireButtons()
+    {
+        WirePausePanel();
+        WirePanel(settingsPanel, "Save", SaveSettings, "Back", BackToPause);
+        WirePanel(savePanel,     "Back", BackToPause);
+        WirePanel(loadPanel,     "Back", BackToPause);
+        WirePanel(partyPanel,    "Back", BackToPause);
+        WireSaveLoadSlots();
+    }
+
+    void WirePausePanel()
+    {
+        if (pausePanel == null) return;
+        // Pause panel buttons are inside PausePanel child of the overlay
+        var pp = pausePanel.transform.Find("PausePanel") ?? pausePanel.transform;
+        foreach (Transform ch in pp)
+        {
+            if (!ch.name.StartsWith("Btn_")) continue;
+            var btn = ch.GetComponent<Button>();
+            if (btn == null) continue;
+            var lbl = ch.Find("Lbl")?.GetComponent<TMP_Text>()?.text ?? "";
+            btn.onClick.RemoveAllListeners();
+            switch (lbl)
+            {
+                case "Resume":    btn.onClick.AddListener(Resume);       break;
+                case "Party":     btn.onClick.AddListener(OpenParty);    break;
+                case "Save Game": btn.onClick.AddListener(OpenSave);     break;
+                case "Load Game": btn.onClick.AddListener(OpenLoad);     break;
+                case "Settings":  btn.onClick.AddListener(OpenSettings); break;
+                case "Quit":      btn.onClick.AddListener(QuitGame);     break;
+            }
+        }
+    }
+
+    void WirePanel(GameObject panel, params object[] labelMethodPairs)
+    {
+        if (panel == null) return;
+        foreach (Transform ch in panel.transform)
+        {
+            if (!ch.name.StartsWith("Btn_")) continue;
+            var btn = ch.GetComponent<Button>();
+            if (btn == null) continue;
+            var lbl = ch.Find("Lbl")?.GetComponent<TMP_Text>()?.text ?? "";
+            for (int i = 0; i < labelMethodPairs.Length - 1; i += 2)
+            {
+                if (lbl == (string)labelMethodPairs[i])
+                {
+                    btn.onClick.RemoveAllListeners();
+                    btn.onClick.AddListener((UnityEngine.Events.UnityAction)labelMethodPairs[i + 1]);
+                }
+            }
+        }
+    }
+
+    void WireSaveLoadSlots()
+    {
+        if (savePanel != null)
+            for (int i = 0; i < 3; i++)
+            {
+                var slot = savePanel.transform.Find("SaveSlot_" + (i + 1));
+                if (slot == null) continue;
+                saveSlotButtons[i] = slot.GetComponent<Button>();
+                saveSlotLabels[i]  = slot.Find("Lbl")?.GetComponent<TMP_Text>();
+                int s = i + 1;
+                if (saveSlotButtons[i]) { saveSlotButtons[i].onClick.RemoveAllListeners(); saveSlotButtons[i].onClick.AddListener(() => SaveSlot(s)); }
+            }
+
+        if (loadPanel != null)
+            for (int i = 0; i < 3; i++)
+            {
+                var slot = loadPanel.transform.Find("LoadSlot_" + (i + 1));
+                if (slot == null) continue;
+                loadSlotButtons[i] = slot.GetComponent<Button>();
+                loadSlotLabels[i]  = slot.Find("Lbl")?.GetComponent<TMP_Text>();
+                int s = i + 1;
+                if (loadSlotButtons[i]) { loadSlotButtons[i].onClick.RemoveAllListeners(); loadSlotButtons[i].onClick.AddListener(() => LoadSlot(s)); }
+            }
     }
 
     void Update()
