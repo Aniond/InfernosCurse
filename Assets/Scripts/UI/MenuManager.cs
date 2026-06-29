@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class MenuManager : MonoBehaviour
 {
@@ -18,7 +19,15 @@ public class MenuManager : MonoBehaviour
     public Toggle fullscreenToggle;
 
     [Header("Gemini API")]
-    public TMPro.TMP_InputField geminiKeyField;
+    public TMP_InputField geminiKeyField;
+
+    [Header("Save Slots")]
+    public Button[] saveSlotButtons = new Button[3];
+    public TMP_Text[] saveSlotLabels = new TMP_Text[3];
+
+    [Header("Load Slots")]
+    public Button[] loadSlotButtons = new Button[3];
+    public TMP_Text[] loadSlotLabels = new TMP_Text[3];
 
     private bool _isPaused;
 
@@ -79,13 +88,40 @@ public class MenuManager : MonoBehaviour
     public void OpenSave()
     {
         pausePanel.SetActive(false);
+        RefreshSlotLabels(saveSlotLabels);
         savePanel.SetActive(true);
     }
 
     public void OpenLoad()
     {
         pausePanel.SetActive(false);
+        RefreshSlotLabels(loadSlotLabels);
+        // Disable load buttons for empty slots
+        for (int i = 0; i < 3; i++)
+            if (loadSlotButtons[i] != null)
+                loadSlotButtons[i].interactable = SaveSystem.SlotExists(i + 1);
         loadPanel.SetActive(true);
+    }
+
+    void RefreshSlotLabels(TMP_Text[] labels)
+    {
+        for (int i = 0; i < 3; i++)
+            if (labels[i] != null)
+                labels[i].text = SaveSystem.SlotLabel(i + 1);
+    }
+
+    public void SaveSlot(int slot)
+    {
+        SaveSystem.Save(slot);
+        RefreshSlotLabels(saveSlotLabels);
+    }
+
+    public void LoadSlot(int slot)
+    {
+        var data = SaveSystem.Load(slot);
+        if (data == null) return;
+        SaveSystem.ApplySave(data);
+        Resume();
     }
 
     public void BackToPause()

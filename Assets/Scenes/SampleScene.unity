@@ -222,6 +222,66 @@ Transform:
   - {fileID: 786586914}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!21 &14125096
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BackdropFlorence (Instance) (Instance) (Instance) (Instance) (Instance)
+    (Instance) (Instance) (Instance) (Instance) (Instance) (Instance) (Instance)
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _SURFACE_TYPE_TRANSPARENT
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 1
+  m_CustomRenderQueue: 1500
+  stringTagMap:
+    RenderType: Transparent
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  - DepthOnly
+  - SHADOWCASTER
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 6db91190fee50cf49997a0d0e8354a22, type: 3}
+        m_Scale: {x: 1, y: 0.55}
+        m_Offset: {x: 0, y: 0.45}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 6db91190fee50cf49997a0d0e8354a22, type: 3}
+        m_Scale: {x: 1, y: 0.55}
+        m_Offset: {x: 0, y: 0.45}
+    m_Ints: []
+    m_Floats:
+    - _AddPrecomputedVelocity: 0
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 0
+    - _BlendOp: 0
+    - _Cull: 0
+    - _Cutoff: 0.5
+    - _DstBlend: 10
+    - _DstBlendAlpha: 10
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
+    - _Surface: 1
+    - _XRMotionVectorsPass: 1
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!1 &24566977
 GameObject:
   m_ObjectHideFlags: 0
@@ -20262,6 +20322,22 @@ MonoBehaviour:
   sfxVolumeSlider: {fileID: 1669331626}
   fullscreenToggle: {fileID: 1469720902}
   geminiKeyField: {fileID: 2125590514}
+  saveSlotButtons:
+  - {fileID: 1885181054}
+  - {fileID: 371611506}
+  - {fileID: 707129601}
+  saveSlotLabels:
+  - {fileID: 1970941990}
+  - {fileID: 1471459933}
+  - {fileID: 191699548}
+  loadSlotButtons:
+  - {fileID: 1267713770}
+  - {fileID: 1033286372}
+  - {fileID: 487275721}
+  loadSlotLabels:
+  - {fileID: 254160593}
+  - {fileID: 640943145}
+  - {fileID: 1674197272}
 --- !u!4 &672861745
 Transform:
   m_ObjectHideFlags: 0
@@ -21717,66 +21793,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4b7f7bf8cd0125243a6a457c53fc1b90, type: 3}
---- !u!21 &802065001
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: BackdropFlorence (Instance) (Instance) (Instance) (Instance) (Instance)
-    (Instance) (Instance) (Instance) (Instance) (Instance) (Instance)
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _SURFACE_TYPE_TRANSPARENT
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 1500
-  stringTagMap:
-    RenderType: Transparent
-  disabledShaderPasses:
-  - MOTIONVECTORS
-  - DepthOnly
-  - SHADOWCASTER
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 2800000, guid: 6db91190fee50cf49997a0d0e8354a22, type: 3}
-        m_Scale: {x: 1, y: 0.55}
-        m_Offset: {x: 0, y: 0.45}
-    - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 6db91190fee50cf49997a0d0e8354a22, type: 3}
-        m_Scale: {x: 1, y: 0.55}
-        m_Offset: {x: 0, y: 0.45}
-    m_Ints: []
-    m_Floats:
-    - _AddPrecomputedVelocity: 0
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 0
-    - _BlendOp: 0
-    - _Cull: 0
-    - _Cutoff: 0.5
-    - _DstBlend: 10
-    - _DstBlendAlpha: 10
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 5
-    - _SrcBlendAlpha: 1
-    - _Surface: 1
-    - _XRMotionVectorsPass: 1
-    - _ZWrite: 1
-    m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
-  m_BuildTextureStacks: []
-  m_AllowLocking: 1
 --- !u!1 &816490450
 GameObject:
   m_ObjectHideFlags: 0
@@ -54689,7 +54705,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 802065001}
+  - {fileID: 14125096}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
