@@ -1,0 +1,115 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+public class MenuManager : MonoBehaviour
+{
+    [Header("Panels")]
+    public GameObject pausePanel;
+    public GameObject settingsPanel;
+    public GameObject savePanel;
+    public GameObject loadPanel;
+
+    [Header("Settings Controls")]
+    public Slider masterVolumeSlider;
+    public Slider musicVolumeSlider;
+    public Slider sfxVolumeSlider;
+    public Toggle fullscreenToggle;
+
+    [Header("Gemini API")]
+    public TMPro.TMP_InputField geminiKeyField;
+
+    private bool _isPaused;
+
+    void Start()
+    {
+        CloseAll();
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            TogglePause();
+    }
+
+    public void TogglePause()
+    {
+        if (_isPaused) Resume();
+        else           Pause();
+    }
+
+    public void Pause()
+    {
+        _isPaused = true;
+        Time.timeScale = 0f;
+        pausePanel.SetActive(true);
+    }
+
+    public void Resume()
+    {
+        CloseAll();
+        _isPaused = false;
+        Time.timeScale = 1f;
+    }
+
+    public void OpenSettings()
+    {
+        pausePanel.SetActive(false);
+        settingsPanel.SetActive(true);
+
+        if (masterVolumeSlider) masterVolumeSlider.value = PlayerPrefs.GetFloat("MasterVolume", 1f);
+        if (musicVolumeSlider)  musicVolumeSlider.value  = PlayerPrefs.GetFloat("MusicVolume",  1f);
+        if (sfxVolumeSlider)    sfxVolumeSlider.value    = PlayerPrefs.GetFloat("SFXVolume",    1f);
+        if (fullscreenToggle)   fullscreenToggle.isOn    = Screen.fullScreen;
+        if (geminiKeyField)     geminiKeyField.text      = PlayerPrefs.GetString("GeminiKey", "");
+    }
+
+    public void SaveSettings()
+    {
+        if (masterVolumeSlider) PlayerPrefs.SetFloat("MasterVolume", masterVolumeSlider.value);
+        if (musicVolumeSlider)  PlayerPrefs.SetFloat("MusicVolume",  musicVolumeSlider.value);
+        if (sfxVolumeSlider)    PlayerPrefs.SetFloat("SFXVolume",    sfxVolumeSlider.value);
+        if (fullscreenToggle)   Screen.fullScreen = fullscreenToggle.isOn;
+        if (geminiKeyField)     PlayerPrefs.SetString("GeminiKey", geminiKeyField.text);
+        PlayerPrefs.Save();
+        BackToPause();
+    }
+
+    public void OpenSave()
+    {
+        pausePanel.SetActive(false);
+        savePanel.SetActive(true);
+    }
+
+    public void OpenLoad()
+    {
+        pausePanel.SetActive(false);
+        loadPanel.SetActive(true);
+    }
+
+    public void BackToPause()
+    {
+        settingsPanel.SetActive(false);
+        savePanel.SetActive(false);
+        loadPanel.SetActive(false);
+        pausePanel.SetActive(true);
+    }
+
+    public void QuitGame()
+    {
+        Time.timeScale = 1f;
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    void CloseAll()
+    {
+        if (pausePanel)    pausePanel.SetActive(false);
+        if (settingsPanel) settingsPanel.SetActive(false);
+        if (savePanel)     savePanel.SetActive(false);
+        if (loadPanel)     loadPanel.SetActive(false);
+    }
+}
