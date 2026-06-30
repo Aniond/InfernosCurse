@@ -109,3 +109,6 @@ InitTestScene*.unity*
 # API keys / secrets
 GeminiConfig.json
 Assets/Scripts/Config/GeminiConfig.json
+
+# Google Drive temp uploads
+.tmp.driveupload/
