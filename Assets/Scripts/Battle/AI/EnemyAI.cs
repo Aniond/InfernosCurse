@@ -45,10 +45,17 @@ public class EnemyAI : MonoBehaviour
 
     public virtual void DecideAction(BattleUnit unit)
     {
+        var bm = BattleManager.Instance;
+        if (bm == null)
+        {
+            Debug.LogWarning("[EnemyAI] No BattleManager — aborting AI turn.");
+            return;
+        }
+
         if (WorldState == null || Influence == null)
         {
             Debug.LogWarning("[EnemyAI] WorldState not initialized — passing turn.");
-            BattleManager.Instance?.EndUnitTurn(unit);
+            bm.EndUnitTurn(unit);
             return;
         }
 
@@ -56,9 +63,9 @@ public class EnemyAI : MonoBehaviour
         Perceive(unit);
 
         // 2. Rebuild influence maps for this turn
-        var grid    = BattleManager.Instance.Grid;
-        var players = BattleManager.Instance.Players;
-        var allies  = BattleManager.Instance.Enemies;
+        var grid    = bm.Grid;
+        var players = bm.Players;
+        var allies  = bm.Enemies;
         WorldState.RefreshThreatMap(players, grid);
         WorldState.RefreshRetreatSafety(grid);
         Influence.Rebuild(allies, players);
@@ -139,7 +146,7 @@ public class EnemyAI : MonoBehaviour
         var stats     = unit.Data.GetTotalStats();
         int movePoints = Mathf.Max(2, stats.speed / 3);
         int jumpHeight = Mathf.Max(1, stats.dexterity / 5);
-        var moveRange  = grid.GetMoveRange(unit.gridPosition, movePoints, jumpHeight);
+        var moveRange  = grid.GetMoveRange(unit.gridPosition, movePoints, jumpHeight, unit);
 
         switch (intent)
         {
@@ -197,10 +204,19 @@ public class EnemyAI : MonoBehaviour
         Vector2Int dest = Influence.BestCurseSpreadPosition(moveRange);
         grid.MoveUnit(unit, dest);
 
-        // Apply curse to this tile and neighbors
-        ApplyCurseToTile(dest, 0.3f);
-        foreach (var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right })
-            ApplyCurseToTile(dest + dir, 0.15f);
+        // Carriers route their spread through the automata so the overlay updates
+        // and tiles corrupt. Other archetypes just seed the world map directly.
+        var automata = BattleCurseAutomata.Instance;
+        if (archetype == InfernalArchetype.Carrier && automata != null)
+        {
+            automata.SpreadFromUnit(dest, 0.3f);
+        }
+        else
+        {
+            ApplyCurseToTile(dest, 0.3f);
+            foreach (var dir in new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right })
+                ApplyCurseToTile(dest + dir, 0.15f);
+        }
 
         Debug.Log($"[EnemyAI] {unit.Data.displayName} spreads curse at {dest}.");
         BattleManager.Instance?.EndUnitTurn(unit);

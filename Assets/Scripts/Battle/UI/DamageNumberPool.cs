@@ -44,20 +44,19 @@ public class DamageNumberPool : MonoBehaviour
 
     // ── Event handlers ────────────────────────────────────────────────────────
 
-    void OnUnitDamaged(BattleUnit unit, int amount, DamageType type)
+    void OnUnitDamaged(BattleUnit unit, int amount, DamageType type, bool isCrit)
     {
-        bool isCrit = false; // BattleFormulas already baked crit into amount; flag not propagated yet
-        Get().ShowDamage(amount, type, isCrit, UnitWorldPos(unit));
+        Get()?.ShowDamage(amount, type, isCrit, UnitWorldPos(unit));
     }
 
     void OnUnitHealed(BattleUnit unit, int amount)
     {
-        Get().ShowHeal(amount, UnitWorldPos(unit));
+        Get()?.ShowHeal(amount, UnitWorldPos(unit));
     }
 
     void OnSkillAbsorbed(BattleUnit unit, AbsorbedSkillInstance absorbed)
     {
-        Get().ShowAbsorb(absorbed.DisplayName(), UnitWorldPos(unit));
+        Get()?.ShowAbsorb(absorbed.DisplayName(), UnitWorldPos(unit));
     }
 
     // ── Pool API ──────────────────────────────────────────────────────────────
@@ -75,6 +74,7 @@ public class DamageNumberPool : MonoBehaviour
 
     public void Return(DamageNumber dn)
     {
+        if (dn == null) return;
         dn.gameObject.SetActive(false);
         dn.transform.SetParent(poolParent != null ? poolParent : transform);
         _pool.Enqueue(dn);
@@ -84,16 +84,28 @@ public class DamageNumberPool : MonoBehaviour
 
     public void ShowMiss(BattleUnit target)
     {
-        Get().ShowMiss(UnitWorldPos(target));
+        Get()?.ShowMiss(UnitWorldPos(target));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     DamageNumber CreateNew()
     {
+        if (damageNumberPrefab == null)
+        {
+            Debug.LogError("[DamageNumberPool] damageNumberPrefab is not assigned.");
+            return null;
+        }
         var go = Instantiate(damageNumberPrefab, poolParent != null ? poolParent : transform);
+        var dn = go.GetComponent<DamageNumber>();
+        if (dn == null)
+        {
+            Debug.LogError("[DamageNumberPool] Prefab is missing a DamageNumber component.");
+            Destroy(go);
+            return null;
+        }
         go.SetActive(false);
-        return go.GetComponent<DamageNumber>();
+        return dn;
     }
 
     Vector3 UnitWorldPos(BattleUnit unit)

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 public class LearnedJobSkill
 {
     public SkillDefinition skill;
-    public int apInvested;
     public bool unlocked;
 }
 
@@ -64,8 +63,6 @@ public class JobProgress
     {
         var entry = GetEntry(skill);
         if (entry == null || entry.unlocked) return false;
-        if (currentAP < entry.apInvested) return false; // shouldn't happen
-        // Find cost from job definition
         int cost = GetAPCost(skill);
         if (currentAP < cost) return false;
         currentAP     -= cost;
@@ -109,9 +106,8 @@ public class JobProgress
         foreach (var entry in job.skills)
             learnedSkills.Add(new LearnedJobSkill
             {
-                skill       = entry.skill,
-                apInvested  = 0,
-                unlocked    = false
+                skill    = entry.skill,
+                unlocked = false
             });
     }
 }

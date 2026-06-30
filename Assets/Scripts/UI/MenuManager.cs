@@ -104,7 +104,7 @@ public class MenuManager : MonoBehaviour
     void WireSaveLoadSlots()
     {
         if (savePanel != null)
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < SaveSystem.SLOT_COUNT; i++)
             {
                 var slot = savePanel.transform.Find("SaveSlot_" + (i + 1));
                 if (slot == null) continue;
@@ -115,7 +115,7 @@ public class MenuManager : MonoBehaviour
             }
 
         if (loadPanel != null)
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < SaveSystem.SLOT_COUNT; i++)
             {
                 var slot = loadPanel.transform.Find("LoadSlot_" + (i + 1));
                 if (slot == null) continue;
@@ -144,9 +144,9 @@ public class MenuManager : MonoBehaviour
     {
         var cs = FindAnyObjectByType<CharacterSheet>();
         if (cs == null) return;
-        pausePanel?.SetActive(false);
+        if (pausePanel) pausePanel.SetActive(false);
         if (partyPanel) partyPanel.SetActive(false);
-        cs.Open();
+        cs.Open(memberIndex);
     }
 
     void Update()
@@ -167,7 +167,7 @@ public class MenuManager : MonoBehaviour
     {
         _isPaused = true;
         Time.timeScale = 0f;
-        pausePanel.SetActive(true);
+        if (pausePanel) pausePanel.SetActive(true);
     }
 
     public void Resume()
@@ -179,8 +179,8 @@ public class MenuManager : MonoBehaviour
 
     public void OpenSettings()
     {
-        pausePanel.SetActive(false);
-        settingsPanel.SetActive(true);
+        if (pausePanel)    pausePanel.SetActive(false);
+        if (settingsPanel) settingsPanel.SetActive(true);
 
         if (masterVolumeSlider) masterVolumeSlider.value = PlayerPrefs.GetFloat("MasterVolume", 1f);
         if (musicVolumeSlider)  musicVolumeSlider.value  = PlayerPrefs.GetFloat("MusicVolume",  1f);
@@ -202,25 +202,25 @@ public class MenuManager : MonoBehaviour
 
     public void OpenSave()
     {
-        pausePanel.SetActive(false);
+        if (pausePanel) pausePanel.SetActive(false);
         RefreshSlotLabels(saveSlotLabels);
-        savePanel.SetActive(true);
+        if (savePanel) savePanel.SetActive(true);
     }
 
     public void OpenLoad()
     {
-        pausePanel.SetActive(false);
+        if (pausePanel) pausePanel.SetActive(false);
         RefreshSlotLabels(loadSlotLabels);
         // Disable load buttons for empty slots
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < loadSlotButtons.Length; i++)
             if (loadSlotButtons[i] != null)
                 loadSlotButtons[i].interactable = SaveSystem.SlotExists(i + 1);
-        loadPanel.SetActive(true);
+        if (loadPanel) loadPanel.SetActive(true);
     }
 
     void RefreshSlotLabels(TMP_Text[] labels)
     {
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < labels.Length; i++)
             if (labels[i] != null)
                 labels[i].text = SaveSystem.SlotLabel(i + 1);
     }
@@ -241,17 +241,17 @@ public class MenuManager : MonoBehaviour
 
     public void OpenParty()
     {
-        pausePanel.SetActive(false);
-        partyPanel.SetActive(true);
+        if (pausePanel) pausePanel.SetActive(false);
+        if (partyPanel) partyPanel.SetActive(true);
     }
 
     public void BackToPause()
     {
-        settingsPanel.SetActive(false);
-        savePanel.SetActive(false);
-        loadPanel.SetActive(false);
-        if (partyPanel) partyPanel.SetActive(false);
-        pausePanel.SetActive(true);
+        if (settingsPanel) settingsPanel.SetActive(false);
+        if (savePanel)     savePanel.SetActive(false);
+        if (loadPanel)     loadPanel.SetActive(false);
+        if (partyPanel)    partyPanel.SetActive(false);
+        if (pausePanel)    pausePanel.SetActive(true);
     }
 
     public void QuitGame()

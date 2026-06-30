@@ -21,6 +21,7 @@ public class DepthOfFieldFocus : MonoBehaviour
 
     private Volume _volume;
     private DepthOfField _dof;
+    private Transform _cam;
 
     private void Awake()
     {
@@ -31,14 +32,22 @@ public class DepthOfFieldFocus : MonoBehaviour
             return;
         }
         _volume.profile.TryGet(out _dof);
+        CacheCamera();
+    }
+
+    void CacheCamera()
+    {
+        var c = Camera.main;
+        _cam = c != null ? c.transform : null;
     }
 
     private void LateUpdate()
     {
         if (_dof == null || player == null) return;
+        if (_cam == null) CacheCamera();
 
         // Calculate distance from camera to player's Z plane
-        float cam = Camera.main != null ? Camera.main.transform.position.z : 0f;
+        float cam = _cam != null ? _cam.position.z : 0f;
         float targetDist = Mathf.Abs(player.position.z - cam) + focusOffset;
 
         // Smooth interpolation so focus doesn't snap

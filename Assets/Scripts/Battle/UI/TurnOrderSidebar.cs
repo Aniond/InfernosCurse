@@ -26,13 +26,28 @@ public class TurnOrderSidebar : MonoBehaviour
 
     void Start()
     {
-        if (BattleManager.Instance != null)
+        var bm = BattleManager.Instance;
+        if (bm != null)
         {
-            BattleManager.Instance.OnTurnStart    += _ => Rebuild();
-            BattleManager.Instance.OnStateChanged += OnStateChanged;
-            BattleManager.Instance.OnUnitDied     += _ => Rebuild();
+            bm.OnTurnStart    += OnTurnStart;
+            bm.OnStateChanged += OnStateChanged;
+            bm.OnUnitDied     += OnUnitDied;
         }
     }
+
+    void OnDestroy()
+    {
+        var bm = BattleManager.Instance;
+        if (bm != null)
+        {
+            bm.OnTurnStart    -= OnTurnStart;
+            bm.OnStateChanged -= OnStateChanged;
+            bm.OnUnitDied     -= OnUnitDied;
+        }
+    }
+
+    void OnTurnStart(BattleUnit _) => Rebuild();
+    void OnUnitDied(BattleUnit _)  => Rebuild();
 
     void OnStateChanged(BattleState state)
     {

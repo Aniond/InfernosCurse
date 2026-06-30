@@ -88,15 +88,28 @@ public class CharacterSheet : MonoBehaviour
     {
         if (stats != null) _stats = stats;
         _isOpen = true;
-        sheetPanel.SetActive(true);
+        if (sheetPanel) sheetPanel.SetActive(true);
         Refresh();
         ShowTab(0);
+    }
+
+    // Open for a specific party member. TODO: once the party/job data system
+    // lands, look up that member's real CharacterStats here instead of the
+    // Dante placeholder. memberIndex is plumbed through now so the call sites
+    // are ready.
+    public void Open(int memberIndex)
+    {
+        // Placeholder: party roster not built yet — always shows _stats.
+        Open(stats: null);
     }
 
     public void Close()
     {
         _isOpen = false;
-        sheetPanel.SetActive(false);
+        if (sheetPanel) sheetPanel.SetActive(false);
+
+        // Return to the pause menu if one is present (sheet was opened from it).
+        MenuMgr?.BackToPause();
     }
 
     public void Toggle()

@@ -38,6 +38,8 @@ public class TorchFlicker : MonoBehaviour
 
     void Update()
     {
+        if (_light == null) return;
+
         _noise += Time.deltaTime * flickerSpeed;
         float flicker = Mathf.PerlinNoise(_noise, 0f) * flickerAmount;
         float targetIntensity = (baseIntensity - flickerAmount * 0.5f) + flicker;

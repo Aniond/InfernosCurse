@@ -15,7 +15,7 @@ public class SaveData
 
 public static class SaveSystem
 {
-    const int SLOT_COUNT = 3;
+    public const int SLOT_COUNT = 3;
 
     static string SlotPath(int slot) =>
         Path.Combine(Application.persistentDataPath, $"save_slot_{slot}.json");
@@ -26,7 +26,6 @@ public static class SaveSystem
         data.slotName    = $"Slot {slot}";
         data.sceneName   = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         data.savedAt     = DateTime.UtcNow.Ticks;
-        data.timeOfDay   = 12f;
 
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -36,8 +35,9 @@ public static class SaveSystem
             data.playerZ = player.transform.position.z;
         }
 
+        // Persist real time-of-day. Fall back to noon only if there's no cycle at all.
         var dnc = UnityEngine.Object.FindAnyObjectByType<DayNightCycle>();
-        if (dnc != null) data.timeOfDay = dnc.timeOfDay;
+        data.timeOfDay = dnc != null ? dnc.timeOfDay : 12f;
 
         var ws = UnityEngine.Object.FindAnyObjectByType<WeatherSystem>();
         if (ws != null) data.weatherType = ws.current.ToString();
@@ -57,7 +57,18 @@ public static class SaveSystem
     {
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
-            player.transform.position = new Vector3(data.playerX, data.playerY, data.playerZ);
+        {
+            var pos = new Vector3(data.playerX, data.playerY, data.playerZ);
+            // Move via Rigidbody when present so physics interpolation doesn't
+            // smear the teleport across a frame.
+            var rb = player.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.position = pos;
+                rb.linearVelocity = Vector3.zero;
+            }
+            player.transform.position = pos;
+        }
 
         var dnc = UnityEngine.Object.FindAnyObjectByType<DayNightCycle>();
         if (dnc != null) dnc.timeOfDay = data.timeOfDay;

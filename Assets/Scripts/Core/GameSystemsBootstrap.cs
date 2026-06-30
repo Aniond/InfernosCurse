@@ -7,7 +7,9 @@ public static class GameSystemsBootstrap
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Init()
     {
-        if (GameObject.FindAnyObjectByType<HubMap>() != null) return;
+        // Use the dedicated root marker, not any individual system, so this stays
+        // correct even if HubMap is ever placed in a scene on its own.
+        if (GameObject.FindAnyObjectByType<GameSystemsRoot>() != null) return;
 
         var prefab = Resources.Load<GameObject>("GameSystems");
         if (prefab == null)

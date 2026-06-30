@@ -5,12 +5,25 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class SpriteBillboard : MonoBehaviour
 {
+    private Transform _cam;
+
+    private void Awake()  => CacheCamera();
+    private void OnEnable() { if (_cam == null) CacheCamera(); }
+
+    void CacheCamera()
+    {
+        var c = Camera.main;
+        _cam = c != null ? c.transform : null;
+    }
+
     private void LateUpdate()
     {
-        if (Camera.main == null) return;
+        // Re-resolve if the cached camera was destroyed (scene change).
+        if (_cam == null) { CacheCamera(); if (_cam == null) return; }
+
         // Match camera's X rotation only — sprite stays vertically upright
         // and tilts toward camera like Octopath sprites do
-        float camX = Camera.main.transform.eulerAngles.x;
+        float camX = _cam.eulerAngles.x;
         transform.rotation = Quaternion.Euler(camX, transform.rotation.eulerAngles.y, 0f);
     }
 }

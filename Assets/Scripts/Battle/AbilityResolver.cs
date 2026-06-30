@@ -71,11 +71,20 @@ public static class AbilityResolver
     static void ApplyActive(BattleUnit user, BattleUnit target, SkillDefinition skill)
     {
         // Healing skills
-        if (skill.damageType == DamageType.None)
+        if (skill.isHealing)
         {
             int heal = BattleFormulas.CalcHeal(user, skill);
             target.Heal(heal);
             Debug.Log($"{user.Data.displayName} heals {target.Data.displayName} for {heal}.");
+            return;
+        }
+
+        // Non-damaging utility / buff (damageType None but not flagged healing).
+        // Tile/status effects still apply; no damage roll.
+        if (skill.damageType == DamageType.None)
+        {
+            ApplyTileEffect(user, target);
+            Debug.Log($"{user.Data.displayName} uses {skill.skillName} on {target.Data.displayName}.");
             return;
         }
 
@@ -96,7 +105,7 @@ public static class AbilityResolver
             Debug.Log($"Critical hit!");
         }
 
-        target.TakeDamage(dmg, skill.damageType, user);
+        target.TakeDamage(dmg, skill.damageType, user, crit);
         Debug.Log($"{user.Data.displayName} uses {skill.skillName} on {target.Data.displayName} for {dmg} {skill.damageType} damage.");
 
         // Status effect from tile

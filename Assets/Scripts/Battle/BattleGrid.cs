@@ -65,7 +65,9 @@ public class BattleGrid : MonoBehaviour
 
     // ── Movement range (BFS) ──────────────────────────────────────────────────
 
-    public List<GridCell> GetMoveRange(Vector2Int origin, int movePoints, int jumpHeight)
+    // mover: the unit doing the moving (optional). Used to decide which occupied
+    // cells are hostile (block traversal) vs allied (pass through, can't stop).
+    public List<GridCell> GetMoveRange(Vector2Int origin, int movePoints, int jumpHeight, BattleUnit mover = null)
     {
         var reachable = new List<GridCell>();
         var visited   = new Dictionary<Vector2Int, int>(); // pos → move points remaining
@@ -93,6 +95,18 @@ public class BattleGrid : MonoBehaviour
                 int jumpCost = cell.JumpCostFrom(fromCell);
                 if (jumpCost > jumpHeight) continue;
 
+                // A cell occupied by a HOSTILE unit blocks both landing and
+                // traversal — you can't walk through enemies. Allies can be
+                // passed through (but not stopped on). When no mover is given,
+                // fall back to "enemies block, players pass".
+                if (cell.IsOccupied && cell.occupant != null && cell.occupant.IsAlive)
+                {
+                    bool hostile = mover != null
+                        ? cell.occupant.IsPlayer != mover.IsPlayer
+                        : cell.occupant.IsPlayer == false;
+                    if (hostile) continue;
+                }
+
                 // Movement cost: 1 per tile + jump cost
                 int cost = 1 + Mathf.Max(0, jumpCost - 1);
                 int left = remaining - cost;
@@ -101,7 +115,8 @@ public class BattleGrid : MonoBehaviour
                 if (visited.TryGetValue(next, out int prev) && prev >= left) continue;
                 visited[next] = left;
 
-                if (!cell.IsOccupied || cell.occupant?.IsPlayer == true)
+                // Can pass through allies but can't stop on an occupied tile.
+                if (!cell.IsOccupied)
                     reachable.Add(cell);
 
                 queue.Enqueue((next, left));
@@ -184,6 +199,8 @@ public class BattleGrid : MonoBehaviour
     public static int ManhattanDistance(Vector2Int a, Vector2Int b) =>
         Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
 
+    // O(n) linear scan of the open set. Fine for our small grids (~14x12); swap
+    // for a min-heap priority queue if grid sizes grow significantly.
     Vector2Int LowestF(List<Vector2Int> open, Dictionary<Vector2Int, int> fScore)
     {
         Vector2Int best = open[0];

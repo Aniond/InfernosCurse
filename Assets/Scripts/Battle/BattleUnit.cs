@@ -36,7 +36,7 @@ public class BattleUnit : MonoBehaviour
         _               => Vector2Int.down,
     };
 
-    public event Action<int, DamageType>    OnDamaged;
+    public event Action<int, DamageType, bool> OnDamaged;   // amount, type, isCrit
     public event Action<int>                OnHealed;
     public event Action                     OnDied;
     public event Action<StatusEffectType>   OnStatusApplied;
@@ -46,11 +46,11 @@ public class BattleUnit : MonoBehaviour
 
     public bool IsAlive => state != UnitState.Dead;
 
-    public void TakeDamage(int amount, DamageType type, BattleUnit source)
+    public void TakeDamage(int amount, DamageType type, BattleUnit source, bool isCrit = false)
     {
         if (!IsAlive) return;
         Data.currentHP = Mathf.Max(0, Data.currentHP - amount);
-        OnDamaged?.Invoke(amount, type);
+        OnDamaged?.Invoke(amount, type, isCrit);
         if (Data.currentHP <= 0) Die();
     }
 
@@ -121,16 +121,23 @@ public class BattleUnit : MonoBehaviour
         }
     }
 
+    // True once a charging unit has finished charging and is waiting for the
+    // battle loop to resolve its queued action. Keeps resolution out of the
+    // synchronous CT-ticking loop (which would corrupt turn-flow state).
+    public bool ChargeComplete { get; private set; }
+
     public void TickCharge()
     {
         if (state != UnitState.Charging) return;
         ChargeTicksRemaining--;
         if (ChargeTicksRemaining <= 0)
         {
-            state = UnitState.Acting;
-            BattleManager.Instance?.ResolveQueuedAction(this);
+            state          = UnitState.Acting;
+            ChargeComplete = true;   // battle loop will pick this up and resolve
         }
     }
+
+    public void ClearChargeComplete() => ChargeComplete = false;
 
     // ── Status effects ────────────────────────────────────────────────────────
 
@@ -189,7 +196,13 @@ public class BattleUnit : MonoBehaviour
 
     public void Initialize(CombatantData data, bool isPlayer)
     {
-        Data     = data;
+        // Clone the asset so runtime HP/SP/state is per-unit, not shared across
+        // every BattleUnit that references the same CombatantData asset.
+        // Dante is the exception — his absorbed skills/jobs must persist on the
+        // original asset between battles, so he keeps his reference.
+        Data     = (data != null && data.role != CombatantRole.Dante)
+                   ? Instantiate(data)
+                   : data;
         IsPlayer = isPlayer;
         Data.InitRuntime();
         ct    = UnityEngine.Random.Range(0f, 40f); // stagger starting CT

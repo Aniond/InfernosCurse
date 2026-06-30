@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4678181047642898321}
   - component: {fileID: 3618522718310076352}
   - component: {fileID: 8118912153558488148}
+  - component: {fileID: 1598108548609994057}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -344,3 +345,15 @@ MonoBehaviour:
   backdropDawnHour: 6.5
   backdropDuskHour: 18.5
   backdropFadeWidth: 1
+--- !u!114 &1598108548609994057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2264137124043943613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8ca4ae5fe34ea148a9bcf8b712d67c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameSystemsRoot

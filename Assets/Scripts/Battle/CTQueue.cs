@@ -21,6 +21,24 @@ public class CTQueue
         int safety = 10000;
         while (safety-- > 0)
         {
+            // Detect total stall — if no alive unit can ever gain CT (e.g. all
+            // Stopped), bail rather than spinning the guard every frame forever.
+            bool anyCanProgress = false;
+            foreach (var u in _units)
+            {
+                if (!u.IsAlive) continue;
+                if (u.state == UnitState.Charging || BattleFormulas.CTGainPerTick(u) > 0f)
+                {
+                    anyCanProgress = true;
+                    break;
+                }
+            }
+            if (!anyCanProgress)
+            {
+                Debug.LogWarning("[CTQueue] No unit can gain CT (all stopped?) — stalling.");
+                return new List<BattleUnit>();
+            }
+
             // Tick CT on all alive, non-charging units
             foreach (var u in _units)
             {
@@ -44,12 +62,13 @@ public class CTQueue
         return new List<BattleUnit>();
     }
 
-    // Returns units that have reached CT >= 100, sorted descending by CT (highest goes first)
+    // Returns units that have reached CT >= 100 (or finished charging),
+    // sorted descending by CT (highest goes first).
     public List<BattleUnit> GetReadyUnits()
     {
         var ready = new List<BattleUnit>();
         foreach (var u in _units)
-            if (u.IsReady) ready.Add(u);
+            if (u.IsReady || u.ChargeComplete) ready.Add(u);
 
         ready.Sort((a, b) => b.ct.CompareTo(a.ct));
         return ready;
@@ -77,6 +96,10 @@ public class CTQueue
                 float needed = (100f - kvp.Value) / gain;
                 if (needed < minTicks) minTicks = needed;
             }
+
+            // No unit can ever reach 100 (all stopped) — stop previewing rather
+            // than multiplying by float.MaxValue and producing NaN/Infinity.
+            if (minTicks == float.MaxValue) break;
 
             // Advance all by minTicks
             var keys = new List<BattleUnit>(snapshot.Keys);

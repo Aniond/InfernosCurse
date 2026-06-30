@@ -15,6 +15,11 @@ public class SkillDefinition : ScriptableObject
     public SkillType skillType;
     public DamageType damageType;
 
+    [Tooltip("If true, this skill restores HP to its target(s). Without this, a " +
+             "skill with damageType None is treated as a non-damaging utility/buff " +
+             "rather than a heal.")]
+    public bool isHealing = false;
+
     [Header("AP Cost")]
     public int apCost = 100;
 
@@ -24,6 +29,8 @@ public class SkillDefinition : ScriptableObject
     public int basePower = 10;
 
     [Header("Range & Area")]
+    [Tooltip("Minimum target distance. 0 = can target self / own tile.")]
+    public int minRange = 1;
     public int range = 1;
     public int areaOfEffect = 0;
     public bool requiresLineOfSight = true;

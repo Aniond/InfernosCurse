@@ -112,3 +112,6 @@ Assets/Scripts/Config/GeminiConfig.json
 
 # Google Drive temp uploads
 .tmp.driveupload/
+
+# Claude transient locks
+.claude/scheduled_tasks.lock

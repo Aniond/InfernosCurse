@@ -37,6 +37,10 @@ public class DayNightCycle : MonoBehaviour
 
     void Awake()
     {
+        // DontDestroyOnLoad only works in play mode; skip when Awake fires inside
+        // the editor (e.g. prefab edit scope) to avoid a harmless exception.
+        if (!Application.isPlaying) return;
+
         // Persist across all scenes — only at runtime
         var existing = FindObjectsByType<DayNightCycle>(FindObjectsInactive.Include);
         if (existing.Length > 1)
@@ -45,9 +49,27 @@ public class DayNightCycle : MonoBehaviour
             return;
         }
         DontDestroyOnLoad(gameObject);
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void OnEnable()
+    void OnDestroy()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    // The persistent instance survives scene loads, but its sun/camera/backdrop
+    // refs point at objects from the old scene that are now destroyed. Re-resolve.
+    void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        sun          = null;
+        mainCamera   = null;
+        _backdropMat = null;
+        ResolveSceneRefs();
+    }
+
+    void OnEnable() => ResolveSceneRefs();
+
+    void ResolveSceneRefs()
     {
         if (sun == null)
             sun = FindAnyObjectByType<Light>();

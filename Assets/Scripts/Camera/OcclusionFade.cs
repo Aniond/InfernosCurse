@@ -14,9 +14,13 @@ public class OcclusionFade : MonoBehaviour
     public float fadeSpeed = 5f;    // lerp speed for fading out
     public float restoreSpeed = 3f; // lerp speed for restoring
 
-    // Track current alpha per renderer
-    private readonly Dictionary<Renderer, float> _targetAlpha = new();
-    private readonly Dictionary<Renderer, Material[]> _materials = new();
+    [Tooltip("Layers the occlusion ray tests against. Set to the building layer(s) " +
+             "only — keeps the player and other geometry out of the raycast.")]
+    public LayerMask occluderMask = ~0;
+
+    // Per-renderer fade state: its cloned materials + current alpha.
+    private class FadeEntry { public Material[] materials; public float alpha = 1f; }
+    private readonly Dictionary<Renderer, FadeEntry> _entries = new();
 
     private void Start()
     {
@@ -37,8 +41,7 @@ public class OcclusionFade : MonoBehaviour
                     SetMaterialTransparent(mats[i]);
                 }
                 r.materials = mats;
-                _materials[r] = mats;
-                _targetAlpha[r] = 1f;
+                _entries[r] = new FadeEntry { materials = mats, alpha = 1f };
             }
         }
     }
@@ -52,8 +55,8 @@ public class OcclusionFade : MonoBehaviour
         Vector3 dir = playerPos - camPos;
         float dist = dir.magnitude;
 
-        // Find all building renderers hit by the ray
-        var hits = Physics.RaycastAll(camPos, dir.normalized, dist, ~0, QueryTriggerInteraction.Ignore);
+        // Find all building renderers hit by the ray (filtered to occluder layers)
+        var hits = Physics.RaycastAll(camPos, dir.normalized, dist, occluderMask, QueryTriggerInteraction.Ignore);
         var occluding = new HashSet<Renderer>();
 
         foreach (var hit in hits)
@@ -65,18 +68,17 @@ public class OcclusionFade : MonoBehaviour
         }
 
         // Update target alphas and lerp
-        foreach (var kvp in _materials)
+        foreach (var kvp in _entries)
         {
-            var r = kvp.Key;
-            bool isOccluding = occluding.Contains(r);
+            var entry = kvp.Value;
+            bool isOccluding = occluding.Contains(kvp.Key);
             float target = isOccluding ? fadedAlpha : 1f;
-            float speed = isOccluding ? fadeSpeed : restoreSpeed;
+            float speed  = isOccluding ? fadeSpeed : restoreSpeed;
 
-            _targetAlpha[r] = Mathf.Lerp(_targetAlpha[r], target, Time.deltaTime * speed);
-            float alpha = _targetAlpha[r];
+            entry.alpha = Mathf.Lerp(entry.alpha, target, Time.deltaTime * speed);
 
-            foreach (var mat in kvp.Value)
-                SetAlpha(mat, alpha);
+            foreach (var mat in entry.materials)
+                SetAlpha(mat, entry.alpha);
         }
     }
 

@@ -54,7 +54,9 @@ public class BattleCurseAutomata : MonoBehaviour
             for (int y = 0; y < grid.height; y++)
             {
                 var pos = new Vector2Int(x, y);
-                // Perlin-based variation so curse isn't perfectly uniform
+                // Perlin-based variation so curse isn't perfectly uniform. The
+                // 0.5–1.2 range can push above 1.0 at high hub levels; that's
+                // intentional — SetCurseDensity clamps it to a saturated tile.
                 float noise = Mathf.PerlinNoise(x * 0.3f, y * 0.3f);
                 float seed  = hubCurseLevel * Mathf.Lerp(0.5f, 1.2f, noise);
                 world.SetCurseDensity(pos, seed);
@@ -209,9 +211,19 @@ public class BattleCurseAutomata : MonoBehaviour
 
     // ── Player cleanse API ────────────────────────────────────────────────────
 
+    // Pulls the world state from BattleManager if this automata hasn't been
+    // seeded/stepped yet — guards against curse API calls before the first step.
+    bool EnsureWorld()
+    {
+        if (_world != null) return true;
+        _world = BattleManager.Instance?.WorldState;
+        return _world != null;
+    }
+
     // Called by AbilityResolver for Holy skills targeting a tile
     public void CleanseTile(Vector2Int pos, float amount)
     {
+        if (!EnsureWorld()) return;
         float current = _world.GetCurseDensity(pos);
         _world.SetCurseDensity(pos, Mathf.Max(0f, current - amount));
         _world.SetSanctity(pos, Mathf.Min(1f, _world.GetSanctity(pos) + amount * 0.4f));
@@ -222,6 +234,7 @@ public class BattleCurseAutomata : MonoBehaviour
     // Spread curse from a Carrier unit's position (called by CarrierAI on move)
     public void SpreadFromUnit(Vector2Int pos, float amount)
     {
+        if (!EnsureWorld()) return;
         _world.SetCurseDensity(pos, Mathf.Min(1f, _world.GetCurseDensity(pos) + amount));
         var dirs = new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         foreach (var dir in dirs)

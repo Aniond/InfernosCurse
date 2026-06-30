@@ -27,7 +27,8 @@ public class AbsorbedSkillInstance
     void RefreshLevel()
     {
         int maxLvl = definition != null ? definition.maxLevel : 5;
-        maxLvl = Mathf.Min(maxLvl, DuplicatesForLevel.Length - 1);
+        // Clamp into [1, table max] — a maxLevel of 0 would otherwise lock level at 1 forever.
+        maxLvl = Mathf.Clamp(maxLvl, 1, DuplicatesForLevel.Length - 1);
         for (int i = maxLvl; i >= 1; i--)
         {
             if (duplicateCount >= DuplicatesForLevel[i])

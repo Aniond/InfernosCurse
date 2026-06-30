@@ -61,7 +61,10 @@ public static class BattleFormulas
         var defStats = defender.Data.GetTotalStats();
 
         float baseHit = 0.85f;
+        // Accuracy: attacker Perception vs defender Perception (tracking/awareness).
         float percBonus = (atkStats.perception - defStats.perception) * 0.02f;
+        // Evasion: attacker Dexterity vs defender Speed — Speed doubles as the
+        // dodge stat, so a faster defender is harder to land hits on.
         float dexBonus  = (atkStats.dexterity  - defStats.speed)      * 0.015f;
 
         float hitChance = Mathf.Clamp(baseHit + percBonus + dexBonus, 0.05f, 0.99f);
