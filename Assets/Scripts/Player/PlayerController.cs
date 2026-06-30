@@ -60,6 +60,16 @@ public class PlayerController : MonoBehaviour
         _anim.SetFloat(Speed, speed);
     }
 
+    // Set the idle facing without moving — used when spawning at an entry point.
+    public void SetFacing(Vector2 dir)
+    {
+        var snapped = SnapToCardinal(dir);
+        if (snapped.sqrMagnitude < 0.01f) return;
+        if (_anim == null) _anim = GetComponent<Animator>();
+        _anim.SetFloat(MoveX, snapped.x);
+        _anim.SetFloat(MoveY, snapped.y);
+    }
+
     // Returns one of: (1,0) (−1,0) (0,1) (0,−1) or (0,0)
     private static Vector2 SnapToCardinal(Vector2 input)
     {

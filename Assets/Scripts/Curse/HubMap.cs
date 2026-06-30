@@ -58,6 +58,7 @@ public class HubMap : MonoBehaviour
                 mapImagePosition = nd.mapImagePosition,
                 blurb       = nd.blurb,
                 sceneName   = nd.sceneName,
+                entryId     = nd.entryId,
                 previewImage = nd.previewImage,
                 curseLevel  = nd.startingCurseLevel,
                 sanctity    = nd.startingSanctity,
@@ -208,6 +209,7 @@ public class HubNodeData
     [TextArea(2, 3)]
     public string      blurb;            // shown in the detail panel
     public string      sceneName;        // scene to load on Enter (optional)
+    public string      entryId;          // ZoneEntryPoint id to spawn at on arrival
     public Sprite      previewImage;     // location splash for the detail panel
     [Range(0f, 1f)] public float startingCurseLevel = 0f;
     [Range(0f, 1f)] public float startingSanctity   = 0f;

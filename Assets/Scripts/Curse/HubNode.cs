@@ -12,6 +12,7 @@ public class HubNode
     public Vector2  mapImagePosition;   // normalized 0-1 pin position on the map art
     public string   blurb;              // detail-panel description
     public string   sceneName;          // scene to load on Enter
+    public string   entryId;            // ZoneEntryPoint id to spawn at on arrival
     public Sprite   previewImage;       // location splash shown in the detail panel
 
     [Range(0f, 1f)] public float curseLevel   = 0f;   // 0 = clean, 1 = fully corrupted

@@ -18,13 +18,6 @@ public class MapNodeDetailPanel : MonoBehaviour
     public Image    previewImage;    // location splash (transparent watercolor)
     public Sprite   fallbackPreview; // shown when a node has no preview yet
 
-    [Header("Status")]
-    public TMP_Text statusTag;       // flavor only — never a measurable number
-
-    [Header("Status Colors")]
-    public Color cleanColor    = new Color(0.45f, 0.80f, 0.45f);
-    public Color cursedColor   = new Color(0.70f, 0.20f, 0.80f);
-    public Color sanctuaryColor = new Color(0.95f, 0.90f, 0.55f);
 
     [Header("Buttons")]
     public Button enterButton;
@@ -60,20 +53,6 @@ public class MapNodeDetailPanel : MonoBehaviour
             previewImage.sprite  = sprite;
             previewImage.enabled = sprite != null;
             previewImage.preserveAspect = true;
-        }
-
-        // Flavor-only status tag — describes the place, never the hidden curse
-        // number. The player infers the curse from atmosphere, not a readout.
-        string tag; Color col;
-        if (node.isSanctuarySite)   { tag = "Hallowed Ground"; col = sanctuaryColor; }
-        else if (node.isRitualSite) { tag = "Unquiet";         col = cursedColor; }
-        else                        { tag = "";                col = Color.white; }
-
-        if (statusTag)
-        {
-            statusTag.text = tag;
-            statusTag.color = col;
-            statusTag.gameObject.SetActive(!string.IsNullOrEmpty(tag));
         }
 
         // A node only appears on the map if it's accessible, so the Travel

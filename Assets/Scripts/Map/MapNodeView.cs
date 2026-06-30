@@ -9,16 +9,12 @@ using TMPro;
 public class MapNodeView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Pin Visuals")]
-    public Image    pinIcon;
-    public Image    curseRing;      // colored ring that fills with curse level
-    public TMP_Text label;
-    public GameObject sanctuaryBadge;
-    public GameObject ritualBadge;
+    public Image      pinIcon;
+    public TMP_Text   label;
     public GameObject selectedOutline;
 
-    [Header("Curse Tint")]
-    public Color cleanColor   = new Color(0.85f, 0.85f, 0.80f);
-    public Color cursedColor  = new Color(0.55f, 0.10f, 0.65f);
+    [Header("Curse Tint (subtle — curse is a hidden value)")]
+    public Color cursedColor    = new Color(0.55f, 0.10f, 0.65f);
     public Color sanctuaryColor = new Color(0.95f, 0.90f, 0.55f);
 
     public HubNode Node { get; private set; }
@@ -31,8 +27,6 @@ public class MapNodeView : MonoBehaviour, IPointerClickHandler, IPointerEnterHan
         _map = map;
 
         if (label) label.text = node.displayName;
-        if (sanctuaryBadge) sanctuaryBadge.SetActive(node.isSanctuarySite);
-        if (ritualBadge)    ritualBadge.SetActive(node.isRitualSite);
         if (selectedOutline) selectedOutline.SetActive(false);
 
         Refresh();
@@ -58,7 +52,6 @@ public class MapNodeView : MonoBehaviour, IPointerClickHandler, IPointerEnterHan
             tint = Color.white;
 
         if (pinIcon) pinIcon.color = tint;
-        if (curseRing) curseRing.gameObject.SetActive(false);     // no proportional gauge
     }
 
     public void SetSelected(bool selected)

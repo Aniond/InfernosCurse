@@ -27,11 +27,25 @@ public class WorldMapUI : MonoBehaviour
 
     void Start()
     {
+        StartCoroutine(BuildWhenReady());
+    }
+
+    // HubMap is spawned by GameSystemsBootstrap; on a fresh scene load its Awake
+    // may run after ours. Wait a few frames for the instance before failing.
+    System.Collections.IEnumerator BuildWhenReady()
+    {
+        int tries = 0;
+        while (HubMap.Instance == null && tries < 300)   // ~5s at 60fps
+        {
+            tries++;
+            yield return null;
+        }
+
         _hub = HubMap.Instance;
         if (_hub == null)
         {
-            Debug.LogError("[WorldMapUI] No HubMap instance — map cannot build.");
-            return;
+            Debug.LogError("[WorldMapUI] HubMap never became available — map cannot build.");
+            yield break;
         }
 
         BuildPins();
@@ -127,7 +141,9 @@ public class WorldMapUI : MonoBehaviour
         }
 
         currentNodeId = node.id;
-        Debug.Log($"[WorldMapUI] Traveling to {node.displayName} ({node.sceneName}).");
+        // Tell the destination scene where to spawn the player.
+        TravelIntent.SetEntry(node.entryId);
+        Debug.Log($"[WorldMapUI] Traveling to {node.displayName} ({node.sceneName}), entry '{node.entryId}'.");
         SceneManager.LoadScene(node.sceneName);
     }
 
