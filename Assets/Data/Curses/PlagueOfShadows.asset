@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dec38d4d2876414bbadfe96d832a295, type: 3}
+  m_Name: PlagueOfShadows
+  m_EditorClassIdentifier: Assembly-CSharp::CurseDefinition
+  curseName: Plague of Shadows
+  description: "The first curse of Inferno \u2014 shadow rot spreading from the 4th
+    Circle."
+  icon: {fileID: 0}
+  hubSpreadRate: 0.05
+  battleSpreadRate: 0.08
+  sanctityResistance: 0.7
+  decayRate: 0.01
+  tileCorruptThreshold: 0.6
+  surgeThreshold: 0.75
+  enemyBuffOnCursedTile: 1.15
+  playerDebuffOnCursedTile: 0.9

@@ -12,6 +12,7 @@ public class MenuManager : MonoBehaviour
     public GameObject savePanel;
     public GameObject loadPanel;
     public GameObject partyPanel;
+    public GameObject characterSheetPanel;
 
     [Header("Settings Controls")]
     public Slider masterVolumeSlider;
@@ -47,6 +48,7 @@ public class MenuManager : MonoBehaviour
         WireBackButton(partyPanel);
         WireSettingsSaveButton();
         WireSaveLoadSlots();
+        WirePartyMemberCards();
     }
 
     void WirePausePanel()
@@ -62,12 +64,13 @@ public class MenuManager : MonoBehaviour
             btn.onClick.RemoveAllListeners();
             switch (lbl)
             {
-                case "Resume":    btn.onClick.AddListener(Resume);       break;
-                case "Party":     btn.onClick.AddListener(OpenParty);    break;
-                case "Save Game": btn.onClick.AddListener(OpenSave);     break;
-                case "Load Game": btn.onClick.AddListener(OpenLoad);     break;
-                case "Settings":  btn.onClick.AddListener(OpenSettings); break;
-                case "Quit":      btn.onClick.AddListener(QuitGame);     break;
+                case "Resume":    btn.onClick.AddListener(Resume);           break;
+                case "Party":     btn.onClick.AddListener(OpenParty);        break;
+                case "Character": btn.onClick.AddListener(() => OpenCharacterSheet(0)); break;
+                case "Save Game": btn.onClick.AddListener(OpenSave);         break;
+                case "Load Game": btn.onClick.AddListener(OpenLoad);         break;
+                case "Settings":  btn.onClick.AddListener(OpenSettings);     break;
+                case "Quit":      btn.onClick.AddListener(QuitGame);         break;
             }
         }
     }
@@ -121,6 +124,29 @@ public class MenuManager : MonoBehaviour
                 int s = i + 1;
                 if (loadSlotButtons[i]) { loadSlotButtons[i].onClick.RemoveAllListeners(); loadSlotButtons[i].onClick.AddListener(() => LoadSlot(s)); }
             }
+    }
+
+    void WirePartyMemberCards()
+    {
+        if (partyPanel == null) return;
+        var grid = partyPanel.transform.Find("CardGrid") ?? partyPanel.transform;
+        int memberIndex = 0;
+        foreach (Transform ch in grid)
+        {
+            if (!ch.name.StartsWith("MemberCard")) continue;
+            var dc = ch.GetComponent<DoubleClickHandler>() ?? ch.gameObject.AddComponent<DoubleClickHandler>();
+            int idx = memberIndex++;
+            dc.onDoubleClick = () => OpenCharacterSheet(idx);
+        }
+    }
+
+    public void OpenCharacterSheet(int memberIndex = 0)
+    {
+        var cs = FindAnyObjectByType<CharacterSheet>();
+        if (cs == null) return;
+        pausePanel?.SetActive(false);
+        if (partyPanel) partyPanel.SetActive(false);
+        cs.Open();
     }
 
     void Update()
@@ -240,10 +266,11 @@ public class MenuManager : MonoBehaviour
 
     void CloseAll()
     {
-        if (pausePanel)    pausePanel.SetActive(false);
-        if (settingsPanel) settingsPanel.SetActive(false);
-        if (savePanel)     savePanel.SetActive(false);
-        if (loadPanel)     loadPanel.SetActive(false);
-        if (partyPanel)    partyPanel.SetActive(false);
+        if (pausePanel)        pausePanel.SetActive(false);
+        if (settingsPanel)     settingsPanel.SetActive(false);
+        if (savePanel)         savePanel.SetActive(false);
+        if (loadPanel)         loadPanel.SetActive(false);
+        if (partyPanel)        partyPanel.SetActive(false);
+        if (characterSheetPanel) characterSheetPanel.SetActive(false);
     }
 }

@@ -35,6 +35,18 @@ public class DayNightCycle : MonoBehaviour
     public float backdropFadeWidth = 1.0f;
     private Material _backdropMat;
 
+    void Awake()
+    {
+        // Persist across all scenes — only at runtime
+        var existing = FindObjectsByType<DayNightCycle>(FindObjectsInactive.Include);
+        if (existing.Length > 1)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        DontDestroyOnLoad(gameObject);
+    }
+
     void OnEnable()
     {
         if (sun == null)
@@ -133,6 +145,8 @@ public class DayNightCycle : MonoBehaviour
 #if UNITY_EDITOR
     void OnValidate()
     {
+        // Guard against null gradient refs when first added to a prefab
+        if (sunColor == null || ambientSkyColor == null) return;
         ApplyLighting(timeOfDay / 24f);
     }
 #endif

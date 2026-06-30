@@ -1,0 +1,152 @@
+using UnityEngine;
+
+// All numeric combat calculations live here.
+// Change numbers in one place, affects the whole game.
+public static class BattleFormulas
+{
+    // ── Damage ────────────────────────────────────────────────────────────────
+
+    public static int CalcDamage(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    {
+        var atkStats = attacker.Data.GetTotalStats();
+        var defStats = defender.Data.GetTotalStats();
+
+        float scalingStat = GetScalingStat(atkStats, skill.primaryStat);
+        float baseDmg     = skill.basePower + scalingStat * skill.scalingMultiplier;
+
+        // Defense reduction based on damage type
+        float defense = GetDefenseStat(defStats, skill.damageType);
+        float dmg     = Mathf.Max(1f, baseDmg - defense * 0.5f);
+
+        // Status effect reductions
+        if (IsPhysical(skill.damageType))
+            dmg *= 1f - defender.Status.CombinedPhysicalReduction();
+        else
+            dmg *= 1f - defender.Status.CombinedMagicReduction();
+
+        // Facing multiplier (FFT-style)
+        dmg *= GetFacingMultiplier(attacker, defender);
+
+        // Elevation bonus — attacker higher than defender
+        int elevDiff = attacker.Elevation - defender.Elevation;
+        if (elevDiff > 0) dmg *= 1f + elevDiff * 0.1f;
+
+        // Random variance ±10%
+        dmg *= Random.Range(0.9f, 1.1f);
+
+        return Mathf.Max(1, Mathf.RoundToInt(dmg));
+    }
+
+    // ── Healing ───────────────────────────────────────────────────────────────
+
+    public static int CalcHeal(BattleUnit healer, SkillDefinition skill)
+    {
+        var stats   = healer.Data.GetTotalStats();
+        float faith = stats.faith;
+        float cre   = stats.creativity;
+        float heal  = skill.basePower + faith * skill.scalingMultiplier + cre * 0.25f;
+
+        // Holy refinement bonus — if Dante is using a refined skill
+        if (skill.damageType == DamageType.Holy) heal *= 1.2f;
+
+        heal *= Random.Range(0.95f, 1.05f);
+        return Mathf.Max(1, Mathf.RoundToInt(heal));
+    }
+
+    // ── Hit chance ────────────────────────────────────────────────────────────
+
+    public static bool RollHit(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    {
+        var atkStats = attacker.Data.GetTotalStats();
+        var defStats = defender.Data.GetTotalStats();
+
+        float baseHit = 0.85f;
+        float percBonus = (atkStats.perception - defStats.perception) * 0.02f;
+        float dexBonus  = (atkStats.dexterity  - defStats.speed)      * 0.015f;
+
+        float hitChance = Mathf.Clamp(baseHit + percBonus + dexBonus, 0.05f, 0.99f);
+        hitChance *= attacker.Status.CombinedHitMultiplier();
+
+        return Random.value <= hitChance;
+    }
+
+    // ── Crit chance ───────────────────────────────────────────────────────────
+
+    public static bool RollCrit(BattleUnit attacker)
+    {
+        var stats    = attacker.Data.GetTotalStats();
+        float chance = 0.05f + stats.dexterity * 0.005f;
+        return Random.value <= Mathf.Clamp(chance, 0f, 0.5f);
+    }
+
+    // ── CT system ─────────────────────────────────────────────────────────────
+
+    // CT gain per tick — Speed drives how quickly a unit reaches 100
+    public static float CTGainPerTick(BattleUnit unit)
+    {
+        var stats = unit.Data.GetTotalStats();
+        return stats.speed * unit.Status.CombinedSpeedMultiplier();
+    }
+
+    // Charge ticks before a queued action fires
+    public static int ActionChargeTicks(BattleUnit unit, SkillDefinition skill)
+    {
+        if (skill.chargeTicks == 0) return 0;
+        var stats  = unit.Data.GetTotalStats();
+        float mod  = 1f - (stats.speed - 10) * 0.03f; // faster units charge quicker
+        return Mathf.Max(1, Mathf.RoundToInt(skill.chargeTicks * mod));
+    }
+
+    // ── Job / AP ──────────────────────────────────────────────────────────────
+
+    // AP earned per kill — scales with enemy level relative to party
+    public static int APFromKill(BattleUnit killer, BattleUnit defeated)
+    {
+        int lvDiff = defeated.Data.baseStats.level - killer.Data.baseStats.level;
+        int base_  = 10;
+        return Mathf.Max(1, base_ + lvDiff * 2);
+    }
+
+    // XP earned per kill
+    public static int XPFromKill(BattleUnit killer, BattleUnit defeated)
+    {
+        int lvDiff = defeated.Data.baseStats.level - killer.Data.baseStats.level;
+        int base_  = 30;
+        return Mathf.Max(1, base_ + lvDiff * 5);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    static float GetScalingStat(CharacterStats s, StatScaling scaling) => scaling switch
+    {
+        StatScaling.Strength     => s.strength,
+        StatScaling.Dexterity    => s.dexterity,
+        StatScaling.Constitution => s.constitution,
+        StatScaling.Creativity   => s.creativity,
+        StatScaling.Faith        => s.faith,
+        StatScaling.Perception   => s.perception,
+        StatScaling.Speed        => s.speed,
+        _                        => 0f,
+    };
+
+    static float GetDefenseStat(CharacterStats s, DamageType dt) =>
+        IsPhysical(dt) ? s.constitution : s.faith;
+
+    static bool IsPhysical(DamageType dt) =>
+        dt == DamageType.Physical;
+
+    static float GetFacingMultiplier(BattleUnit attacker, BattleUnit defender)
+    {
+        // FFT facing: back = 1.25x, side = 1.1x, front = 1.0x
+        Vector2Int dir = attacker.gridPosition - defender.gridPosition;
+
+        // Convert attacker direction to defender's facing space
+        Vector2Int defFacing = defender.FacingDirection;
+
+        // Dot product: -1 = attacker behind defender (back attack)
+        int dot = dir.x * defFacing.x + dir.y * defFacing.y;
+        if (dot < 0)  return 1.25f; // back
+        if (dot == 0) return 1.10f; // side
+        return 1.00f;               // front
+    }
+}

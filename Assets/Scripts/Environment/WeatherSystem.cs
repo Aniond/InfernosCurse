@@ -38,9 +38,10 @@ public class WeatherSystem : MonoBehaviour
 
     void Awake()
     {
-        _dnc = FindAnyObjectByType<DayNightCycle>();
         SetWeatherImmediate(current);
     }
+
+    DayNightCycle DNC => _dnc != null ? _dnc : (_dnc = FindAnyObjectByType<DayNightCycle>());
 
     void Update()
     {
@@ -134,9 +135,9 @@ public class WeatherSystem : MonoBehaviour
             WeatherType.Wind  => windFogBoost,
             _ => 0f
         };
-        RenderSettings.fog = current != WeatherType.None || (_dnc != null && _dnc.useFog);
+        RenderSettings.fog = current != WeatherType.None || (DNC != null && DNC.useFog);
         if (boost > 0f)
-            RenderSettings.fogDensity = (_dnc != null ? _dnc.fogDensity.Evaluate(_dnc.timeOfDay / 24f) : 0.005f) + boost;
+            RenderSettings.fogDensity = (DNC != null ? DNC.fogDensity.Evaluate(DNC.timeOfDay / 24f) : 0.005f) + boost;
     }
 
     void UpdateAudio()
