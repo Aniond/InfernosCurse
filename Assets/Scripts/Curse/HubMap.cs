@@ -55,6 +55,10 @@ public class HubMap : MonoBehaviour
                 id          = nd.id,
                 displayName = nd.displayName,
                 mapPosition = nd.mapPosition,
+                mapImagePosition = nd.mapImagePosition,
+                blurb       = nd.blurb,
+                sceneName   = nd.sceneName,
+                previewImage = nd.previewImage,
                 curseLevel  = nd.startingCurseLevel,
                 sanctity    = nd.startingSanctity,
                 population  = nd.population,
@@ -198,6 +202,13 @@ public class HubNodeData
     public string      id;
     public string      displayName;
     public Vector2     mapPosition;
+    [Tooltip("Normalized 0-1 position on the Florence map image (x=left→right, " +
+             "y=bottom→top). Drives where the clickable pin sits on the artwork.")]
+    public Vector2     mapImagePosition = new Vector2(0.5f, 0.5f);
+    [TextArea(2, 3)]
+    public string      blurb;            // shown in the detail panel
+    public string      sceneName;        // scene to load on Enter (optional)
+    public Sprite      previewImage;     // location splash for the detail panel
     [Range(0f, 1f)] public float startingCurseLevel = 0f;
     [Range(0f, 1f)] public float startingSanctity   = 0f;
     [Range(0f, 1f)] public float population         = 0.5f;

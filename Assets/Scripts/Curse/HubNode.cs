@@ -8,7 +8,11 @@ public class HubNode
 {
     public string   id;
     public string   displayName;
-    public Vector2  mapPosition;        // 2D position for UI/map display
+    public Vector2  mapPosition;        // abstract graph position
+    public Vector2  mapImagePosition;   // normalized 0-1 pin position on the map art
+    public string   blurb;              // detail-panel description
+    public string   sceneName;          // scene to load on Enter
+    public Sprite   previewImage;       // location splash shown in the detail panel
 
     [Range(0f, 1f)] public float curseLevel   = 0f;   // 0 = clean, 1 = fully corrupted
     [Range(0f, 1f)] public float sanctity     = 0f;   // holy resistance to spread

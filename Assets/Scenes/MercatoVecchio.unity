@@ -598,56 +598,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 40872575}
   m_CullTransparentMesh: 1
---- !u!1 &42201000
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 42201002}
-  - component: {fileID: 42201001}
-  m_Layer: 0
-  m_Name: CurseOverlay
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &42201001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 42201000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e394869a63ab9eb449441f2b3855aff4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CurseOverlay
-  grid: {fileID: 0}
-  automata: {fileID: 1020863790}
-  overlaySprite: {fileID: 21300000, guid: 6293d2a1455a8ef4fb20eb9cb5a0addb, type: 3}
-  lowCurseColor: {r: 0.4, g: 0, b: 0.6, a: 0}
-  highCurseColor: {r: 0.4, g: 0, b: 0.6, a: 0.65}
-  sortingOrder: 1
---- !u!4 &42201002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 42201000}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &47461668
 GameObject:
   m_ObjectHideFlags: 0
@@ -3023,6 +2973,9 @@ MonoBehaviour:
   fadedAlpha: 0.25
   fadeSpeed: 5
   restoreSpeed: 3
+  occluderMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!4 &234369582
 Transform:
   m_ObjectHideFlags: 0
@@ -32842,7 +32795,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 899332593}
-  - component: {fileID: 899332592}
   m_Layer: 0
   m_Name: BattleManager
   m_TagString: Untagged
@@ -32850,21 +32802,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &899332592
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 899332591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f9d807dc9d69a44483591343b5b3837, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BattleManager
-  Grid: {fileID: 0}
-  CurseAutomata: {fileID: 1020863790}
-  battleUnitPrefab: {fileID: 0}
 --- !u!4 &899332593
 Transform:
   m_ObjectHideFlags: 0
@@ -34350,53 +34287,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1016750080}
   m_CullTransparentMesh: 1
---- !u!1 &1020863789
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1020863791}
-  - component: {fileID: 1020863790}
-  m_Layer: 0
-  m_Name: BattleCurseAutomata
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1020863790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1020863789}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d235610d7c516eb4bb26509e3379c879, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BattleCurseAutomata
-  grid: {fileID: 0}
-  activeCurse: {fileID: 11400000, guid: a3fadcf8f369fbc4e983610ef7b4574d, type: 2}
-  stepsPerTurn: 1
---- !u!4 &1020863791
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1020863789}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1029990313
 GameObject:
   m_ObjectHideFlags: 0
@@ -44683,135 +44573,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1333936757}
   m_CullTransparentMesh: 1
---- !u!1 &1340809798
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1340809800}
-  - component: {fileID: 1340809799}
-  m_Layer: 0
-  m_Name: HubMap
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1340809799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1340809798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0b8e870af6e5ddc48acde662855fd5d2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HubMap
-  activeCurse: {fileID: 11400000, guid: a3fadcf8f369fbc4e983610ef7b4574d, type: 2}
-  tickInterval: 60
-  nodeData:
-  - id: mercato
-    displayName: Mercato Vecchio
-    mapPosition: {x: 0, y: 0}
-    startingCurseLevel: 0.3
-    startingSanctity: 0
-    population: 0.9
-    isRitualSite: 0
-    isSanctuarySite: 0
-    neighborIds:
-    - signoria
-    - duomo
-    - oltrarno
-  - id: signoria
-    displayName: Piazza della Signoria
-    mapPosition: {x: 1, y: 0}
-    startingCurseLevel: 0.1
-    startingSanctity: 0
-    population: 0.7
-    isRitualSite: 0
-    isSanctuarySite: 0
-    neighborIds:
-    - mercato
-    - duomo
-    - crocifisso
-  - id: duomo
-    displayName: Il Duomo
-    mapPosition: {x: 0, y: 1}
-    startingCurseLevel: 0
-    startingSanctity: 0.8
-    population: 0.6
-    isRitualSite: 0
-    isSanctuarySite: 1
-    neighborIds:
-    - mercato
-    - signoria
-    - sanmarco
-  - id: oltrarno
-    displayName: Oltrarno
-    mapPosition: {x: -1, y: 0}
-    startingCurseLevel: 0.5
-    startingSanctity: 0
-    population: 0.5
-    isRitualSite: 0
-    isSanctuarySite: 0
-    neighborIds:
-    - mercato
-    - crocifisso
-  - id: crocifisso
-    displayName: Santa Croce
-    mapPosition: {x: 1, y: -1}
-    startingCurseLevel: 0.6
-    startingSanctity: 0
-    population: 0.4
-    isRitualSite: 1
-    isSanctuarySite: 0
-    neighborIds:
-    - signoria
-    - oltrarno
-    - borgognissanti
-  - id: sanmarco
-    displayName: San Marco
-    mapPosition: {x: 0, y: 2}
-    startingCurseLevel: 0.05
-    startingSanctity: 0.5
-    population: 0.3
-    isRitualSite: 0
-    isSanctuarySite: 1
-    neighborIds:
-    - duomo
-    - borgognissanti
-  - id: borgognissanti
-    displayName: Borgo Ognissanti
-    mapPosition: {x: -1, y: 1}
-    startingCurseLevel: 0.4
-    startingSanctity: 0
-    population: 0.6
-    isRitualSite: 0
-    isSanctuarySite: 0
-    neighborIds:
-    - oltrarno
-    - crocifisso
-    - sanmarco
---- !u!4 &1340809800
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1340809798}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1351484835
 GameObject:
   m_ObjectHideFlags: 0
@@ -69922,6 +69683,3 @@ SceneRoots:
   - {fileID: 672861745}
   - {fileID: 1558529826}
   - {fileID: 899332593}
-  - {fileID: 1020863791}
-  - {fileID: 42201002}
-  - {fileID: 1340809800}
