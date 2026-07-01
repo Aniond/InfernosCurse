@@ -1,0 +1,31 @@
+{
+    "asset": "fc3b57c2c35579241ad514fe0f825687",
+    "fileName": "019f1fa1-6de2-77b4-a44b-cdfb32b0c241.png",
+    "prompt": "Square fantasy RPG skill icon in the style of a dark AAA action-RPG skill icon set (Diablo / Path of Exile / Lost Ark). Low-key painterly digital painting, dramatic chiaroscuro. The subject FILLS THE ENTIRE SQUARE FRAME edge to edge, emerging from a solid deep near-black background with a subtle dark radial vignette in the corners. Strong colored energy glow radiating outward — sickly violet-and-green hallucination light.\n\nSubject: a screaming medieval victim's gaunt face half-dissolving into madness — eyes rolled white, mouth open in a silent scream, the head wreathed in a crawling swirling haze of violet-green ergot spores and writhing hallucinatory shapes twisting out of the smoke. Saint Anthony's Fire, the burning madness. Ghostly, feverish, terrifying.\n\nMuted palette of ash-black and bone-grey, drowned in a sickly poison-violet and bilious-green glow as the focal light. High detail, rich brushwork, eerie rim light on the face, cinematic, nightmarish and moody. Centered composition. NO text, NO border or ornate frame, NO UI chrome, NO empty margins — the art bleeds to all four edges of the square.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

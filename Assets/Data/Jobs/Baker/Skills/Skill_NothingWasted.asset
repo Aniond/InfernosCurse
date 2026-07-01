@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d8de4bde3e72ee4babf0b90bc91f72d, type: 3}
+  m_Name: Skill_NothingWasted
+  m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
+  skillName: Nothing Wasted
+  description: "The spurred, blighted grain no honest baker would touch — he
+    gathers it anyway. A man with an empty larder cannot afford disgust. What
+    ruined him will feed him now."
+  icon: {fileID: 21300000, guid: ce2d6765c26d5904292fc5f3f8e78aba, type: 3}
+  skillType: 1
+  damageType: 7
+  isHealing: 0
+  apCost: 80
+  primaryStat: 7
+  scalingMultiplier: 0
+  basePower: 0
+  minRange: 0
+  range: 0
+  areaOfEffect: 0
+  requiresLineOfSight: 0
+  chargeTicks: 0
+  spCost: 0
+  appliesStatus: 0
+  statusType: 0
+  statusDuration: 0
+  statusMagnitude: 0
+  statusChance: 0
+  isAbsorbable: 0
+  maxLevel: 1
+  refinable: 0
+  holyVersion: {fileID: 0}

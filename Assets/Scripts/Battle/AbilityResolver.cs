@@ -84,6 +84,7 @@ public static class AbilityResolver
         if (skill.damageType == DamageType.None)
         {
             ApplyTileEffect(user, target);
+            ApplySkillStatus(user, target, skill);
             Debug.Log($"{user.Data.displayName} uses {skill.skillName} on {target.Data.displayName}.");
             return;
         }
@@ -111,6 +112,9 @@ public static class AbilityResolver
         // Status effect from tile
         ApplyTileEffect(user, target);
 
+        // Status effect carried by the skill itself (e.g. ergot poison, oven burn)
+        ApplySkillStatus(user, target, skill);
+
         // Post-kill absorb (Dante only)
         if (!target.IsAlive)
         {
@@ -121,6 +125,19 @@ public static class AbilityResolver
             // Award AP/XP to all party members
             BattleManager.Instance?.AwardPostKill(user, target);
         }
+    }
+
+    // Applies a status carried by the skill definition itself, independent of the
+    // target's tile. Rolls statusChance; call only after a hit has landed.
+    static void ApplySkillStatus(BattleUnit source, BattleUnit target, SkillDefinition skill)
+    {
+        if (skill == null || !skill.appliesStatus || target == null || !target.IsAlive) return;
+        if (skill.statusChance < 1f && Random.value > skill.statusChance) return;
+
+        target.ApplyStatus(new StatusEffect(
+            skill.statusType, skill.statusDuration, skill.statusMagnitude, source));
+        Debug.Log($"{target.Data.displayName} is afflicted with {skill.statusType} " +
+                  $"from {skill.skillName}.");
     }
 
     static void ApplyTileEffect(BattleUnit source, BattleUnit target)

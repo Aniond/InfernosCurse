@@ -42,6 +42,20 @@ public class SkillDefinition : ScriptableObject
     [Header("SP Cost")]
     public int spCost = 0;
 
+    [Header("Applied Status (optional)")]
+    [Tooltip("If true, a successful use also inflicts a StatusEffect on the target " +
+             "(in addition to any tile-based status). Lets a skill apply its own DoT / " +
+             "debuff — e.g. ergot poison, oven burn — without relying on the target's tile.")]
+    public bool appliesStatus = false;
+    public StatusEffectType statusType;
+    [Tooltip("Duration in target-turns (status ticks on the afflicted unit's turn start).")]
+    public int statusDuration = 3;
+    [Tooltip("DoT fraction (0-1 of HP per tick) for Poison/Burn/Regen, or reduction " +
+             "amount (0-1) for Blind/Protect/Shell.")]
+    [Range(0f, 1f)] public float statusMagnitude = 0.05f;
+    [Tooltip("Chance (0-1) the status procs on a successful hit.")]
+    [Range(0f, 1f)] public float statusChance = 1f;
+
     [Header("Absorbable — Dante Only")]
     public bool isAbsorbable = true;
     [Tooltip("Max times this skill can be leveled via duplicate drops.")]

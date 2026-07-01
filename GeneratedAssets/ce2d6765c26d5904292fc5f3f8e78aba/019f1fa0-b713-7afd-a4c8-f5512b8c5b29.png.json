@@ -1,0 +1,31 @@
+{
+    "asset": "ce2d6765c26d5904292fc5f3f8e78aba",
+    "fileName": "019f1fa0-b713-7afd-a4c8-f5512b8c5b29.png",
+    "prompt": "Square fantasy RPG skill icon in the style of a dark AAA action-RPG skill icon set (Diablo / Path of Exile / Lost Ark). Low-key painterly digital painting, dramatic chiaroscuro. The subject FILLS THE ENTIRE SQUARE FRAME edge to edge, emerging from a solid deep near-black background with a subtle dark radial vignette in the corners. A muted, cold, sorrowful glow rather than a bright one — this is a somber passive perk, not a flashy attack.\n\nSubject: two gaunt, dirt-stained medieval peasant hands cupping and salvaging a pile of blighted, spurred rye grain from a torn burlap sack — the grain half-rotten, streaked with dark purple-black ergot horns and grey mold, a few good gold kernels among the ruin. Quiet desperation. Nothing wasted. 13th-century famine.\n\nMuted palette of ash-black, dun-brown burlap, wheat-gold, and rot-purple, with a faint cold moonlit glow. High detail, rich brushwork, soft low rim light, cinematic, melancholy and grim. Centered composition. NO text, NO border or ornate frame, NO UI chrome, NO empty margins — the art bleeds to all four edges of the square.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

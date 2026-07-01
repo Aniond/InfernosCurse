@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d8de4bde3e72ee4babf0b90bc91f72d, type: 3}
+  m_Name: Skill_BakersFever
+  m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
+  skillName: Baker's Fever
+  description: "The other face of the ergot: not the burning, but the madness. He
+    forces the tainted dust into the air his enemy breathes, and the world dissolves
+    into writhing, crawling visions. They can no longer trust their own eyes."
+  icon: {fileID: 21300000, guid: fc3b57c2c35579241ad514fe0f825687, type: 3}
+  skillType: 0
+  damageType: 7
+  isHealing: 0
+  apCost: 150
+  primaryStat: 7
+  scalingMultiplier: 0
+  basePower: 0
+  minRange: 1
+  range: 2
+  areaOfEffect: 0
+  requiresLineOfSight: 1
+  chargeTicks: 1
+  spCost: 7
+  appliesStatus: 1
+  statusType: 1
+  statusDuration: 3
+  statusMagnitude: 0.4
+  statusChance: 1
+  isAbsorbable: 0
+  maxLevel: 1
+  refinable: 0
+  holyVersion: {fileID: 0}

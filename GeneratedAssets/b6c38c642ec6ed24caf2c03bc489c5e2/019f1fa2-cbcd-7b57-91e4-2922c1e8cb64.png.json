@@ -1,0 +1,31 @@
+{
+    "asset": "b6c38c642ec6ed24caf2c03bc489c5e2",
+    "fileName": "019f1fa2-cbcd-7b57-91e4-2922c1e8cb64.png",
+    "prompt": "Square fantasy RPG job/class emblem icon in the style of a dark AAA action-RPG portrait-emblem (Diablo / Path of Exile / Lost Ark class icon). Low-key painterly digital painting, dramatic chiaroscuro. The subject FILLS THE ENTIRE SQUARE FRAME edge to edge, emerging from a solid deep near-black background with a subtle dark radial vignette in the corners. A grim ember-and-violet glow.\n\nSubject: a haunted, gaunt 13th-century medieval baker — a broken man consumed by grief and vengeance. Ash-smudged weathered face, hollow burning eyes, flour and soot in his stubble, a scorched leather apron, gripping a blighted loaf in one fist. Behind and around him, the embers of his burned-out bakery and a faint haze of purple ergot rot. He seeks revenge, not salvation. Portrait bust composition, three-quarter view, emerging from shadow.\n\nMuted palette of ash-black, soot-grey, wheat-gold, ember-orange, and a haunting rot-violet glow. High detail, rich brushwork, strong dramatic rim light on the face, cinematic, sorrowful and vengeful. NO text, NO border or ornate frame, NO UI chrome, NO empty margins — the art bleeds to all four edges of the square.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}

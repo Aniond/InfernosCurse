@@ -1,0 +1,31 @@
+{
+    "asset": "b9cf54fe8119e834697d935f2b97a966",
+    "fileName": "019f1f9f-e554-7b49-a7a1-36465b058c13.png",
+    "prompt": "Square fantasy RPG skill icon in the style of a dark AAA action-RPG skill icon set (Diablo / Path of Exile / Lost Ark). Low-key painterly digital painting, dramatic chiaroscuro. The subject FILLS THE ENTIRE SQUARE FRAME edge to edge, emerging from a solid deep near-black background with a subtle dark radial vignette in the corners. Strong colored energy glow radiating from the center — molten orange-and-red fire light.\n\nSubject: a long medieval iron baker's oven-peel (a flat-bladed hearth paddle on a long shaft) swung diagonally like a weapon, its iron blade glowing red-hot from the coals, trailing sparks and cinders and a wave of ember heat. Grimy, forged, 13th-century. A ruined baker's weapon.\n\nMuted palette of ash-black, dark iron-grey, with a searing molten orange-red glow as the focal light source. High detail, rich brushwork, hot rim light along the glowing blade edge, cinematic and moody. Centered dynamic composition. NO text, NO border or ornate frame, NO UI chrome, NO empty margins — the art bleeds to all four edges of the square.",
+    "negativePrompt": "",
+    "model": "gpt-image-1-5",
+    "modelName": "GPT Image 1.5",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}
