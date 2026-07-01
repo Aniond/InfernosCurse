@@ -67,6 +67,7 @@ public class MenuManager : MonoBehaviour
                 case "Resume":    btn.onClick.AddListener(Resume);           break;
                 case "Party":     btn.onClick.AddListener(OpenParty);        break;
                 case "Character": btn.onClick.AddListener(() => OpenCharacterSheet(0)); break;
+                case "Travel":    btn.onClick.AddListener(OpenTravel);       break;
                 case "Save Game": btn.onClick.AddListener(OpenSave);         break;
                 case "Load Game": btn.onClick.AddListener(OpenLoad);         break;
                 case "Settings":  btn.onClick.AddListener(OpenSettings);     break;
@@ -237,6 +238,21 @@ public class MenuManager : MonoBehaviour
         if (data == null) return;
         SaveSystem.ApplySave(data);
         Resume();
+    }
+
+    // Hand off to the fast-travel menu. It manages its own pause/timescale, so we
+    // fully close the pause menu first (Resume) to avoid two systems fighting over
+    // Time.timeScale — the travel menu will re-pause itself.
+    public void OpenTravel()
+    {
+        var travel = FindAnyObjectByType<FastTravelMenu>();
+        if (travel == null)
+        {
+            Debug.LogWarning("[MenuManager] No FastTravelMenu in the scene.");
+            return;
+        }
+        Resume();          // closes panels + restores timeScale to 1
+        travel.Open();     // re-pauses via its own logic
     }
 
     public void OpenParty()
