@@ -5,6 +5,11 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class SpriteBillboard : MonoBehaviour
 {
+    [Tooltip("Fraction of the camera's X pitch the sprite tilts to. 1 = full " +
+             "match (bottom edge leans hard toward camera and can clip at the " +
+             "screen edge); 0.75 keeps the facing while reducing that clip.")]
+    [Range(0f, 1f)] public float tiltFactor = 0.75f;
+
     private Transform _cam;
 
     private void Awake()  => CacheCamera();
@@ -21,9 +26,10 @@ public class SpriteBillboard : MonoBehaviour
         // Re-resolve if the cached camera was destroyed (scene change).
         if (_cam == null) { CacheCamera(); if (_cam == null) return; }
 
-        // Match camera's X rotation only — sprite stays vertically upright
-        // and tilts toward camera like Octopath sprites do
-        float camX = _cam.eulerAngles.x;
+        // Match a fraction of the camera's X pitch — sprite stays upright and
+        // tilts toward the camera like Octopath sprites, but the reduced tilt
+        // stops the bottom edge from clipping when the player is low in frame.
+        float camX = _cam.eulerAngles.x * tiltFactor;
         transform.rotation = Quaternion.Euler(camX, transform.rotation.eulerAngles.y, 0f);
     }
 }
