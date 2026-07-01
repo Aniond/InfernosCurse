@@ -41,13 +41,23 @@ public class DynamicZoom : MonoBehaviour
 
     private CinemachineCamera _cam;
     private CinemachineFollow _follow;
+    private Camera _mainCam;      // cached — avoids Camera.main every LateUpdate
     private float _t;   // 0 = wide, 1 = close
 
     void Awake()
     {
         _cam = GetComponent<CinemachineCamera>();
         _follow = GetComponent<CinemachineFollow>();
-        if (_follow == null) _follow = gameObject.AddComponent<CinemachineFollow>();
+        if (_follow == null)
+        {
+            // Nothing authored a Body — add one so the offset can be driven.
+            // If a different body component exists in the scene, prefer it: log
+            // so a conflicting double-follow is easy to spot.
+            Debug.LogWarning("[DynamicZoom] No CinemachineFollow found — adding one at runtime. " +
+                             "Author it in the scene to avoid conflicts with other body components.");
+            _follow = gameObject.AddComponent<CinemachineFollow>();
+        }
+        _mainCam = Camera.main;
     }
 
     void OnEnable()
@@ -81,10 +91,10 @@ public class DynamicZoom : MonoBehaviour
         // Screen-position clamp: if the player is drifting too close to the
         // bottom edge (e.g. walking south toward the camera), push the camera
         // back and up so the sprite stays fully visible.
-        var cam = Camera.main;
-        if (cam != null)
+        if (_mainCam == null) _mainCam = Camera.main;   // re-resolve after scene load
+        if (_mainCam != null)
         {
-            Vector3 vp = cam.WorldToViewportPoint(target.position);
+            Vector3 vp = _mainCam.WorldToViewportPoint(target.position);
             if (vp.z > 0f && vp.y < bottomSafeMargin)
             {
                 float deficit = (bottomSafeMargin - vp.y) / bottomSafeMargin; // 0..1

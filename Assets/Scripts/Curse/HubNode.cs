@@ -8,7 +8,6 @@ public class HubNode
 {
     public string   id;
     public string   displayName;
-    public Vector2  mapPosition;        // abstract graph position
     public Vector2  mapImagePosition;   // normalized 0-1 pin position on the map art
     public string   blurb;              // detail-panel description
     public string   sceneName;          // scene to load on Enter

@@ -14,6 +14,9 @@ public class WorldMapUI : MonoBehaviour
     public MapNodeDetailPanel detailPanel;
 
     [Header("Travel")]
+    // Defaults false: early game allows fast-travel to any discovered node. The
+    // adjacency-gated path (IsReachable/currentNodeId/neighbors) is implemented
+    // but untested in play — flip this on once node discovery drives currentNodeId.
     [Tooltip("If true, you can only open/travel to nodes adjacent to the current one.")]
     public bool restrictToNeighbors = false;
     [Tooltip("Node id the player currently occupies. Empty = anywhere allowed.")]

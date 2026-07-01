@@ -24,6 +24,10 @@ public class HubMap : MonoBehaviour
 
     // ── Events ────────────────────────────────────────────────────────────────
     public event System.Action<HubNode> OnNodeChanged;
+    // Fires when any node crosses activeCurse.surgeThreshold.
+    // TODO(not-yet-wired): intended to trigger enemy buffs / new ritual spawns.
+    // No subscriber exists yet — this is by design until the escalation system
+    // is built, not a dropped event.
     public event System.Action          OnSurge;
 
     void Awake()
@@ -54,7 +58,6 @@ public class HubMap : MonoBehaviour
             {
                 id          = nd.id,
                 displayName = nd.displayName,
-                mapPosition = nd.mapPosition,
                 mapImagePosition = nd.mapImagePosition,
                 blurb       = nd.blurb,
                 sceneName   = nd.sceneName,
@@ -158,7 +161,12 @@ public class HubMap : MonoBehaviour
 
     public List<HubNode> AllNodes => _nodes;
 
-    // Called by clerics / player abilities
+    // ── Public API built ahead of use ─────────────────────────────────────────
+    // NOTE: Cleanse / ActivateRitual / GetBattleSeedCurse have no callers yet —
+    // they're the intended interface for the cleric/ritual/battle-seed systems
+    // that aren't built. Only GlobalCurseLevel() is currently consumed.
+
+    // Called by clerics / player abilities (not yet wired)
     public void Cleanse(string nodeId, float amount)
     {
         var node = GetNode(nodeId);

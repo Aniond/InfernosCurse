@@ -65,7 +65,7 @@ public class PlayerController : MonoBehaviour
     {
         var snapped = SnapToCardinal(dir);
         if (snapped.sqrMagnitude < 0.01f) return;
-        if (_anim == null) _anim = GetComponent<Animator>();
+        // _anim is guaranteed by [RequireComponent(typeof(Animator))].
         _anim.SetFloat(MoveX, snapped.x);
         _anim.SetFloat(MoveY, snapped.y);
     }

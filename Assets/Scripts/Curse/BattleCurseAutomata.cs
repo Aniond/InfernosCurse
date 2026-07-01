@@ -9,6 +9,9 @@ public class BattleCurseAutomata : MonoBehaviour
 
     [Header("References")]
     public BattleGrid grid;
+    [Tooltip("Optional — if set, its overlay pool is built with the seeded curse " +
+             "so the initial density is visible before any cell changes.")]
+    public CurseOverlay overlay;
 
     [Header("Curse")]
     public CurseDefinition activeCurse;
@@ -80,6 +83,10 @@ public class BattleCurseAutomata : MonoBehaviour
         }
 
         ApplyTileTypes();
+
+        // Build the overlay pool now so the seeded density is visible immediately
+        // (otherwise cells stay invisible until they first change via OnCellCurseChanged).
+        if (overlay != null) overlay.Initialise(world);
     }
 
     // ── Core CA step ──────────────────────────────────────────────────────────

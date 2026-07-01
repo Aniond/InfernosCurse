@@ -12,18 +12,16 @@ public class ZoneExit : MonoBehaviour
     [Header("Exit")]
     public ExitMode mode = ExitMode.ToWorldMap;
 
-    [Tooltip("Scene to load when mode is ToScene.")]
+    [Tooltip("Scene to load. For ToWorldMap this defaults to the world map; " +
+             "for ToScene set the destination zone scene.")]
     public string targetScene = "WorldMap";
+
+    [Tooltip("ZoneEntryPoint id to spawn at in the destination scene (ToScene). " +
+             "Leave empty to use the destination's default spawn.")]
+    public string targetEntryId = "";
 
     [Tooltip("Tag the player root carries. Default 'Player'.")]
     public string playerTag = "Player";
-
-    [Header("Entry (where the player spawns when arriving here)")]
-    [Tooltip("If another zone routes the player to THIS exit, they spawn here.")]
-    public Transform entryPoint;
-
-    [Tooltip("Unique id so other zones can target this entry point.")]
-    public string entryId = "";
 
     [Header("Behaviour")]
     [Tooltip("Seconds the player must stay in the zone before it fires (prevents accidental brush).")]
@@ -46,8 +44,11 @@ public class ZoneExit : MonoBehaviour
         _fired = false;
         _dwell = 0f;
         _armed = false;
+        CancelInvoke(nameof(Arm));   // avoid stacked Arm invokes on rapid re-enable
         Invoke(nameof(Arm), armDelay);
     }
+
+    void OnDisable() => CancelInvoke(nameof(Arm));
 
     void Arm() => _armed = true;
 
@@ -76,7 +77,9 @@ public class ZoneExit : MonoBehaviour
                 LoadIfPossible("WorldMap");
                 break;
             case ExitMode.ToScene:
-                Debug.Log($"[ZoneExit] Traveling to {targetScene}.");
+                // Tell the destination scene where to spawn the player.
+                TravelIntent.SetEntry(targetEntryId);
+                Debug.Log($"[ZoneExit] Traveling to {targetScene}, entry '{targetEntryId}'.");
                 LoadIfPossible(targetScene);
                 break;
         }
@@ -103,13 +106,6 @@ public class ZoneExit : MonoBehaviour
         Gizmos.DrawCube(col.center, col.size);
         Gizmos.color = new Color(1f, 0.85f, 0.2f, 0.8f);
         Gizmos.DrawWireCube(col.center, col.size);
-
-        if (entryPoint != null)
-        {
-            Gizmos.matrix = Matrix4x4.identity;
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawSphere(entryPoint.position, 0.3f);
-        }
     }
 #endif
 }
