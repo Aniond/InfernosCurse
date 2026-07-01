@@ -1,0 +1,30 @@
+{
+  "_comment": "Real Arno-valley (Florence) climate, monthly. Hand-authored from historical Tuscan climate norms as build-time DATA — not runtime LLM output. Probabilities are per-DAY chances (0..1) and sum-aware: 'clear' is the remainder. The weather picker rolls one condition per in-game day, SEEDED off the date so a given playthrough day is reproducible. COZY renders the chosen condition; WeatherEffects applies gameplay consequences. Keyed by real Gregorian month (1=Jan). GameCalendar uses stile fiorentino (civil year starts March) — map month NAME, not index. Signature Florence traits encoded: heavy winter valley/morning fog, dramatic late-summer thunderstorms, dry-ish high summer, wet autumn.",
+  "_schemaVersion": 1,
+  "_fields": {
+    "clearProb": "derived = 1 - sum(other probs); listed for readability only",
+    "fogProb": "chance of a foggy day. Florence fog is a MORNING/valley thing — WeatherEffects should weight it to dawn hours.",
+    "rainProb": "steady rain",
+    "stormProb": "thunderstorm (rain + lightning). COZY particle lightning + WeatherEffects flash.",
+    "windProb": "gusty/windy day (dust, debris)",
+    "snowProb": "snow — rare in the valley, only deep winter",
+    "sleetProb": "cold-mix; shoulder of winter",
+    "hailProb": "rare, tied to violent summer storms",
+    "tempC": "typical daytime high/low in Celsius, for flavor/effects tuning",
+    "note": "designer-facing flavor for the month"
+  },
+  "months": [
+    { "month": 1,  "name": "January",   "tempC": [10, 2],  "fogProb": 0.35, "rainProb": 0.22, "stormProb": 0.02, "windProb": 0.08, "snowProb": 0.05, "sleetProb": 0.06, "hailProb": 0.0,  "clearProb": 0.22, "note": "Coldest month. Thick Arno-valley fog many mornings; occasional dusting of snow." },
+    { "month": 2,  "name": "February",  "tempC": [12, 3],  "fogProb": 0.28, "rainProb": 0.20, "stormProb": 0.03, "windProb": 0.12, "snowProb": 0.03, "sleetProb": 0.05, "hailProb": 0.0,  "clearProb": 0.29, "note": "Still cold and damp; fog easing, windier as winter breaks." },
+    { "month": 3,  "name": "March",     "tempC": [15, 5],  "fogProb": 0.15, "rainProb": 0.22, "stormProb": 0.06, "windProb": 0.16, "snowProb": 0.0,  "sleetProb": 0.01, "hailProb": 0.01, "clearProb": 0.39, "note": "Fiorentino new year. Unsettled spring — showers, gusty, first storms." },
+    { "month": 4,  "name": "April",     "tempC": [19, 8],  "fogProb": 0.06, "rainProb": 0.26, "stormProb": 0.08, "windProb": 0.14, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.01, "clearProb": 0.45, "note": "Wettest of spring. Frequent showers between bright spells." },
+    { "month": 5,  "name": "May",       "tempC": [24, 12], "fogProb": 0.02, "rainProb": 0.20, "stormProb": 0.12, "windProb": 0.10, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.02, "clearProb": 0.54, "note": "Warming fast; afternoon thunderstorms begin to build." },
+    { "month": 6,  "name": "June",      "tempC": [29, 16], "fogProb": 0.01, "rainProb": 0.11, "stormProb": 0.14, "windProb": 0.08, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.03, "clearProb": 0.63, "note": "Hot and mostly dry, punctuated by sharp evening thunderstorms." },
+    { "month": 7,  "name": "July",      "tempC": [33, 18], "fogProb": 0.0,  "rainProb": 0.06, "stormProb": 0.12, "windProb": 0.07, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.03, "clearProb": 0.72, "note": "Peak summer heat, largely clear; violent but brief storms with hail." },
+    { "month": 8,  "name": "August",    "tempC": [33, 18], "fogProb": 0.0,  "rainProb": 0.07, "stormProb": 0.15, "windProb": 0.07, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.04, "clearProb": 0.67, "note": "Hot; the most dramatic thunderstorms of the year, often with hail." },
+    { "month": 9,  "name": "September", "tempC": [28, 15], "fogProb": 0.04, "rainProb": 0.16, "stormProb": 0.13, "windProb": 0.08, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.02, "clearProb": 0.57, "note": "Warm, breaking down — wet spell begins, storms still frequent." },
+    { "month": 10, "name": "October",   "tempC": [22, 11], "fogProb": 0.12, "rainProb": 0.28, "stormProb": 0.09, "windProb": 0.09, "snowProb": 0.0,  "sleetProb": 0.0,  "hailProb": 0.01, "clearProb": 0.41, "note": "Wettest month of the year. Game start (1 Ottobre 1299) — grey, rainy, fog returning." },
+    { "month": 11, "name": "November",  "tempC": [16, 7],  "fogProb": 0.24, "rainProb": 0.27, "stormProb": 0.05, "windProb": 0.10, "snowProb": 0.01, "sleetProb": 0.03, "hailProb": 0.0,  "clearProb": 0.30, "note": "Cold, wet, foggy. Deep autumn gloom over the Arno." },
+    { "month": 12, "name": "December",  "tempC": [11, 3],  "fogProb": 0.33, "rainProb": 0.23, "stormProb": 0.02, "windProb": 0.08, "snowProb": 0.04, "sleetProb": 0.05, "hailProb": 0.0,  "clearProb": 0.25, "note": "Cold and damp; heavy morning valley fog, rare snow." }
+  ]
+}
