@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 502679204886729168}
   - component: {fileID: 9214083287794652063}
   - component: {fileID: 6516014349141766986}
+  - component: {fileID: 7820961972506139969}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -385,3 +386,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8ca4ae5fe34ea148a9bcf8b712d67c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameSystemsRoot
+--- !u!114 &7820961972506139969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1241c605f823042408485eb417c11cb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameCalendar
+  daysPerMonth: 4
+  startYear: 1299
+  startMonth: 7
+  startDayOfMonth: 1
+  _year: 1299
+  _month: 0
+  _dayOfMonth: 1
