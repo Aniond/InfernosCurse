@@ -30,6 +30,9 @@ public class SpriteBillboard : MonoBehaviour
         // tilts toward the camera like Octopath sprites, but the reduced tilt
         // stops the bottom edge from clipping when the player is low in frame.
         float camX = _cam.eulerAngles.x * tiltFactor;
-        transform.rotation = Quaternion.Euler(camX, transform.rotation.eulerAngles.y, 0f);
+        // BUG FIX: force Y and Z to 0. Preserving transform.rotation.eulerAngles.y
+        // could carry a Y-flip that spins the sprite to show its back when the
+        // rigidbody or physics nudges rotation. Billboard must ONLY tilt on X.
+        transform.rotation = Quaternion.Euler(camX, 0f, 0f);
     }
 }
