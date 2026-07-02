@@ -128,17 +128,53 @@ public class BattleGrid : MonoBehaviour
 
     // ── Attack range ──────────────────────────────────────────────────────────
 
-    public List<GridCell> GetAttackRange(Vector2Int origin, int minRange, int maxRange)
+    public List<GridCell> GetAttackRange(Vector2Int origin, int minRange, int maxRange,
+                                         bool requireLineOfSight = false, int originElevation = 0)
     {
         var result = new List<GridCell>();
         for (int x = 0; x < width; x++)
             for (int y = 0; y < height; y++)
             {
-                int dist = ManhattanDistance(origin, new Vector2Int(x, y));
-                if (dist >= minRange && dist <= maxRange)
-                    result.Add(_cells[x, y]);
+                var pos  = new Vector2Int(x, y);
+                int dist = ManhattanDistance(origin, pos);
+                if (dist < minRange || dist > maxRange) continue;
+                if (requireLineOfSight && !HasLineOfSight(origin, pos)) continue;
+                result.Add(_cells[x, y]);
             }
         return result;
+    }
+
+    // ── Line of sight ─────────────────────────────────────────────────────────
+
+    // Bresenham walk between the two cells. Blocked by unwalkable cells (walls)
+    // and by intermediate terrain rising 2+ above BOTH endpoints (you can shoot
+    // over low cover and down from ledges, not through a ridge).
+    public bool HasLineOfSight(Vector2Int from, Vector2Int to)
+    {
+        int fromElev = GetCell(from)?.elevation ?? 0;
+        int toElev   = GetCell(to)?.elevation ?? 0;
+        int maxElev  = Mathf.Max(fromElev, toElev);
+
+        int x0 = from.x, y0 = from.y, x1 = to.x, y1 = to.y;
+        int dx = Mathf.Abs(x1 - x0), dy = -Mathf.Abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1,   sy = y0 < y1 ? 1 : -1;
+        int err = dx + dy;
+
+        while (true)
+        {
+            if (x0 == x1 && y0 == y1) return true;
+
+            int e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+
+            if (x0 == x1 && y0 == y1) return true;   // endpoint never blocks itself
+
+            var cell = GetCell(x0, y0);
+            if (cell == null) return false;
+            if (!cell.walkable) return false;                  // solid wall
+            if (cell.elevation >= maxElev + 2) return false;   // ridge in the way
+        }
     }
 
     // ── AOE spread ────────────────────────────────────────────────────────────
@@ -240,6 +276,19 @@ public class BattleGrid : MonoBehaviour
         var oldCell = GetCell(unit.gridPosition);
         if (oldCell != null) oldCell.occupant = null;
         PlaceUnit(unit, newPos);
+    }
+
+    // Data moves instantly (occupancy/logic are authoritative immediately);
+    // the sprite walks the A* path as a purely visual tween.
+    public void MoveUnitAnimated(BattleUnit unit, Vector2Int newPos)
+    {
+        var from = unit.gridPosition;
+        var path = FindPath(from, newPos, jumpHeight: 99); // visual route; range already validated
+
+        MoveUnit(unit, newPos);
+
+        if (path.Count > 1)
+            unit.AnimateWalk(path, this);
     }
 
     public void RemoveUnit(BattleUnit unit)

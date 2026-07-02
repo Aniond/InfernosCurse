@@ -37,6 +37,7 @@ public class BattleCursor : MonoBehaviour
 
     private List<GameObject>        _moveHighlights   = new();
     private List<GameObject>        _attackHighlights = new();
+    private List<GameObject>        _aoeHighlights    = new();
     private GameObject              _hoverHighlight;
 
     private float   _bobTimer;
@@ -184,12 +185,14 @@ public class BattleCursor : MonoBehaviour
         switch (bm.State)
         {
             case BattleState.PlayerSelectTarget:
-                // Go back to action menu
-                bm.PlayerSkipMove();
+                // Back out of aiming, reopen the action menu
+                bm.PlayerCancelTarget();
                 break;
 
             case BattleState.PlayerSelectMove:
-                bm.PlayerWait();
+                // Cancel out of move selection = skip the move (opens the action
+                // menu pre-act, ends the turn post-act). Never forfeits a turn.
+                bm.PlayerSkipMove();
                 break;
         }
     }
@@ -214,6 +217,7 @@ public class BattleCursor : MonoBehaviour
     public void ShowAttackRange(List<GridCell> cells)
     {
         ClearHighlights(_attackHighlights);
+        ClearHighlights(_aoeHighlights);
         _attackRange.Clear();
 
         foreach (var cell in cells)
@@ -249,6 +253,8 @@ public class BattleCursor : MonoBehaviour
 
     void UpdateHoverHighlight()
     {
+        UpdateAOEPreview();
+
         if (_hoverHighlight == null) return;
 
         var cell = _grid.GetCell(_cursorPos);
@@ -265,6 +271,23 @@ public class BattleCursor : MonoBehaviour
             else if (_attackRange.Contains(_cursorPos)) sr.color = hoverAttack;
             else                                        sr.color = hoverNeutral;
         }
+    }
+
+    // ── AOE splash preview ────────────────────────────────────────────────────
+
+    // While aiming an AOE skill, show every cell the splash would cover.
+    void UpdateAOEPreview()
+    {
+        ClearHighlights(_aoeHighlights);
+
+        var bm    = BattleManager.Instance;
+        var skill = bm != null ? bm.SelectedSkill : null;
+        if (skill == null || skill.areaOfEffect <= 0) return;
+        if (!_attackRange.Contains(_cursorPos)) return;   // only preview on valid targets
+
+        foreach (var cell in _grid.GetAOECells(_cursorPos, skill.areaOfEffect))
+            SpawnHighlight(_aoeHighlights, attackTilePrefab, cell,
+                           new Color(1f, 0.55f, 0.15f, 0.7f)); // splash orange
     }
 
     // ── Cursor world position ─────────────────────────────────────────────────
@@ -354,6 +377,7 @@ public class BattleCursor : MonoBehaviour
     {
         ClearHighlights(_moveHighlights);
         ClearHighlights(_attackHighlights);
+        ClearHighlights(_aoeHighlights);
         _moveRange.Clear();
         _attackRange.Clear();
     }

@@ -190,7 +190,7 @@ public class EnemyAI : MonoBehaviour
         if (target == null) { FallbackAttack(unit, moveRange, players, grid); return; }
 
         Vector2Int dest = Influence.BestFlankPosition(moveRange, target);
-        grid.MoveUnit(unit, dest);
+        grid.MoveUnitAnimated(unit, dest);
         unit.SetFacingToward(target.gridPosition);
 
         // Attack if now in range of any skill
@@ -202,7 +202,7 @@ public class EnemyAI : MonoBehaviour
     void ExecuteSpreadCurse(BattleUnit unit, List<GridCell> moveRange, BattleGrid grid)
     {
         Vector2Int dest = Influence.BestCurseSpreadPosition(moveRange);
-        grid.MoveUnit(unit, dest);
+        grid.MoveUnitAnimated(unit, dest);
 
         // Carriers route their spread through the automata so the overlay updates
         // and tiles corrupt. Other archetypes just seed the world map directly.
@@ -231,7 +231,7 @@ public class EnemyAI : MonoBehaviour
 
         // Move to the cell that most reduces target's retreat safety
         Vector2Int dest = BestIsolationCell(moveRange, target, grid);
-        grid.MoveUnit(unit, dest);
+        grid.MoveUnitAnimated(unit, dest);
         unit.SetFacingToward(target.gridPosition);
         TryAttack(unit, players, grid);
     }
@@ -241,7 +241,7 @@ public class EnemyAI : MonoBehaviour
     void ExecuteRetreat(BattleUnit unit, List<GridCell> moveRange, BattleGrid grid)
     {
         Vector2Int dest = Influence.BestRetreatPosition(moveRange);
-        grid.MoveUnit(unit, dest);
+        grid.MoveUnitAnimated(unit, dest);
         Debug.Log($"[EnemyAI] {unit.Data.displayName} retreats to {dest}.");
         BattleManager.Instance?.EndUnitTurn(unit);
     }
@@ -251,7 +251,7 @@ public class EnemyAI : MonoBehaviour
     void ExecuteSupportAnchor(BattleUnit unit, List<GridCell> moveRange, BattleGrid grid)
     {
         Vector2Int dest = Influence.BestAnchorDefensePosition(moveRange);
-        grid.MoveUnit(unit, dest);
+        grid.MoveUnitAnimated(unit, dest);
 
         // Mark this unit as guardian of nearest node
         foreach (var node in WorldState.ritualNodes)
@@ -283,15 +283,21 @@ public class EnemyAI : MonoBehaviour
         var skill = PickBestSkill(unit);
         if (skill == null) { BattleManager.Instance?.EndUnitTurn(unit); return; }
 
-        // Find target in range
-        var attackRange = grid.GetAttackRange(unit.gridPosition, 1, skill.range);
+        // Find target in range — honor the skill's own min range and LoS
+        var attackRange = grid.GetAttackRange(unit.gridPosition, skill.minRange, skill.range,
+                                              skill.requiresLineOfSight, unit.Elevation);
         foreach (var cell in attackRange)
         {
             if (cell.occupant == null || cell.occupant.IsPlayer == false) continue;
             if (!cell.occupant.IsAlive) continue;
 
             unit.QueueAction(skill, cell.occupant, cell.gridPos);
-            BattleManager.Instance?.ResolveQueuedAction(unit);
+
+            // Charged skills charge for enemies too — resolve only instant ones.
+            if (unit.ChargeTicksRemaining > 0)
+                BattleManager.Instance?.EndUnitTurn(unit);
+            else
+                BattleManager.Instance?.ResolveQueuedAction(unit);
             return;
         }
 
@@ -308,7 +314,7 @@ public class EnemyAI : MonoBehaviour
 
         // Move as close as possible
         Vector2Int dest = ClosestReachableToTarget(moveRange, target.gridPosition);
-        grid.MoveUnit(unit, dest);
+        grid.MoveUnitAnimated(unit, dest);
         unit.SetFacingToward(target.gridPosition);
 
         TryAttack(unit, players, grid);
@@ -316,13 +322,15 @@ public class EnemyAI : MonoBehaviour
 
     SkillDefinition PickBestSkill(BattleUnit unit)
     {
-        // Pick highest base power skill the unit has MP for
+        // Pick highest base power OFFENSIVE skill the unit has SP for.
+        // Healing skills are excluded — casting one at a player would heal them.
         SkillDefinition best    = null;
         int             bestPow = -1;
         foreach (var skill in unit.Data.equippedSkills.actives)
         {
             if (skill == null) continue;
             if (skill.skillType != SkillType.Active) continue;
+            if (skill.isHealing) continue;
             if (!unit.HasSP(skill.spCost)) continue;
             if (skill.basePower > bestPow) { bestPow = skill.basePower; best = skill; }
         }

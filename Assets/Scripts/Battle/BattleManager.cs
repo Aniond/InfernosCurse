@@ -28,6 +28,11 @@ public class BattleManager : MonoBehaviour
     [Header("Combatant Prefab")]
     public GameObject battleUnitPrefab;
 
+    [Header("Fallback Attack")]
+    [Tooltip("Basic weapon attack granted to any unit with a free active slot — " +
+             "guarantees every unit can always act (FFT's Attack command).")]
+    public SkillDefinition basicAttackSkill;
+
     // ── State ─────────────────────────────────────────────────────────────────
     public BattleState State { get; private set; } = BattleState.Inactive;
 
@@ -41,6 +46,8 @@ public class BattleManager : MonoBehaviour
     // Player action selection state
     private List<GridCell>      _moveRange;
     private List<GridCell>      _attackRange;
+    private HashSet<Vector2Int> _validMoves   = new HashSet<Vector2Int>();  // authoritative — UI can't teleport units
+    private HashSet<Vector2Int> _validTargets = new HashSet<Vector2Int>();
     private SkillDefinition     _selectedSkill;
     private bool                _hasMoved;
     private bool                _hasActed;
@@ -102,6 +109,10 @@ public class BattleManager : MonoBehaviour
         if (CurseAutomata != null)
             CurseAutomata.SeedFromHub(_worldState, hubCurse, _worldState.ritualNodes);
 
+        // Hand the enemy AI its shared belief state + influence map. Without this
+        // every EnemyAI hits its null-guard and passes the turn forever.
+        EnemyAI.InitSharedState(_worldState, new InfluenceMap(Grid, _worldState));
+
         SetState(BattleState.BattleStart);
         StartCoroutine(BattleLoop());
     }
@@ -111,6 +122,7 @@ public class BattleManager : MonoBehaviour
         var go   = Instantiate(battleUnitPrefab);
         var unit = go.GetComponent<BattleUnit>();
         unit.Initialize(data, isPlayer);
+        EnsureBattleSkills(unit);
 
         Grid.PlaceUnit(unit, pos);
         _ctQueue.Register(unit);
@@ -124,6 +136,38 @@ public class BattleManager : MonoBehaviour
         else          _enemies.Add(unit);
 
         return unit;
+    }
+
+    // Guarantees a unit enters battle with something to do:
+    // - empty active slots are auto-filled from the equipped job's UNLOCKED
+    //   Active skills (the loadout screen doesn't exist yet — this is the
+    //   battle-side bridge for the job → equippedSkills gap);
+    // - a basic Attack goes in the first remaining free slot so no unit is
+    //   ever reduced to Wait-only. Hand-authored loadouts are never overwritten.
+    void EnsureBattleSkills(BattleUnit unit)
+    {
+        var slots = unit.Data.equippedSkills.actives;
+
+        var job = unit.Data.activeJob;
+        if (job != null && job.learnedSkills != null)
+        {
+            foreach (var learned in job.learnedSkills)
+            {
+                if (learned == null || !learned.unlocked || learned.skill == null) continue;
+                if (learned.skill.skillType != SkillType.Active) continue;
+                if (System.Array.IndexOf(slots, learned.skill) >= 0) continue;
+
+                int free = System.Array.IndexOf(slots, null);
+                if (free < 0) break;
+                slots[free] = learned.skill;
+            }
+        }
+
+        if (basicAttackSkill != null && System.Array.IndexOf(slots, basicAttackSkill) < 0)
+        {
+            int free = System.Array.IndexOf(slots, null);
+            if (free >= 0) slots[free] = basicAttackSkill;
+        }
     }
 
     // ── Core loop ─────────────────────────────────────────────────────────────
@@ -177,6 +221,18 @@ public class BattleManager : MonoBehaviour
 
         OnTurnStart?.Invoke(unit);
 
+        // Stop/Frozen: the turn is lost. (Durations already ticked in StartTurn,
+        // so the status runs out even while the unit is locked down.)
+        if (unit.Status.PreventsAction)
+        {
+            Debug.Log($"{unit.Data.displayName} can't act (stopped/frozen).");
+            yield return new WaitForSeconds(0.35f);
+            unit.EndTurn();
+            if (CurseAutomata != null) CurseAutomata.Step(_worldState);
+            if (!IsBattleOver()) SetState(BattleState.TickCT);
+            yield break;
+        }
+
         if (unit.IsPlayer)
         {
             SetState(BattleState.PlayerSelectMove);
@@ -219,17 +275,22 @@ public class BattleManager : MonoBehaviour
     {
         if (State != BattleState.PlayerSelectMove) return;
         if (_activeUnit == null) return;
+        if (!_validMoves.Contains(pos)) return;   // authoritative range check
 
-        Grid.MoveUnit(_activeUnit, pos);
+        Grid.MoveUnitAnimated(_activeUnit, pos);
         _activeUnit.SetFacingToward(pos);
         _hasMoved = true;
-        SetState(BattleState.PlayerSelectAction);
         HideRangeHighlights();
+
+        // FFT order freedom: if the unit already acted, moving finishes the turn.
+        if (_hasActed) _turnComplete = true;
+        else           SetState(BattleState.PlayerSelectAction);
     }
 
     public void PlayerSelectSkill(SkillDefinition skill)
     {
         if (State != BattleState.PlayerSelectAction) return;
+        if (_hasActed) return;                    // one action per turn
         _selectedSkill = skill;
         SetState(BattleState.PlayerSelectTarget);
         ShowAttackRange(_activeUnit, skill);
@@ -239,6 +300,7 @@ public class BattleManager : MonoBehaviour
     {
         if (State != BattleState.PlayerSelectTarget) return;
         if (_selectedSkill == null) return;
+        if (!_validTargets.Contains(targetPos)) return;   // authoritative range check
 
         var target = Grid.GetCell(targetPos)?.occupant;
         _activeUnit.QueueAction(_selectedSkill, target, targetPos);
@@ -252,10 +314,19 @@ public class BattleManager : MonoBehaviour
         else
         {
             // Charged skill — unit is now Charging and will resolve on a future
-            // CT tick via TickCharge. End the current turn now.
+            // CT tick via TickCharge. Charging locks the unit: turn ends now.
             _hasActed     = true;
             _turnComplete = true;
         }
+    }
+
+    // Cancel out of target selection — back to the action menu.
+    public void PlayerCancelTarget()
+    {
+        if (State != BattleState.PlayerSelectTarget) return;
+        _selectedSkill = null;
+        HideRangeHighlights();
+        SetState(BattleState.PlayerSelectAction);
     }
 
     public void PlayerWait()
@@ -271,8 +342,11 @@ public class BattleManager : MonoBehaviour
     {
         if (State != BattleState.PlayerSelectMove) return;
         _hasMoved = true;
-        SetState(BattleState.PlayerSelectAction);
         HideRangeHighlights();
+
+        // Skipping the post-act move ends the turn; pre-act it opens the menu.
+        if (_hasActed) _turnComplete = true;
+        else           SetState(BattleState.PlayerSelectAction);
     }
 
     // Return from action menu to move selection — only valid before acting
@@ -304,12 +378,25 @@ public class BattleManager : MonoBehaviour
         unit.QueuedTarget = null;
         _hasActed         = true;
 
-        // The action finished the unit's turn. Let the per-unit coroutine
-        // advance state — for enemies leave EnemyTurn, for players end the turn.
         if (unit.IsPlayer)
-            _turnComplete = true;
+        {
+            // FFT order freedom: acting first still allows the move afterward.
+            // (Only for the live active player turn — a charge-resolution for a
+            // player long past their turn just completes.)
+            if (unit == _activeUnit && !_turnComplete && !_hasMoved && unit.IsAlive && !IsBattleOver())
+            {
+                SetState(BattleState.PlayerSelectMove);
+                ShowMoveRange(unit);
+            }
+            else
+            {
+                _turnComplete = true;
+            }
+        }
         else
+        {
             EndUnitTurn(unit);
+        }
     }
 
     // ── End of turn / death ───────────────────────────────────────────────────
@@ -350,12 +437,21 @@ public class BattleManager : MonoBehaviour
         int move   = Mathf.Max(2, stats.speed / 3);
         int jump   = Mathf.Max(1, stats.dexterity / 5);
         _moveRange = Grid.GetMoveRange(unit.gridPosition, move, jump, unit);
+
+        _validMoves.Clear();
+        foreach (var c in _moveRange) _validMoves.Add(c.gridPos);
+
         OnMoveRangeReady?.Invoke(_moveRange);
     }
 
     void ShowAttackRange(BattleUnit unit, SkillDefinition skill)
     {
-        _attackRange = Grid.GetAttackRange(unit.gridPosition, skill.minRange, skill.range);
+        _attackRange = Grid.GetAttackRange(unit.gridPosition, skill.minRange, skill.range,
+                                           skill.requiresLineOfSight, unit.Elevation);
+
+        _validTargets.Clear();
+        foreach (var c in _attackRange) _validTargets.Add(c.gridPos);
+
         OnAttackRangeReady?.Invoke(_attackRange);
     }
 
@@ -364,6 +460,10 @@ public class BattleManager : MonoBehaviour
         OnMoveRangeReady?.Invoke(new List<GridCell>());
         OnAttackRangeReady?.Invoke(new List<GridCell>());
     }
+
+    // Skill the player is currently aiming (null outside PlayerSelectTarget).
+    // Used by the cursor's AOE preview and the forecast panel.
+    public SkillDefinition SelectedSkill => State == BattleState.PlayerSelectTarget ? _selectedSkill : null;
 
     // ── Post-kill rewards ─────────────────────────────────────────────────────
 

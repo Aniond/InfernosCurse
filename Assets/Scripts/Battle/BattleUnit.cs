@@ -87,9 +87,48 @@ public class BattleUnit : MonoBehaviour
 
     public void EndTurn()
     {
-        ct    = 0f;
-        state = UnitState.Idle;
+        ct = 0f;
+        // A unit that just queued a charged action must KEEP its Charging state —
+        // stomping it to Idle here silently killed every charged skill (the CT
+        // queue only ticks charge on units in Charging state).
+        if (state != UnitState.Charging)
+            state = UnitState.Idle;
         SetFacingToward(QueuedTargetPos); // face last action target
+    }
+
+    // ── Walk animation (visual only — grid data is already authoritative) ─────
+
+    private Coroutine _walkRoutine;
+
+    public void AnimateWalk(System.Collections.Generic.List<Vector2Int> path, BattleGrid grid)
+    {
+        if (_walkRoutine != null) StopCoroutine(_walkRoutine);
+        _walkRoutine = StartCoroutine(WalkRoutine(path, grid));
+    }
+
+    System.Collections.IEnumerator WalkRoutine(System.Collections.Generic.List<Vector2Int> path, BattleGrid grid)
+    {
+        const float speed = 6f; // world units per second
+
+        // PlaceUnit already snapped us to the destination — pull back to the
+        // path start before the first rendered frame (no yield yet = no flicker).
+        var startCell = grid.GetCell(path[0]);
+        transform.position = grid.GridToWorld(path[0], startCell?.elevation ?? 0);
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            var cell = grid.GetCell(path[i]);
+            Vector3 target = grid.GridToWorld(path[i], cell?.elevation ?? 0);
+
+            if (i > 0) SetFacingToward(path[i] + (path[i] - path[i - 1])); // face travel direction
+
+            while (Vector3.Distance(transform.position, target) > 0.01f)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+                yield return null;
+            }
+        }
+        _walkRoutine = null;
     }
 
     // ── Facing ────────────────────────────────────────────────────────────────

@@ -55,12 +55,14 @@ public class StatusEffect
     public void Tick() => remainingTurns--;
     public bool IsExpired => remainingTurns <= 0;
 
-    // Stat modifiers applied when computing effective stats
+    // Stat modifiers applied when computing effective stats.
+    // NOTE: Stop/Frozen deliberately do NOT zero CT gain — status durations only
+    // tick on the victim's turn start, so zero CT would deadlock them forever.
+    // Instead they accrue CT normally and LOSE their turns (see PreventsAction).
     public float GetSpeedMultiplier()
     {
-        if (type == StatusEffectType.Haste) return 2f;
-        if (type == StatusEffectType.Slow)  return 0.5f;
-        if (type == StatusEffectType.Stop)  return 0f;
+        if (type == StatusEffectType.Haste)  return 2f;
+        if (type == StatusEffectType.Slow)   return 0.5f;
         return 1f;
     }
 
@@ -114,9 +116,21 @@ public class StatusEffectList
         return _effects.Exists(e => e.type == type);
     }
 
+    // Stop = time-frozen, Frozen = encased in ice: the unit's turn is skipped
+    // (durations still tick at turn start, so the effect eventually expires).
+    public bool PreventsAction =>
+        Has(StatusEffectType.Stop) || Has(StatusEffectType.Frozen);
+
     public void TickAll(BattleUnit owner)
     {
-        foreach (var e in _effects) { e.OnTurnStart(owner); e.Tick(); }
+        // Iterate a copy — OnTurnStart raises damage events that may apply new
+        // statuses (counters, thorns) which would mutate _effects mid-loop.
+        foreach (var e in _effects.ToArray())
+        {
+            if (!owner.IsAlive) break;   // DoT killed the owner mid-tick
+            e.OnTurnStart(owner);
+            e.Tick();
+        }
         _effects.RemoveAll(e => e.IsExpired);
     }
 

@@ -8,6 +8,18 @@ public static class BattleFormulas
 
     public static int CalcDamage(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
     {
+        float dmg = CalcDamageCore(attacker, defender, skill);
+
+        // Random variance ±10%
+        dmg *= Random.Range(0.9f, 1.1f);
+
+        return Mathf.Max(1, Mathf.RoundToInt(dmg));
+    }
+
+    // Deterministic damage before variance/crit — shared by the real roll and
+    // the forecast preview so the two can never drift apart.
+    static float CalcDamageCore(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    {
         var atkStats = attacker.Data.GetTotalStats();
         var defStats = defender.Data.GetTotalStats();
 
@@ -16,13 +28,22 @@ public static class BattleFormulas
 
         // Defense reduction based on damage type
         float defense = GetDefenseStat(defStats, skill.damageType);
-        float dmg     = Mathf.Max(1f, baseDmg - defense * 0.5f);
+
+        // Cursed: the target's spiritual guard is broken — magic defense suffers
+        if (!IsPhysical(skill.damageType) && defender.Status.Has(StatusEffectType.Cursed))
+            defense *= 0.6f;
+
+        float dmg = Mathf.Max(1f, baseDmg - defense * 0.5f);
 
         // Status effect reductions
         if (IsPhysical(skill.damageType))
             dmg *= 1f - defender.Status.CombinedPhysicalReduction();
         else
             dmg *= 1f - defender.Status.CombinedMagicReduction();
+
+        // Inspired: attacker channels heightened creativity into the strike
+        if (attacker.Status.Has(StatusEffectType.Inspired))
+            dmg *= 1.15f;
 
         // Facing multiplier (FFT-style)
         dmg *= GetFacingMultiplier(attacker, defender);
@@ -31,10 +52,32 @@ public static class BattleFormulas
         int elevDiff = attacker.Elevation - defender.Elevation;
         if (elevDiff > 0) dmg *= 1f + elevDiff * 0.1f;
 
-        // Random variance ±10%
-        dmg *= Random.Range(0.9f, 1.1f);
+        return dmg;
+    }
 
-        return Mathf.Max(1, Mathf.RoundToInt(dmg));
+    // ── Forecast (FFT confirm-panel numbers — no RNG rolled) ──────────────────
+
+    public static (int min, int max, float hitChance) PreviewAttack(
+        BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    {
+        float core = CalcDamageCore(attacker, defender, skill);
+        int min = Mathf.Max(1, Mathf.RoundToInt(core * 0.9f));
+        int max = Mathf.Max(1, Mathf.RoundToInt(core * 1.1f));
+        return (min, max, PreviewHitChance(attacker, defender, skill));
+    }
+
+    public static float PreviewHitChance(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    {
+        if (skill.damageType == DamageType.None) return 1f;  // utility path skips the roll
+        var atkStats = attacker.Data.GetTotalStats();
+        var defStats = defender.Data.GetTotalStats();
+
+        float baseHit   = 0.85f;
+        float percBonus = (atkStats.perception - defStats.perception) * 0.02f;
+        float dexBonus  = (atkStats.dexterity  - defStats.speed)      * 0.015f;
+
+        float hitChance = Mathf.Clamp(baseHit + percBonus + dexBonus, 0.05f, 0.99f);
+        return hitChance * attacker.Status.CombinedHitMultiplier();
     }
 
     // ── Healing ───────────────────────────────────────────────────────────────
@@ -55,22 +98,12 @@ public static class BattleFormulas
 
     // ── Hit chance ────────────────────────────────────────────────────────────
 
+    // Accuracy: attacker Perception vs defender Perception (tracking/awareness).
+    // Evasion: attacker Dexterity vs defender Speed — Speed doubles as the
+    // dodge stat, so a faster defender is harder to land hits on.
     public static bool RollHit(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
     {
-        var atkStats = attacker.Data.GetTotalStats();
-        var defStats = defender.Data.GetTotalStats();
-
-        float baseHit = 0.85f;
-        // Accuracy: attacker Perception vs defender Perception (tracking/awareness).
-        float percBonus = (atkStats.perception - defStats.perception) * 0.02f;
-        // Evasion: attacker Dexterity vs defender Speed — Speed doubles as the
-        // dodge stat, so a faster defender is harder to land hits on.
-        float dexBonus  = (atkStats.dexterity  - defStats.speed)      * 0.015f;
-
-        float hitChance = Mathf.Clamp(baseHit + percBonus + dexBonus, 0.05f, 0.99f);
-        hitChance *= attacker.Status.CombinedHitMultiplier();
-
-        return Random.value <= hitChance;
+        return Random.value <= PreviewHitChance(attacker, defender, skill);
     }
 
     // ── Crit chance ───────────────────────────────────────────────────────────

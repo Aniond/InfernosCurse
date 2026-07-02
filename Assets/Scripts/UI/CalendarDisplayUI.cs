@@ -149,7 +149,7 @@ public class CalendarDisplayUI : MonoBehaviour
         label.fontSize = 26;
         label.color = new Color(0.96f, 0.9f, 0.72f);   // warm parchment gold
         label.alignment = TextAlignmentOptions.TopLeft;
-        label.enableWordWrapping = false;
+        label.textWrappingMode = TextWrappingModes.NoWrap;
         var lrt = label.rectTransform;
         lrt.anchorMin = lrt.anchorMax = new Vector2(0f, 1f);
         lrt.pivot = new Vector2(0f, 1f);
