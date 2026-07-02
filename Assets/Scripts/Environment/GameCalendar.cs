@@ -12,13 +12,13 @@ public enum Season { Spring, Summer, Autumn, Winter }
 /// (<i>stile fiorentino</i>): the civil year begins on <b>25 March</b>, the Feast
 /// of the Annunciation — NOT 1 January. Months carry period Italian names.
 ///
-/// Time is driven off <see cref="DayNightCycle.timeOfDay"/>: each time the day
+/// Time is driven off <see cref="GameClock.Hour"/>: each time the day
 /// clock wraps past midnight, one calendar day passes. Months are a small fixed
 /// length (<see cref="daysPerMonth"/>) so seasons cycle at a playable pace while
 /// the month identity + Annunciation new-year stay historically authentic.
 ///
 /// Add this to the GameSystems prefab — it's a DontDestroyOnLoad singleton like
-/// HubMap / DayNightCycle. The future weather picker reads <see cref="CurrentMonth"/>
+/// HubMap. The future weather picker reads <see cref="CurrentMonth"/>
 /// / <see cref="CurrentSeason"/> / <see cref="YearProgress"/> to key a real-Tuscan
 /// weather-probability table.
 /// </summary>
@@ -84,7 +84,6 @@ public class GameCalendar : MonoBehaviour
     /// <summary>Fires once when the civil year rolls over (past 25 March).</summary>
     public event Action<int> OnYearChanged;
 
-    private DayNightCycle _dnc;
     private float _lastTimeOfDay;
     private bool _hasPrevTime;
 
@@ -104,15 +103,12 @@ public class GameCalendar : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    DayNightCycle DNC => _dnc != null ? _dnc : (_dnc = FindAnyObjectByType<DayNightCycle>());
-
     void Update()
     {
         if (!Application.isPlaying) return;
-        var dnc = DNC;
-        if (dnc == null) return;
+        if (!GameClock.HasClock) return;
 
-        float t = dnc.timeOfDay;
+        float t = GameClock.Hour;
         if (!_hasPrevTime) { _lastTimeOfDay = t; _hasPrevTime = true; return; }
 
         // The day clock counts up and wraps (…23.9 → 0.x). A large drop = midnight

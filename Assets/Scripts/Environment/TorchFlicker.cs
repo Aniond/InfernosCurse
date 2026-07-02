@@ -8,7 +8,6 @@ public class TorchFlicker : MonoBehaviour
     public float flickerAmount = 0.4f;
 
     [Header("Night Fade")]
-    public DayNightCycle dayNight;
     // Torches fully on from dusk (hour 17) through dawn (hour 7)
     public float duskHour = 17f;
     public float dawnHour = 7f;
@@ -42,8 +41,6 @@ public class TorchFlicker : MonoBehaviour
     {
         _light = GetComponent<Light>();
         _noise = Random.Range(0f, 100f);
-        if (dayNight == null)
-            dayNight = FindAnyObjectByType<DayNightCycle>();
 
         var flameGO = transform.Find("Flame");
         if (flameGO != null)
@@ -156,8 +153,8 @@ public class TorchFlicker : MonoBehaviour
 
     float NightBlend()
     {
-        if (dayNight == null) return 1f;
-        float h = dayNight.timeOfDay;
+        if (!GameClock.HasClock) return 1f;
+        float h = GameClock.Hour;
         // Night = hours outside [dawnHour, duskHour]
         if (h >= dawnHour && h <= duskHour)
         {

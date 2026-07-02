@@ -35,9 +35,8 @@ public static class SaveSystem
             data.playerZ = player.transform.position.z;
         }
 
-        // Persist real time-of-day. Fall back to noon only if there's no cycle at all.
-        var dnc = UnityEngine.Object.FindAnyObjectByType<DayNightCycle>();
-        data.timeOfDay = dnc != null ? dnc.timeOfDay : 12f;
+        // Persist real time-of-day (GameClock falls back to noon with no backend).
+        data.timeOfDay = GameClock.Hour;
 
         var ws = UnityEngine.Object.FindAnyObjectByType<WeatherSystem>();
         if (ws != null) data.weatherType = ws.current.ToString();
@@ -70,8 +69,7 @@ public static class SaveSystem
             player.transform.position = pos;
         }
 
-        var dnc = UnityEngine.Object.FindAnyObjectByType<DayNightCycle>();
-        if (dnc != null) dnc.timeOfDay = data.timeOfDay;
+        GameClock.SetHour(data.timeOfDay);
 
         if (!string.IsNullOrEmpty(data.weatherType))
         {

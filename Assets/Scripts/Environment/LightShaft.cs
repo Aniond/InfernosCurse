@@ -5,7 +5,7 @@ using UnityEngine;
 /// Spawns and drives volumetric "god ray" light shafts — the signature HD-2D
 /// look (Octopath). Drop this on an empty in the scene, assign anchor transforms
 /// (one per church window / archway opening), and it instantiates a soft
-/// translucent cone at each. Shaft brightness follows <see cref="DayNightCycle"/>:
+/// translucent cone at each. Shaft brightness follows <see cref="GameClock"/>:
 /// strongest at low-angle dawn/dusk, gone at midday and night. A gentle shimmer
 /// keeps them feeling alive with drifting dust.
 ///
@@ -32,7 +32,6 @@ public class LightShaft : MonoBehaviour
     [SerializeField] private float floorRadius = 1.4f;
 
     [Header("Time-of-day drive")]
-    [SerializeField] private DayNightCycle dayNight;
     [Tooltip("Hours (0-24) at which shafts peak. Two entries = dawn & dusk rakes.")]
     [SerializeField] private float dawnPeakHour = 7.5f;
     [SerializeField] private float duskPeakHour = 17.5f;
@@ -53,7 +52,6 @@ public class LightShaft : MonoBehaviour
 
     void OnEnable()
     {
-        if (dayNight == null) dayNight = FindAnyObjectByType<DayNightCycle>();
         Build();
     }
 
@@ -105,7 +103,7 @@ public class LightShaft : MonoBehaviour
 
     void LateUpdate()
     {
-        float hour = dayNight != null ? dayNight.timeOfDay : 12f;
+        float hour = GameClock.Hour;
         float strength = TimeStrength(hour);
 
         for (int i = 0; i < _shafts.Count; i++)
