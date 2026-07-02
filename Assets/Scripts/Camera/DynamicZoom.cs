@@ -1,9 +1,13 @@
 using UnityEngine;
 using Unity.Cinemachine;
 
-// HD-2D dynamic zoom (Octopath-style). Zooms the follow camera IN as the player
-// nears the edges/buildings of a zone, and OUT when in the open center.
-// Drive it off distance-from-center: center = wide, edges = close.
+// HD-2D dynamic zoom (Octopath-style). Zooms the follow camera IN when the
+// player is hemmed in by architecture (corridors, building faces) and OUT in
+// open space. v2: zoom is driven by measured CLEARANCE — horizontal rays from
+// the player to the nearest tall collider — so the same rig works in the open
+// plaza (Mercato), narrow corridors (Ponte Vecchio), and future street scenes
+// without per-scene center/radius tuning. The legacy center-distance mode is
+// kept for scenes that want an authored open-center instead.
 [RequireComponent(typeof(CinemachineCamera))]
 public class DynamicZoom : MonoBehaviour
 {
@@ -12,7 +16,26 @@ public class DynamicZoom : MonoBehaviour
     public Transform target;
     public string playerTag = "Player";
 
-    [Header("Zone center (open area) in world space")]
+    [Header("Clearance zoom (corridors / streets)")]
+    [Tooltip("Drive zoom by distance to nearest tall collider around the player — " +
+             "right for corridors and street scenes (Ponte Vecchio). OFF (default) = " +
+             "legacy zone-center mode, which is the tuned behavior for open plazas " +
+             "(Mercato Vecchio). Pick per scene.")]
+    public bool useClearanceZoom = false;
+    [Tooltip("Clearance at or below this = fully zoomed IN (close).")]
+    public float closeClearance = 3f;
+    [Tooltip("Clearance at or above this = fully zoomed OUT (wide).")]
+    public float wideClearance = 9f;
+    [Tooltip("Colliders shorter than this are props, not architecture — ignored. " +
+             "Default 6.5 counts only real buildings (market stalls/fountains " +
+             "don't pump the zoom). Corridor blockouts whose dividers are low " +
+             "(e.g. Ponte Vecchio, 3.0-high dividers) should lower this to ~2.5 " +
+             "per scene.")]
+    public float minArchitectureHeight = 6.5f;
+    [Tooltip("Height above the player's feet the clearance rays are cast at.")]
+    public float rayHeight = 1.2f;
+
+    [Header("Legacy zone-center mode (useClearanceZoom = false)")]
     [Tooltip("The open-square center. Far from here = near a building = zoom in.")]
     public Vector2 zoneCenterXZ = Vector2.zero;
     [Tooltip("Distance from center at which the camera is fully zoomed OUT (wide).")]
@@ -21,9 +44,9 @@ public class DynamicZoom : MonoBehaviour
     public float innerRadius = 13f;
 
     [Header("Camera follow offsets (blended by proximity)")]
-    [Tooltip("Offset when in the open center — wide, pulled back.")]
+    [Tooltip("Offset when in the open — wide, pulled back.")]
     public Vector3 wideOffset  = new Vector3(0f, 14f, -20f);
-    [Tooltip("Offset when close to a building/edge — zoomed in.")]
+    [Tooltip("Offset when hemmed in — zoomed in.")]
     public Vector3 closeOffset = new Vector3(0f, 7f, -10f);
 
     [Header("Smoothing")]
@@ -42,7 +65,17 @@ public class DynamicZoom : MonoBehaviour
     private CinemachineCamera _cam;
     private CinemachineFollow _follow;
     private Camera _mainCam;      // cached — avoids Camera.main every LateUpdate
-    private float _t;   // 0 = wide, 1 = close
+    private float _t;             // 0 = wide, 1 = close
+    private float _lastClearance; // for gizmos
+
+    // 8 compass directions, built once.
+    private static readonly Vector3[] RayDirs =
+    {
+        new Vector3( 1, 0,  0), new Vector3(-1, 0,  0),
+        new Vector3( 0, 0,  1), new Vector3( 0, 0, -1),
+        new Vector3( 0.7071f, 0,  0.7071f), new Vector3(-0.7071f, 0,  0.7071f),
+        new Vector3( 0.7071f, 0, -0.7071f), new Vector3(-0.7071f, 0, -0.7071f),
+    };
 
     void Awake()
     {
@@ -51,8 +84,6 @@ public class DynamicZoom : MonoBehaviour
         if (_follow == null)
         {
             // Nothing authored a Body — add one so the offset can be driven.
-            // If a different body component exists in the scene, prefer it: log
-            // so a conflicting double-follow is easy to spot.
             Debug.LogWarning("[DynamicZoom] No CinemachineFollow found — adding one at runtime. " +
                              "Author it in the scene to avoid conflicts with other body components.");
             _follow = gameObject.AddComponent<CinemachineFollow>();
@@ -74,13 +105,7 @@ public class DynamicZoom : MonoBehaviour
     {
         if (target == null || _follow == null) return;
 
-        // How far is the player from the open center?
-        Vector2 pos = new Vector2(target.position.x, target.position.z);
-        float dist = Vector2.Distance(pos, zoneCenterXZ);
-
-        // Map distance -> zoom amount. Near center (<outerRadius) = wide (0),
-        // near edge (>innerRadius) = close (1).
-        float targetT = Mathf.InverseLerp(outerRadius, innerRadius, dist);
+        float targetT = useClearanceZoom ? ClearanceT() : CenterDistanceT();
 
         // Ease toward it
         _t = Mathf.Lerp(_t, targetT, Time.deltaTime * zoomLerpSpeed);
@@ -106,9 +131,51 @@ public class DynamicZoom : MonoBehaviour
         _follow.FollowOffset = currentOffset;
     }
 
+    // ── Zoom drivers ──────────────────────────────────────────────────────────
+
+    // Nearest tall-collider distance around the player → 0 (open) .. 1 (hemmed in).
+    float ClearanceT()
+    {
+        Vector3 origin = target.position + Vector3.up * rayHeight;
+        float clearance = wideClearance;
+
+        for (int i = 0; i < RayDirs.Length; i++)
+        {
+            var hits = Physics.RaycastAll(origin, RayDirs[i], wideClearance,
+                                          Physics.DefaultRaycastLayers,
+                                          QueryTriggerInteraction.Ignore);
+            for (int h = 0; h < hits.Length; h++)
+            {
+                var col = hits[h].collider;
+                if (col.transform.root == target.root) continue;              // self
+                if (col.bounds.size.y < minArchitectureHeight) continue;      // prop
+                if (hits[h].distance < clearance) clearance = hits[h].distance;
+            }
+        }
+
+        _lastClearance = clearance;
+        return Mathf.InverseLerp(wideClearance, closeClearance, clearance);
+    }
+
+    // Legacy: distance from an authored open-center.
+    float CenterDistanceT()
+    {
+        Vector2 pos = new Vector2(target.position.x, target.position.z);
+        float dist = Vector2.Distance(pos, zoneCenterXZ);
+        return Mathf.InverseLerp(outerRadius, innerRadius, dist);
+    }
+
 #if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
+        if (useClearanceZoom)
+        {
+            if (target == null) return;
+            Vector3 origin = target.position + Vector3.up * rayHeight;
+            Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.6f);
+            foreach (var d in RayDirs) Gizmos.DrawRay(origin, d * _lastClearance);
+            return;
+        }
         Vector3 c = new Vector3(zoneCenterXZ.x, 0.1f, zoneCenterXZ.y);
         Gizmos.color = new Color(0.3f, 0.8f, 1f, 0.6f);
         DrawCircle(c, outerRadius);
