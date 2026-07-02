@@ -24,7 +24,14 @@ public enum Season { Spring, Summer, Autumn, Winter }
 /// </summary>
 public class GameCalendar : MonoBehaviour
 {
-    public static GameCalendar Instance { get; private set; }
+    // Lazy-resolving so a mid-play domain reload (statics wiped, Awake not
+    // re-run) can't leave the singleton permanently null.
+    static GameCalendar _instance;
+    public static GameCalendar Instance
+    {
+        get => _instance != null ? _instance : (_instance = FindAnyObjectByType<GameCalendar>());
+        private set => _instance = value;
+    }
 
     /// <summary>
     /// The twelve months in Florentine civil-year order — the year opens with

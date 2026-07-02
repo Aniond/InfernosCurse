@@ -38,8 +38,7 @@ public static class SaveSystem
         // Persist real time-of-day (GameClock falls back to noon with no backend).
         data.timeOfDay = GameClock.Hour;
 
-        var ws = UnityEngine.Object.FindAnyObjectByType<WeatherSystem>();
-        if (ws != null) data.weatherType = ws.current.ToString();
+        data.weatherType = FlorenceWeather.CurrentProfileName;
 
         File.WriteAllText(SlotPath(slot), JsonUtility.ToJson(data, true));
         Debug.Log($"[SaveSystem] Saved slot {slot} to {SlotPath(slot)}");
@@ -71,12 +70,8 @@ public static class SaveSystem
 
         GameClock.SetHour(data.timeOfDay);
 
-        if (!string.IsNullOrEmpty(data.weatherType))
-        {
-            var ws = UnityEngine.Object.FindAnyObjectByType<WeatherSystem>();
-            if (ws != null && Enum.TryParse<WeatherType>(data.weatherType, out var wt))
-                ws.SetWeatherImmediate(wt);
-        }
+        if (!string.IsNullOrEmpty(data.weatherType) && FlorenceWeather.Instance != null)
+            FlorenceWeather.Instance.Apply(data.weatherType);
     }
 
     public static bool SlotExists(int slot) => File.Exists(SlotPath(slot));
