@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody _rb;
     private Animator _anim;
+    private Transform _cam;
     private Vector2 _moveInput;
     private Vector2 _snapped;
     private bool _isRunning;
@@ -48,7 +49,14 @@ public class PlayerController : MonoBehaviour
             ? (_isRunning ? runSpeed : walkSpeed)
             : 0f;
 
-        Vector3 move = new Vector3(_snapped.x, 0f, _snapped.y) * speed;
+        // Camera-relative movement: screen-up walks away from the camera whatever
+        // the rig's bearing (PV/Mercato look north so nothing changes there; the
+        // Duomo rig looks south and world-fixed axes felt inverted). Animator
+        // still gets the raw screen-space input, so sprite facing matches screen.
+        if (_cam == null) _cam = Camera.main ? Camera.main.transform : null;
+        Vector3 fwd = _cam ? Vector3.ProjectOnPlane(_cam.forward, Vector3.up).normalized : Vector3.forward;
+        Vector3 right = _cam ? Vector3.ProjectOnPlane(_cam.right, Vector3.up).normalized : Vector3.right;
+        Vector3 move = (right * _snapped.x + fwd * _snapped.y) * speed;
         _rb.linearVelocity = new Vector3(move.x, _rb.linearVelocity.y, move.z);
 
         // Update animator only when moving so idle holds last facing direction

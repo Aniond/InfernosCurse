@@ -306,7 +306,7 @@ MonoBehaviour:
     triggerSize: {x: 2.5, y: 2, z: 2.5}
     innPrice: 10
     isGuildInn: 1
-  - sceneName: Duomo
+  - sceneName: Duomo_DISABLED_until_trust_flow_ready
     kind: 2
     guildId: church
     label: Cappella Maggiore
@@ -314,7 +314,7 @@ MonoBehaviour:
     triggerSize: {x: 4, y: 2.5, z: 4}
     innPrice: 10
     isGuildInn: 1
-  - sceneName: Duomo
+  - sceneName: Duomo_DISABLED_donation_ui_freeze
     kind: 1
     guildId: church
     label: Cassetta delle Offerte

@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Building
+  - FX Block Zone
   layers:
   - Default
   - TransparentFX
