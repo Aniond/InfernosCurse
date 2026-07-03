@@ -3,13 +3,20 @@ using UnityEngine;
 using DistantLands.Cozy;
 using DistantLands.Cozy.Data;
 
-// Rolls one weather condition per in-game day from real Arno-valley climate
-// data (Assets/Data/Weather/FlorenceClimate.json) and applies it through COZY.
-// The roll is SEEDED off the calendar date, so a given playthrough day always
-// gets the same sky — revisits are reproducible, not re-randomized.
+// Rolls one weather condition per in-game day from research-backed Arno-valley
+// climate data (Assets/Data/Weather/FlorenceClimate.json) and applies it through
+// COZY. Fully deterministic: the base roll AND the autumn rain-spell chain are
+// pure functions of the calendar date, so a given playthrough day always gets
+// the same sky — across revisits and across save/load.
 //
-// Selection is deterministic/data-driven by design (see the climate JSON's
-// header note); narrative flavor on top of it can come later.
+// Era layer (chronicle-verified — see the JSON header and WEATHER_SYSTEM.md):
+// the circa-1300 Arno was flood-prone through multi-day autumn rain (Villani:
+// 1269, 1280s, 1302-03, 1333). In autumn a wet day can chain into the next;
+// late spell days render as Heavy Rain and raise FloodRiskToday for future
+// gameplay/story hooks.
+//
+// Florence fog is a radiation/morning phenomenon: fog days start in Dense Fog
+// and burn off to haze mid-morning instead of lasting all day.
 public class FlorenceWeather : MonoBehaviour
 {
     // Lazy-resolving so a mid-play domain reload (statics wiped, Awake not
@@ -27,8 +34,14 @@ public class FlorenceWeather : MonoBehaviour
     [Tooltip("Seconds COZY takes to blend into the day's weather.")]
     public float transitionSeconds = 20f;
 
+    [Tooltip("Hour (0-24) at which morning fog burns off into haze.")]
+    public float fogBurnOffHour = 10.5f;
+
     /// <summary>COZY profile name currently applied (for save games).</summary>
     public static string CurrentProfileName { get; private set; } = "";
+
+    /// <summary>True on a late day of an autumn rain spell — the 1269/1333-style Arno flood setup.</summary>
+    public static bool FloodRiskToday { get; private set; }
 
     [Serializable]
     public class MonthRow
@@ -41,10 +54,23 @@ public class FlorenceWeather : MonoBehaviour
     }
 
     [Serializable]
-    class ClimateFile { public MonthRow[] months; }
+    public class RainSpell
+    {
+        public string[] months;
+        public float chainProb = 0.45f;
+        public int maxDays = 4;
+        public int heavyFromDay = 2;
+        public int floodRiskFromDay = 3;
+    }
+
+    [Serializable]
+    class ClimateFile { public MonthRow[] months; public RainSpell rainSpell; }
 
     MonthRow[] _months;
+    RainSpell _spell;
     string _appliedDayKey = "";
+    string _todayCondition = "";
+    bool _fogBurnedOff;
 
     void Awake()
     {
@@ -58,9 +84,12 @@ public class FlorenceWeather : MonoBehaviour
     {
         if (_months != null) return;
         if (climateJson != null)
-            _months = JsonUtility.FromJson<ClimateFile>(climateJson.text).months;
-        else
-            Debug.LogWarning("[FlorenceWeather] No climate JSON assigned.");
+        {
+            var file = JsonUtility.FromJson<ClimateFile>(climateJson.text);
+            _months = file.months;
+            _spell = file.rainSpell;
+        }
+        else Debug.LogWarning("[FlorenceWeather] No climate JSON assigned.");
     }
 
     void OnDestroy()
@@ -77,13 +106,29 @@ public class FlorenceWeather : MonoBehaviour
         if (cal == null || _months == null) return;
 
         string key = cal.Year + ":" + cal.DayOfYear;
-        if (key == _appliedDayKey) return;
+        if (key != _appliedDayKey)
+        {
+            _appliedDayKey = key;
+            ApplyToday(cal);
+        }
 
-        var row = RowFor(cal.CurrentMonth);
-        if (row == null) return;
+        // Radiation fog burns off mid-morning; the slow transition reads as the
+        // valley haze lifting rather than a weather change.
+        if (_todayCondition == "fog" && !_fogBurnedOff && GameClock.Hour >= fogBurnOffHour && GameClock.Hour < 20f)
+        {
+            _fogBurnedOff = true;
+            ApplyProfile("Mostly Clear", 60f);
+        }
+    }
 
-        _appliedDayKey = key;
-        RollAndApply(row, cal.Year * 1000 + cal.DayOfYear);
+    // ── deterministic condition engine ──────────────────────────────────────
+
+    static int Seed(int year, int dayOfYear) => year * 1000 + dayOfYear;
+
+    MonthRow RowForDay(GameCalendar cal, int dayOfYear)
+    {
+        int mi = Mathf.Clamp(dayOfYear / Mathf.Max(1, cal.daysPerMonth), 0, 11);
+        return RowFor((GameCalendar.Month)mi);
     }
 
     MonthRow RowFor(GameCalendar.Month month)
@@ -96,28 +141,126 @@ public class FlorenceWeather : MonoBehaviour
         return null;
     }
 
-    void RollAndApply(MonthRow m, int seed)
+    // The raw dice roll for a date, no chaining.
+    static string BaseCondition(MonthRow m, int seed)
     {
         var rng = new System.Random(seed);
         double r = rng.NextDouble();
-        string prof;
-        if ((r -= m.fogProb) < 0)        prof = "Dense Fog";
-        else if ((r -= m.rainProb) < 0)  prof = rng.NextDouble() < 0.3 ? "Heavy Rain" : "Light Rain";
-        else if ((r -= m.stormProb) < 0) prof = "Thunder Storm";
-        else if ((r -= m.windProb) < 0)  prof = "Mostly Cloudy";     // gusty grey day
-        else if ((r -= m.snowProb) < 0)  prof = "Light Snow";
-        else if ((r -= m.sleetProb) < 0) prof = "Light Precipitation"; // cold mix
-        else if ((r -= m.hailProb) < 0)  prof = "Hail Storm";
-        else
+        if ((r -= m.fogProb) < 0) return "fog";
+        if ((r -= m.rainProb) < 0) return "rain";
+        if ((r -= m.stormProb) < 0) return "storm";
+        if ((r -= m.windProb) < 0) return "wind";
+        if ((r -= m.snowProb) < 0) return "snow";
+        if ((r -= m.sleetProb) < 0) return "sleet";
+        if ((r -= m.hailProb) < 0) return "hail";
+        return "clear";
+    }
+
+    static bool IsWet(string c) => c == "rain" || c == "storm";
+
+    bool InSpellSeason(MonthRow m)
+    {
+        if (_spell?.months == null || m == null) return false;
+        foreach (var n in _spell.months)
+            if (string.Equals(n, m.name, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    }
+
+    // 1 = first wet day of a spell, 2 = second consecutive, … 0 = dry today.
+    // Pure function of the date, so spells reproduce identically after
+    // save/load or a revisit. Two passes: walk back to the nearest day that is
+    // CERTAINLY dry (no base wet, no possible chain roll — decidable without
+    // history), then replay the spell recurrence forward from that zero.
+    int SpellDay(GameCalendar cal, int year, int dayOfYear)
+    {
+        int maxDays = _spell != null ? _spell.maxDays : 4;
+        int daysPerYear = Mathf.Max(1, cal.daysPerMonth) * 12;
+        const int LookbackCap = 12; // spells cap at maxDays; this bound is generous
+
+        int start = 1;
+        for (; start <= LookbackCap; start++)
         {
-            double c = rng.NextDouble();
-            prof = c < 0.5 ? "Clear" : (c < 0.8 ? "Mostly Clear" : "Partly Cloudy");
+            int y = year, d = dayOfYear - start;
+            while (d < 0) { d += daysPerYear; y--; }
+            var row = RowForDay(cal, d);
+            if (row == null) break;
+            bool possiblyWet = IsWet(BaseCondition(row, Seed(y, d))) ||
+                               (InSpellSeason(row) && ChainRoll(y, d));
+            if (!possiblyWet) break; // spell(d) == 0 for certain
         }
-        Apply(prof);
+
+        int spell = 0;
+        for (int back = start - 1; back >= 0; back--)
+        {
+            int y = year, d = dayOfYear - back;
+            while (d < 0) { d += daysPerYear; y--; }
+            var row = RowForDay(cal, d);
+            if (row == null) { spell = 0; continue; }
+
+            bool wet = IsWet(BaseCondition(row, Seed(y, d)));
+            if (!wet && spell >= 1 && spell < maxDays && InSpellSeason(row))
+                wet = ChainRoll(y, d);
+            spell = wet ? Mathf.Min(spell + 1, maxDays) : 0;
+        }
+        return spell;
+    }
+
+    bool ChainRoll(int year, int dayOfYear)
+    {
+        // Separate seed stream so chaining never disturbs the base roll.
+        var rng = new System.Random(Seed(year, dayOfYear) ^ 0x05F00D);
+        return rng.NextDouble() < (_spell != null ? _spell.chainProb : 0f);
+    }
+
+    // ── daily application ────────────────────────────────────────────────────
+
+    void ApplyToday(GameCalendar cal)
+    {
+        var row = RowForDay(cal, cal.DayOfYear);
+        if (row == null) return;
+
+        int seed = Seed(cal.Year, cal.DayOfYear);
+        string cond = BaseCondition(row, seed);
+
+        int spellDay = 0;
+        if (IsWet(cond) || InSpellSeason(row))
+            spellDay = SpellDay(cal, cal.Year, cal.DayOfYear);
+        if (spellDay >= 1 && !IsWet(cond))
+            cond = "rain"; // chained extension of yesterday's rain
+
+        FloodRiskToday = _spell != null && spellDay >= _spell.floodRiskFromDay;
+        _todayCondition = cond;
+        _fogBurnedOff = false;
+
+        ApplyProfile(ProfileFor(cond, seed, spellDay), transitionSeconds);
+        if (FloodRiskToday)
+            Debug.Log($"[FlorenceWeather] Rain spell day {spellDay} — FLOOD RISK on the Arno (1269/1333-style).");
+    }
+
+    string ProfileFor(string cond, int seed, int spellDay)
+    {
+        var rng = new System.Random(seed ^ 0x9E37);
+        switch (cond)
+        {
+            case "fog": return "Dense Fog";
+            case "rain":
+                if (_spell != null && spellDay >= _spell.heavyFromDay) return "Heavy Rain";
+                return rng.NextDouble() < 0.3 ? "Heavy Rain" : "Light Rain";
+            case "storm": return "Thunder Storm";
+            case "wind": return "Mostly Cloudy";              // gusty grey day
+            case "snow": return "Light Snow";
+            case "sleet": return "Light Precipitation";       // cold mix
+            case "hail": return "Hail Storm";
+            default:
+                double c = rng.NextDouble();
+                return c < 0.5 ? "Clear" : (c < 0.8 ? "Mostly Clear" : "Partly Cloudy");
+        }
     }
 
     /// <summary>Apply a COZY weather profile by name (also used by save-game restore).</summary>
-    public void Apply(string profileName)
+    public void Apply(string profileName) => ApplyProfile(profileName, transitionSeconds);
+
+    void ApplyProfile(string profileName, float transition)
     {
         var cozy = CozyWeather.instance;
         if (cozy == null || cozy.weatherModule == null)
@@ -134,7 +277,7 @@ public class FlorenceWeather : MonoBehaviour
         }
 
         cozy.weatherModule.ecosystem.weatherSelectionMode = CozyEcosystem.EcosystemStyle.manual;
-        cozy.weatherModule.ecosystem.SetWeather(profile, transitionSeconds);
+        cozy.weatherModule.ecosystem.SetWeather(profile, transition);
         CurrentProfileName = profileName;
 
         // A save-restore counts as today's weather — don't re-roll over it.

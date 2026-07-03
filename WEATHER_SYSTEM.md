@@ -23,10 +23,25 @@ GameCalendar  — stile fiorentino calendar (unchanged); advances one day
   when GameClock.Hour wraps past midnight.
 
 FlorenceWeather  (on GameSystems)  — the daily weather picker.
-  Reads Assets/Data/Weather/FlorenceClimate.json (real Arno-valley monthly
-  probabilities), rolls ONE condition per in-game day, SEEDED off the date
-  (year*1000 + dayOfYear) so a given day is reproducible. Applies it via
-  COZY's ecosystem in manual mode with a 20s transition.
+  Reads Assets/Data/Weather/FlorenceClimate.json (v2: research-backed —
+  1991-2020 NOAA normals for rain days/temps, verified storm/hail seasonality;
+  fog & wind columns are flagged design judgment; see the JSON's _sources).
+  Rolls ONE condition per in-game day, SEEDED off the date (year*1000 +
+  dayOfYear) so a given day is reproducible. Applies it via COZY's ecosystem
+  in manual mode with a 20s transition.
+
+  Era layer (chronicle-verified: Villani's floods of 1269/1280s, the 1302-03
+  famine rains, 4 Nov 1333): in Sep/Oct/Nov a wet day can CHAIN into the next
+  (rainSpell block in the JSON; chainProb 0.45, max 4 days). The chain is a
+  pure function of the date (seeded, bounded backward replay) — save-proof.
+  Spell day >= 2 renders Heavy Rain; day >= 3 sets FlorenceWeather.
+  FloodRiskToday (hook for WeatherEffects/story). Statistically verified over
+  2000 simulated years: autumn wet frequency amplifies ~1.4x, ~1.4 flood-risk
+  days/year, full 4-day episodes every ~2.6 years.
+
+  Morning fog: fog days apply Dense Fog, then burn off to Mostly Clear at
+  fogBurnOffHour (10.5) with a slow 60s dissolve — Arno fog is a radiation/
+  morning phenomenon, not an all-day soup.
 
 CozySceneAdapter  (on GameSystems) — on every scene load, disables
   scene-authored directional lights so COZY's sun is the only sun at
