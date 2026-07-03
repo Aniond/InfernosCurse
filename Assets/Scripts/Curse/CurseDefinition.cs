@@ -34,4 +34,17 @@ public class CurseDefinition : ScriptableObject
     public float enemyBuffOnCursedTile = 1.15f;
     [Tooltip("Player stat penalty when standing on a cursed tile.")]
     public float playerDebuffOnCursedTile = 0.90f;
+
+    [Header("Daily Drift")]
+    // The corruption tide: every in-game day each district grows by base,
+    // modified below. Gentle + linear by design — drama comes from thresholds.
+    [Tooltip("Curse added to every node per in-game day.")]
+    [Range(0f, 0.2f)] public float dailyGrowthBase = 0.02f;
+    [Tooltip("Extra daily growth on ritual-site nodes (permanent sources).")]
+    [Range(0f, 0.2f)] public float dailyRitualBonus = 0.02f;
+    [Tooltip("Daily growth relief on sanctuary nodes.")]
+    [Range(0f, 0.2f)] public float dailySanctuaryRelief = 0.015f;
+    [Tooltip("Extra daily growth on river nodes when the Arno runs flood-high " +
+             "(FlorenceWeather.FloodRiskToday).")]
+    [Range(0f, 0.3f)] public float dailyFloodSpike = 0.05f;
 }

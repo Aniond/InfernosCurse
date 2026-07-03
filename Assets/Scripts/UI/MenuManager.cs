@@ -71,6 +71,8 @@ public class MenuManager : MonoBehaviour
                 case "Save Game": btn.onClick.AddListener(OpenSave);         break;
                 case "Load Game": btn.onClick.AddListener(OpenLoad);         break;
                 case "Settings":  btn.onClick.AddListener(OpenSettings);     break;
+                case "Guilds":    btn.onClick.AddListener(OpenGuilds);       break;
+                case "Rest":      btn.onClick.AddListener(OpenRest);         break;
                 case "Quit":      btn.onClick.AddListener(QuitGame);         break;
             }
         }
@@ -253,6 +255,30 @@ public class MenuManager : MonoBehaviour
         }
         Resume();          // closes panels + restores timeScale to 1
         travel.Open();     // re-pauses via its own logic
+    }
+
+    public void OpenGuilds()
+    {
+        var panel = FindAnyObjectByType<GuildPanelUI>();
+        if (panel == null)
+        {
+            Debug.LogWarning("[MenuManager] No GuildPanelUI in the scene.");
+            return;
+        }
+        Resume();
+        panel.OpenStandings();   // re-pauses via its own logic
+    }
+
+    public void OpenRest()
+    {
+        var rest = FindAnyObjectByType<RestMenuUI>();
+        if (rest == null)
+        {
+            Debug.LogWarning("[MenuManager] No RestMenuUI in the scene.");
+            return;
+        }
+        Resume();
+        rest.OpenCamp();         // re-pauses via its own logic
     }
 
     public void OpenParty()

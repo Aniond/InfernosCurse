@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5649c560b99d9fd4cbf1b77b65b7dc86, type: 3}
+  m_Name: Guild_Albergatori
+  m_EditorClassIdentifier: Assembly-CSharp::GuildDefinition
+  guildId: albergatori
+  displayName: Arte degli Albergatori
+  blurb: The innkeepers' guild. Their houses are the only honest beds in Florence,
+    and their wards keep the night's rot from the door.
+  crest: {fileID: 0}
+  isChurch: 0
+  homeNodeId: mercato
+  repPerRank: 0000000032000000960000005e010000bc020000
+  rankNames:
+  - Straniero
+  - Amico
+  - Sostenitore
+  - Confratello
+  - Console
+  repPerHomeKill: 5
+  florinsPerRep: 2
+  perks:
+  - type: 0
+    unlockRank: 1
+    magnitude: 0.85
+    flavorText: "A friend sleeps easier \u2014 the night weighs a little less."
+  - type: 0
+    unlockRank: 2
+    magnitude: 0.7
+    flavorText: 'Blessed hearths: the guild''s houses keep the dark at bay.'
+  - type: 3
+    unlockRank: 2
+    magnitude: 0.75
+    flavorText: "Guild prices \u2014 a member never pays the stranger's rate."
+  - type: 0
+    unlockRank: 3
+    magnitude: 0.55
+    flavorText: The Albergatori's wards are old, and they hold.
+  - type: 0
+    unlockRank: 4
+    magnitude: 0.4
+    flavorText: Under the guild's seal, sleep is nearly clean.
+  - type: 1
+    unlockRank: 4
+    magnitude: 0.1
+    flavorText: Where a Console sleeps, the quarter itself breathes easier.

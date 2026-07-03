@@ -4,6 +4,13 @@ using System.Collections.Generic;
 // The overworld graph. Curse diffuses along node edges each real-time tick.
 // One instance lives in the hub scene. BattleStarter reads node curseLevel
 // to seed the battle grid's initial curse density.
+//
+// LOAD-BEARING: this component is DISABLED on the GameSystems prefab, on
+// purpose. Awake still runs (Instance/graph/API all work), but the real-time
+// diffusion Update stays dormant — DailyCurseDrift is the sole hub-curse
+// driver so that DAYS, not wall-clock seconds, move the corruption (time is a
+// resource the player spends by resting). Re-enabling this component would
+// double-drive curse growth.
 public class HubMap : MonoBehaviour
 {
     public static HubMap Instance { get; private set; }
@@ -153,6 +160,15 @@ public class HubMap : MonoBehaviour
 
     // ── Public API ────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Build the runtime graph if it hasn't been (edit-mode tools instantiate
+    /// the prefab without Awake running — e.g. the drift economy sim).
+    /// </summary>
+    public void EnsureGraphBuilt()
+    {
+        if (_nodes.Count == 0 && nodeData.Count > 0) BuildGraph();
+    }
+
     public HubNode GetNode(string id)
     {
         foreach (var n in _nodes) if (n.id == id) return n;
@@ -174,6 +190,46 @@ public class HubMap : MonoBehaviour
         node.curseLevel = Mathf.Max(0f, node.curseLevel - amount);
         node.sanctity   = Mathf.Min(1f, node.sanctity   + amount * 0.3f);
         OnNodeChanged?.Invoke(node);
+    }
+
+    // The corruption side of the ledger: rest costs and the daily drift land
+    // here. Mirror of Cleanse so the world-state tells (pin tints, overlays)
+    // react through the same OnNodeChanged path.
+    public void AddCurse(string nodeId, float amount)
+    {
+        var node = GetNode(nodeId);
+        if (node == null || amount <= 0f) return;
+        node.curseLevel = Mathf.Min(1f, node.curseLevel + amount);
+        OnNodeChanged?.Invoke(node);
+    }
+
+    // ── Save-game round-trip (SaveSystem) ────────────────────────────────────
+
+    public void ExportNodeStates(out string[] ids, out float[] curse, out float[] sanctity)
+    {
+        ids = new string[_nodes.Count];
+        curse = new float[_nodes.Count];
+        sanctity = new float[_nodes.Count];
+        for (int i = 0; i < _nodes.Count; i++)
+        {
+            ids[i] = _nodes[i].id;
+            curse[i] = _nodes[i].curseLevel;
+            sanctity[i] = _nodes[i].sanctity;
+        }
+    }
+
+    public void ImportNodeStates(string[] ids, float[] curse, float[] sanctity)
+    {
+        if (ids == null || curse == null || ids.Length != curse.Length) return;
+        for (int i = 0; i < ids.Length; i++)
+        {
+            var node = GetNode(ids[i]);
+            if (node == null) continue; // node list changed since the save — skip
+            node.curseLevel = Mathf.Clamp01(curse[i]);
+            if (sanctity != null && sanctity.Length == ids.Length)
+                node.sanctity = Mathf.Clamp01(sanctity[i]);
+            OnNodeChanged?.Invoke(node);
+        }
     }
 
     // Called when a ritual is completed

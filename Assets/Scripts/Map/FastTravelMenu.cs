@@ -178,6 +178,7 @@ public class FastTravelMenu : MonoBehaviour
         }
 
         TravelIntent.SetEntry(node.entryId);
+        DistrictTracker.CurrentNodeId = node.id;
         Debug.Log($"[FastTravelMenu] Traveling to {node.displayName} ({node.sceneName}).");
 
         // Restore timescale before the load so the destination scene runs normally.

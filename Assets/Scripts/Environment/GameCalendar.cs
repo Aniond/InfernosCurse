@@ -126,6 +126,25 @@ public class GameCalendar : MonoBehaviour
         _lastTimeOfDay = t;
     }
 
+    /// <summary>
+    /// Forget the last-seen clock hour so the next Update just records the new
+    /// value. Call after any deliberate backwards SetHour jump (rest-to-morning,
+    /// save restore) — otherwise the midnight wrap detector reads a backwards
+    /// jump &gt; 6h as a day passing and fires a spurious AdvanceDay.
+    /// </summary>
+    public void ResyncClock() => _hasPrevTime = false;
+
+    /// <summary>
+    /// Set the date outright (save-game restore). Fires NO events — a restore
+    /// is not a day passing.
+    /// </summary>
+    public void SetDate(int year, Month month, int dayOfMonth)
+    {
+        _year = year;
+        _month = month;
+        _dayOfMonth = Mathf.Clamp(dayOfMonth, 1, Mathf.Max(1, daysPerMonth));
+    }
+
     /// <summary>Advance the calendar by one day, firing rollover events as needed.</summary>
     public void AdvanceDay()
     {

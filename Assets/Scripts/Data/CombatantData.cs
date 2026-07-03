@@ -106,7 +106,28 @@ public class CombatantData : ScriptableObject
     public bool RefineAtChurch(AbsorbedSkillInstance skill)
     {
         if (!skill.CanRefine()) return false;
+
+        // The rite is the Church's to grant: standing gates it, an offering
+        // pays for it. Without a GuildSystem (battle-arena tests, tools) the
+        // old ungated behavior stands so tests keep working.
+        var guilds = GuildSystem.Instance;
+        if (guilds != null)
+        {
+            if (!guilds.CanTransmute(out int offering))
+            {
+                Debug.Log("[Church] The Church does not yet trust you with such rites.");
+                return false;
+            }
+            if (!FlorinWallet.TrySpend(offering, "transmutation offering"))
+                return false;
+        }
+        else
+        {
+            Debug.LogWarning("[Church] No GuildSystem present — transmuting ungated (test context).");
+        }
+
         skill.isRefined = true;
+        Debug.Log($"[Church] {skill.DisplayName()} — the corruption is burned away.");
         return true;
     }
 

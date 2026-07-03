@@ -49,6 +49,17 @@ public class AbsorbedSkillInstance
             && level >= definition.maxLevel;
     }
 
+    // The definition battle code should CAST: the holy counterpart once
+    // refined, the corrupted original otherwise. `definition` itself is never
+    // swapped — duplicate matching (AddDuplicate) and re-absorption key off
+    // the original, so a reference swap would orphan the lineage. Absorbed
+    // skills have no battle casting path yet; this is the contract the future
+    // loadout/casting code consumes.
+    public SkillDefinition EffectiveDefinition =>
+        isRefined && definition != null && definition.holyVersion != null
+            ? definition.holyVersion
+            : definition;
+
     // Power at current level: basePower * (1 + 0.2 * (level-1)) * multiplier from holy if refined
     public float GetEffectivePower()
     {

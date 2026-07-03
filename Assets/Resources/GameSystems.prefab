@@ -15,6 +15,11 @@ GameObject:
   - component: {fileID: 7928523304916312821}
   - component: {fileID: 2297025142736978070}
   - component: {fileID: 3733854374486566034}
+  - component: {fileID: 6323141340174849716}
+  - component: {fileID: 3918837222480738804}
+  - component: {fileID: 3991163463977817704}
+  - component: {fileID: 2028659444268085293}
+  - component: {fileID: 407752065719074716}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -228,6 +233,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FlorenceWeather
   climateJson: {fileID: 4900000, guid: 2353e72491df07c47b428deb1cf7c5d3, type: 3}
   transitionSeconds: 20
+  fogBurnOffHour: 10.5
 --- !u!114 &3733854374486566034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -240,6 +246,114 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a72097fea01a2f4e95f7e2f9f6e6bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CozySceneAdapter
+--- !u!114 &6323141340174849716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 683aa5c1d326b7e4db9f01564fd8c6a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuildSystem
+  guilds:
+  - {fileID: 11400000, guid: e9fe5b150f42cb449b87b6a5b0a90016, type: 2}
+  - {fileID: 11400000, guid: 0e8f4cda0a4e10745b10eb537a8fcb3c, type: 2}
+  _memberships: []
+--- !u!114 &3918837222480738804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0f05bed97d0423428808216a9b239b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DailyCurseDrift
+  riverNodeIds:
+  - pontevecchio
+  - oltrarno
+--- !u!114 &3991163463977817704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a718034fc9fbe5b4a8e308c3c82326bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuildInteractionSpawner
+  entries:
+  - sceneName: MercatoVecchio
+    kind: 0
+    guildId: albergatori
+    label: Locanda del Mercato
+    position: {x: 6, y: 1, z: -12}
+    triggerSize: {x: 3, y: 2, z: 3}
+    innPrice: 10
+    isGuildInn: 1
+  - sceneName: MercatoVecchio
+    kind: 1
+    guildId: albergatori
+    label: Banco degli Albergatori
+    position: {x: 10, y: 1, z: -12}
+    triggerSize: {x: 2.5, y: 2, z: 2.5}
+    innPrice: 10
+    isGuildInn: 1
+  - sceneName: MercatoVecchio
+    kind: 2
+    guildId: church
+    label: Cappella di San Tommaso
+    position: {x: -8, y: 1, z: -12}
+    triggerSize: {x: 2.5, y: 2, z: 2.5}
+    innPrice: 10
+    isGuildInn: 1
+--- !u!114 &2028659444268085293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5033f2ee7f5f3204885b9dc7ca8cc404, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GuildPanelUI
+  hotkey: 21
+  hotkeyLegacy: 103
+  pauseWhileOpen: 1
+  blockedScenes:
+  - WorldMap
+  - MainMenu
+  - Battle
+  - BattleArena
+--- !u!114 &407752065719074716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2dd263267814484dab60f8a554a90a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RestMenuUI
+  hotkey: 32
+  hotkeyLegacy: 114
+  pauseWhileOpen: 1
+  blockedScenes:
+  - WorldMap
+  - MainMenu
+  - Battle
+  - BattleArena
 --- !u!1001 &3242152288469685475
 PrefabInstance:
   m_ObjectHideFlags: 0

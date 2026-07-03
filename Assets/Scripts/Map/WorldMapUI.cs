@@ -144,6 +144,7 @@ public class WorldMapUI : MonoBehaviour
         }
 
         currentNodeId = node.id;
+        DistrictTracker.CurrentNodeId = node.id;
         // Tell the destination scene where to spawn the player.
         TravelIntent.SetEntry(node.entryId);
         Debug.Log($"[WorldMapUI] Traveling to {node.displayName} ({node.sceneName}), entry '{node.entryId}'.");

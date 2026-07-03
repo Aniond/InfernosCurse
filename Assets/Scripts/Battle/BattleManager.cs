@@ -478,6 +478,16 @@ public class BattleManager : MonoBehaviour
             u.AwardAP(ap);
             u.AwardXP(xp);
         }
+
+        // Loot + guild standing. A battle belongs to the district the party
+        // was last in (DistrictTracker); fighting in a guild's home turf earns
+        // its gratitude. Null-guarded — test scenes may lack the systems.
+        FlorinWallet.Add(BattleFormulas.FlorinsFromKill(killer, defeated), "kill");
+        var guilds = GuildSystem.Instance;
+        var homeGuild = guilds != null ? guilds.GuildForHomeNode(DistrictTracker.CurrentNodeId) : null;
+        if (homeGuild != null)
+            guilds.AwardRep(homeGuild.guildId, homeGuild.repPerHomeKill,
+                            $"kill in {DistrictTracker.CurrentNodeId}");
     }
 
     public void NotifyAbsorb(BattleUnit absorber, AbsorbedSkillInstance skill)

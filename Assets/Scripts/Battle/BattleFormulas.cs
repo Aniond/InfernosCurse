@@ -151,6 +151,14 @@ public static class BattleFormulas
         return Mathf.Max(1, base_ + lvDiff * 5);
     }
 
+    // Florins looted per kill (party pot, once per kill — not per survivor)
+    public static int FlorinsFromKill(BattleUnit killer, BattleUnit defeated)
+    {
+        int lvDiff = defeated.Data.baseStats.level - killer.Data.baseStats.level;
+        int base_  = 8;
+        return Mathf.Max(1, base_ + lvDiff * 3);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     static float GetScalingStat(CharacterStats s, StatScaling scaling) => scaling switch
