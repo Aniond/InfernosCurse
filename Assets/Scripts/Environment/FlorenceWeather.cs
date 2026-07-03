@@ -260,6 +260,22 @@ public class FlorenceWeather : MonoBehaviour
     /// <summary>Apply a COZY weather profile by name (also used by save-game restore).</summary>
     public void Apply(string profileName) => ApplyProfile(profileName, transitionSeconds);
 
+    // COZY nests some profiles in subfolders (e.g. Heavy Rain), so an exact-path
+    // Resources.Load misses them — resolve by NAME over a recursive LoadAll once.
+    static System.Collections.Generic.Dictionary<string, WeatherProfile> _profileCache;
+
+    static WeatherProfile FindProfile(string name)
+    {
+        if (_profileCache == null)
+        {
+            _profileCache = new System.Collections.Generic.Dictionary<string, WeatherProfile>(StringComparer.OrdinalIgnoreCase);
+            foreach (var p in Resources.LoadAll<WeatherProfile>("Profiles/Weather Profiles"))
+                if (!_profileCache.ContainsKey(p.name)) _profileCache[p.name] = p;
+        }
+        _profileCache.TryGetValue(name, out var found);
+        return found;
+    }
+
     void ApplyProfile(string profileName, float transition)
     {
         var cozy = CozyWeather.instance;
@@ -269,7 +285,7 @@ public class FlorenceWeather : MonoBehaviour
             return;
         }
 
-        var profile = Resources.Load<WeatherProfile>("Profiles/Weather Profiles/" + profileName);
+        var profile = FindProfile(profileName);
         if (profile == null)
         {
             Debug.LogWarning($"[FlorenceWeather] COZY profile '{profileName}' not found.");

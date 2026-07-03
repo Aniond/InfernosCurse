@@ -64,9 +64,16 @@ store `timeOfDay` (via GameClock) and the COZY profile name; load restores both.
 
 ## Gotchas (learned the hard way)
 
-- **"Time is frozen"** → check `EditorApplication.isPaused` FIRST. The editor
-  pause button latches across play sessions and caused every frozen-clock
-  mystery during the migration.
+- **"Time is frozen"** → check `EditorApplication.isPaused` FIRST. Refined
+  diagnosis: play sessions started PROGRAMMATICALLY (AI-assistant RunCommand
+  setting `isPlaying = true`) enter paused at frame 0 even hands-off; manual
+  Play-button sessions don't. Unpause after any scripted play entry.
+- **COZY profile assets are nested in subfolders** under
+  `Resources/Profiles/Weather Profiles/` (e.g. Heavy Rain) — an exact-path
+  `Resources.Load` misses them and only root-level names (Clear, Thunder
+  Storm…) work. `FlorenceWeather.FindProfile` resolves by name over a cached
+  recursive `LoadAll` instead. Symptom when broken: "profile 'X' not found"
+  warning and yesterday's weather silently persisting.
 - Editor **RunCommand scripts cannot reference `DistantLands.Cozy`** (asmdef not
   visible to the dynamic assembly) — probe through project types
   (`GameClock.Describe()` etc.).
