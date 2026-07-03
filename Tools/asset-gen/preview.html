@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>__NAME__ — model preview</title>
+<style>
+  body { margin:0; background:#1a1720; color:#e8e4da; font:13px system-ui, sans-serif; overflow:hidden; }
+  #hud { position:fixed; top:10px; left:12px; background:#0009; padding:6px 12px; border-radius:8px; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="hud"><b>__NAME__</b> — drag to orbit, wheel to zoom, right-drag to pan</div>
+<script type="module">
+import * as THREE from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+
+const scene = new THREE.Scene()
+scene.background = new THREE.Color(0x1a1720)
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.01, 100)
+const renderer = new THREE.WebGLRenderer({ antialias: true })
+renderer.setSize(innerWidth, innerHeight)
+renderer.setPixelRatio(devicePixelRatio)
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+document.body.appendChild(renderer.domElement)
+
+scene.add(new THREE.HemisphereLight(0xf5ead9, 0x2a2433, 1.1))
+const sun = new THREE.DirectionalLight(0xfff1dd, 2.2)
+sun.position.set(3, 5, 2)
+scene.add(sun)
+scene.add(new THREE.GridHelper(4, 20, 0x4a4360, 0x2c2838))
+
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.enableDamping = true
+
+new GLTFLoader().load('__MODEL_URL__', (gltf) => {
+  const obj = gltf.scene
+  // center + frame the model whatever its authored scale
+  const box = new THREE.Box3().setFromObject(obj)
+  const size = box.getSize(new THREE.Vector3())
+  const center = box.getCenter(new THREE.Vector3())
+  obj.position.sub(center)
+  obj.position.y += size.y / 2
+  scene.add(obj)
+  const d = Math.max(size.x, size.y, size.z)
+  camera.position.set(d * 1.4, d * 1.0, d * 1.4)
+  controls.target.set(0, size.y / 2, 0)
+  controls.update()
+}, undefined, (e) => { document.getElementById('hud').textContent = 'load failed: ' + e })
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(innerWidth, innerHeight)
+})
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera) })
+</script>
+</body>
+</html>

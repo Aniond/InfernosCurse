@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Inferno's Curse — Asset Workbench</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.45 system-ui, sans-serif; background:#15131a; color:#e8e4da; margin:0; padding:24px; }
+  h1 { font-size:20px; margin:0 0 4px; } .sub { color:#9a93a5; margin:0 0 20px; font-size:13px; }
+  .warn { background:#4a2c14; border:1px solid #8a5a2a; padding:8px 12px; border-radius:8px; margin-bottom:16px; }
+  .bar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+  button { background:#3d3450; color:#efeaf7; border:1px solid #5a4e75; border-radius:8px; padding:7px 14px; cursor:pointer; font-size:13px; }
+  button:hover { background:#4a3f63; } button:disabled { opacity:.45; cursor:default; }
+  button.primary { background:#7a4a1f; border-color:#a86c33; }
+  button.approve { background:#254a28; border-color:#3f7a44; }
+  button.deny { background:#4a2226; border-color:#7a3a41; }
+  .card { background:#1e1b26; border:1px solid #322d40; border-radius:12px; padding:14px; margin-bottom:14px; display:flex; gap:14px; }
+  .thumb { width:200px; min-width:200px; height:200px; background:#0f0d13; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; color:#5a5468; font-size:12px; }
+  .thumb img { max-width:100%; max-height:100%; }
+  .body { flex:1; min-width:0; }
+  .name { font-weight:600; font-size:15px; margin-bottom:6px; display:flex; gap:10px; align-items:center; }
+  textarea { width:100%; background:#141119; color:#ddd6c8; border:1px solid #37314a; border-radius:8px; padding:8px; font:13px/1.4 ui-monospace, monospace; resize:vertical; }
+  textarea.prompt { min-height:74px; } textarea.extra { min-height:38px; }
+  label { font-size:11px; color:#9a93a5; text-transform:uppercase; letter-spacing:.06em; display:block; margin:8px 0 3px; }
+  .row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; align-items:center; }
+  .badge { padding:2px 10px; border-radius:99px; font-size:11px; font-weight:600; letter-spacing:.04em; }
+  .b-new{background:#37314a} .b-generated{background:#1f3d5c} .b-approved{background:#254a28} .b-denied{background:#4a2226}
+  .m-queued{background:#4a4426} .m-submitting,.m-generating{background:#4a3a12} .m-done{background:#1f5c3d} .m-failed{background:#5c1f28}
+  .err { color:#e08a8a; font-size:12px; margin-top:6px; white-space:pre-wrap; }
+  .addform { background:#1e1b26; border:1px dashed #4a4360; border-radius:12px; padding:14px; margin-bottom:20px; }
+  input[type=text] { width:100%; background:#141119; color:#ddd6c8; border:1px solid #37314a; border-radius:8px; padding:8px; font-size:13px; }
+  .spin { display:inline-block; animation:r 1s linear infinite; } @keyframes r { to { transform:rotate(360deg);} }
+  a.preview { color:#e8b56a; }
+</style>
+</head>
+<body>
+<h1>Inferno's Curse — Asset Workbench</h1>
+<p class="sub">Gemini concept &rarr; approve &rarr; Tripo 3D (rate-limited 3/min) &rarr; Three.js preview. ~100 credits per model.</p>
+<div id="keywarn"></div>
+
+<div class="addform">
+  <label>New asset name</label>
+  <input type="text" id="newName" placeholder="e.g. Terracotta Pot with Geraniums">
+  <label>Image prompt</label>
+  <textarea class="prompt" id="newPrompt" placeholder="Describe the concept image…"></textarea>
+  <div class="row"><button class="primary" onclick="addAsset()">Add asset</button></div>
+</div>
+
+<div class="bar">
+  <button class="primary" id="batchBtn" onclick="generateModels()">Generate 3D models for approved</button>
+  <span id="batchStatus"></span>
+</div>
+
+<div id="list"></div>
+
+<script>
+let state = { assets: [], batch: {}, keys: {} };
+const busy = new Set();
+
+async function api(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body||{}) });
+  if (!r.ok) { const e = await r.json().catch(()=>({error:r.statusText})); alert(e.error||'request failed'); }
+  await refresh();
+}
+
+async function refresh() {
+  const r = await fetch('/api/state');
+  state = await r.json();
+  render();
+}
+
+function render() {
+  const kw = [];
+  if (!state.keys.gemini) kw.push('GEMINI_API_KEY missing — image generation disabled.');
+  if (!state.keys.tripo) kw.push('3D_AI_STUDIO_API_KEY missing — model generation disabled.');
+  document.getElementById('keywarn').innerHTML = kw.length ? `<div class="warn">${kw.join('<br>')}</div>` : '';
+
+  const b = state.batch || {};
+  const approved = state.assets.filter(a=>a.status==='approved' && a.hasImage && a.model!=='done').length;
+  document.getElementById('batchBtn').disabled = b.running || approved===0 || !state.keys.tripo;
+  document.getElementById('batchBtn').textContent = `Generate 3D models for approved (${approved})`;
+  document.getElementById('batchStatus').textContent = b.running
+    ? `⏳ batch running: ${b.done+b.failed}/${b.total} finished${b.failed?` (${b.failed} failed)`:''}`
+    : (b.total ? `last batch: ${b.done} ok, ${b.failed} failed` : '');
+
+  document.getElementById('list').innerHTML = state.assets.map(a => `
+    <div class="card">
+      <div class="thumb">${a.hasImage ? `<img src="/images/${a.id}.png?t=${Date.now()}">` : 'no image yet'}</div>
+      <div class="body">
+        <div class="name">${esc(a.name)}
+          <span class="badge b-${a.status}">${a.status}</span>
+          ${a.model ? `<span class="badge m-${a.model}">${a.model==='generating'||a.model==='submitting'?'<span class=spin>◐</span> ':''}3D: ${a.model}</span>` : ''}
+          ${a.model==='done' ? `<a class="preview" href="/preview/${a.id}" target="_blank">preview ↗</a>` : ''}
+        </div>
+        <label>Prompt</label>
+        <textarea class="prompt" id="p-${a.id}">${esc(a.prompt)}</textarea>
+        <label>Extra direction (appended on regenerate)</label>
+        <textarea class="extra" id="x-${a.id}">${esc(a.extraPrompt||'')}</textarea>
+        <div class="row">
+          <button onclick="gen('${a.id}')" ${busy.has(a.id)||!state.keys.gemini?'disabled':''}>${busy.has(a.id)?'<span class=spin>◐</span> generating…':(a.hasImage?'Regenerate image':'Generate image')}</button>
+          <button class="approve" onclick="act('${a.id}','approve')" ${!a.hasImage?'disabled':''}>Approve</button>
+          <button class="deny" onclick="act('${a.id}','deny')" ${!a.hasImage?'disabled':''}>Deny</button>
+          <button onclick="if(confirm('Delete ${esc(a.name)}?'))act('${a.id}','delete')">Delete</button>
+        </div>
+        ${a.error ? `<div class="err">${esc(a.error)}</div>` : ''}
+      </div>
+    </div>`).join('') || '<p class="sub">No assets yet — add one above.</p>';
+}
+
+function esc(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function addAsset() {
+  const name = document.getElementById('newName').value;
+  const prompt = document.getElementById('newPrompt').value;
+  if (!name.trim() || !prompt.trim()) return alert('name and prompt required');
+  await api('/api/assets', { name, prompt });
+  document.getElementById('newName').value = ''; document.getElementById('newPrompt').value = '';
+}
+
+async function saveFields(id) {
+  await fetch(`/api/assets/${id}/update`, { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ prompt: document.getElementById('p-'+id).value, extraPrompt: document.getElementById('x-'+id).value }) });
+}
+
+async function gen(id) {
+  await saveFields(id);
+  busy.add(id); render();
+  try {
+    await api(`/api/assets/${id}/generate`, { extraPrompt: document.getElementById('x-'+id)?.value ?? undefined });
+  } finally { busy.delete(id); await refresh(); }
+}
+
+async function act(id, action) {
+  if (document.getElementById('p-'+id)) await saveFields(id);
+  await api(`/api/assets/${id}/${action}`);
+}
+
+async function generateModels() { await api('/api/generate-models'); }
+
+refresh();
+setInterval(() => { if (busy.size === 0) refresh(); }, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "test-terracotta-pot",
+    "name": "Test Terracotta Pot",
+    "prompt": "A single terracotta pot with red geraniums, medieval Italian style, isolated on a plain white background, three-quarter view, soft even studio lighting, no shadows on the background, photorealistic painted-miniature look",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "medieval-light-post",
+    "name": "Medieval Light Post",
+    "prompt": "A 13th century medieval street light post: a tall dark wrought-iron post rising from a heavy octagonal stone base, an ornate scrolled iron bracket arm at the top holding a hanging lantern with amber glass panes framed in blackened iron, warm candle glow inside. Weathered medieval Italian craftsmanship, Florence circa 1300. Single object, the entire post visible from stone base to lantern top, isolated on a plain white background, three-quarter view, soft even studio lighting, no cast shadows, painted-miniature look.",
+    "extraPrompt": "No text anywhere in the image. No labels, no banners, no scrolls, no captions. The object only.",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "120fb553-8f31-4d5e-adc6-fb0dd47e1b1e",
+    "error": null
+  },
+  {
+    "id": "light-post",
+    "name": "Light Post",
+    "prompt": "A 13th century medieval street light post: a tall dark wrought-iron post rising from a heavy octagonal stone base, an ornate scrolled iron bracket arm at the top holding a hanging lantern with amber glass panes framed in blackened iron, warm candle glow inside. Weathered medieval Italian craftsmanship, Florence circa 1300. Single object, the entire post visible from stone base to lantern top, isolated on a plain white background, three-quarter view, soft even studio lighting, no cast shadows, painted-miniature look. No text anywhere in the image, no labels, no banners, no captions.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "b53fe44c-e0b3-4bdc-bad7-c4a8a7f0c301",
+    "error": null
+  }
+]

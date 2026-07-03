@@ -118,3 +118,7 @@ Assets/Scripts/Config/GeminiConfig.json
 
 # Large 3D source refs (keep local, not in git)
 Refrences/3dassets/*.glb
+
+# asset-gen tool secrets + output
+Tools/asset-gen/.env
+Tools/asset-gen/output/
