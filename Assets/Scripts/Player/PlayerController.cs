@@ -20,6 +20,11 @@ public class PlayerController : MonoBehaviour
     private static readonly int MoveY = Animator.StringToHash("MoveY");
     private static readonly int Speed  = Animator.StringToHash("Speed");
 
+    // Kneel ceremony (shrine pledge): movement locks and a directional kneel
+    // state plays until the timer runs out, then control returns.
+    private float _kneelUntil;
+    private int _stateBeforeKneel;
+
     private void Awake()
     {
         _rb  = GetComponent<Rigidbody>();
@@ -42,6 +47,19 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (Time.time < _kneelUntil)
+        {
+            _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+            _anim.SetFloat(Speed, 0f);
+            return;
+        }
+        if (_stateBeforeKneel != 0)
+        {
+            // kneel just ended — ease back into the locomotion tree
+            _anim.CrossFade(_stateBeforeKneel, 0.15f);
+            _stateBeforeKneel = 0;
+        }
+
         // Snap raw input to 4 cardinal directions
         _snapped = SnapToCardinal(_moveInput);
 
@@ -76,6 +94,22 @@ public class PlayerController : MonoBehaviour
         // _anim is guaranteed by [RequireComponent(typeof(Animator))].
         _anim.SetFloat(MoveX, snapped.x);
         _anim.SetFloat(MoveY, snapped.y);
+    }
+
+    // Kneel facing a world position (the shrine) for a few seconds. The sprite
+    // set has north (back to camera) and south (facing camera) kneels; pick by
+    // the camera-relative direction toward the target, and hold that facing.
+    public void KneelToward(Vector3 worldPos, float seconds = 3f)
+    {
+        if (_cam == null) _cam = Camera.main ? Camera.main.transform : null;
+        Vector3 to = worldPos - transform.position;
+        float screenY = _cam ? Vector3.Dot(to, Vector3.ProjectOnPlane(_cam.forward, Vector3.up).normalized) : to.z;
+        bool north = screenY >= 0f; // target is up-screen -> kneel showing his back
+
+        SetFacing(new Vector2(0f, north ? 1f : -1f));
+        _stateBeforeKneel = _anim.GetCurrentAnimatorStateInfo(0).fullPathHash;
+        _kneelUntil = Time.time + seconds;
+        _anim.CrossFade(north ? "Kneeling_north" : "Kneeling_south", 0.1f);
     }
 
     // Returns one of: (1,0) (−1,0) (0,1) (0,−1) or (0,0)

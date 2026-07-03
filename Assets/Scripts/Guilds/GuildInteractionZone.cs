@@ -6,7 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class GuildInteractionZone : MonoBehaviour
 {
-    public enum Kind { Inn, Donation, Transmute }
+    public enum Kind { Inn, Donation, Transmute, Join }
 
     [Header("Service")]
     public Kind kind = Kind.Inn;
@@ -75,6 +75,9 @@ public class GuildInteractionZone : MonoBehaviour
                 break;
             case Kind.Transmute:
                 GuildPanelUI.Instance?.OpenTransmute(label);
+                break;
+            case Kind.Join:
+                GuildPanelUI.Instance?.OpenJoin(guildId, label, transform.position);
                 break;
         }
     }

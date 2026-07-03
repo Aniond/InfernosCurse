@@ -163,5 +163,71 @@
     "model": "done",
     "taskId": "0f1510d0-6f8b-4152-a612-829de5877d46",
     "error": null
+  },
+  {
+    "id": "prop-high-altar",
+    "name": "Prop High Altar",
+    "prompt": "A grand medieval cathedral high altar: rectangular marble altar table with carved gothic arcade front panels, white and green marble inlay, gilded candlestick pair and a golden crucifix on top, richly carved, Florence trecento style. Single object, entire object visible, straight-on three-quarter view, isolated on a plain white background, soft even studio lighting, no shadows on background, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "30b615c9-bc6a-4764-be9c-6c68a303fb08",
+    "error": null
+  },
+  {
+    "id": "prop-baptismal-font",
+    "name": "Prop Baptismal Font",
+    "prompt": "An octagonal medieval baptismal font of white Carrara marble with green serpentine inlay panels, carved on a stepped octagonal base, shallow ornate basin, Florence baptistery style circa 1300. Single object, entire object visible, straight-on three-quarter view, isolated on a plain white background, soft even studio lighting, no shadows on background, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "142781f5-366d-4897-812e-0af9e437554f",
+    "error": null
+  },
+  {
+    "id": "prop-choir-screen",
+    "name": "Prop Choir Screen",
+    "prompt": "A low medieval cathedral choir screen section: white marble balustrade with carved openwork gothic quatrefoil panels and small columns, waist-high, straight section, Florence trecento style. Single object, entire object visible, straight-on three-quarter view, isolated on a plain white background, soft even studio lighting, no shadows on background, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "9f35f74a-773a-4aa2-b784-ec79f8e4a641",
+    "error": null
+  },
+  {
+    "id": "prop-candelabrum",
+    "name": "Prop Candelabrum",
+    "prompt": "A tall standing bronze candelabrum for a medieval cathedral: dark bronze tripod base, tall stem with foliate ornament, seven-branched crown holding thick beeswax candles with small flames, gothic craftsmanship. Single object, entire object visible, straight-on three-quarter view, isolated on a plain white background, soft even studio lighting, no shadows on background, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "92b7552f-6766-4b95-a490-0d18f72e9e4f",
+    "error": null
+  },
+  {
+    "id": "prop-cathedral-door",
+    "name": "Prop Cathedral Door",
+    "prompt": "A massive medieval cathedral double door: dark oak wood with iron studs and hinges, tall rectangular panels with carved relief scenes, bronze ring handles, weathered wood, Florence trecento style, shown closed as one flat object. Single object, entire object visible, straight-on three-quarter view, isolated on a plain white background, soft even studio lighting, no shadows on background, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "b1069082-8e4f-447e-9229-c16668efb253",
+    "error": null
+  },
+  {
+    "id": "shrine-of-san-zenobio",
+    "name": "Shrine of San Zenobio",
+    "prompt": "A freestanding medieval reliquary shrine of Saint Zenobius for the center of a cathedral crossing: a gilded bronze and white marble casket-shrine on a stepped octagonal marble base, gothic arcade sides with small saint figures, a small gabled roof with a gold cross finial, votive candles on the base corners, richly detailed goldsmith work, Florence trecento style. Single object, entire shrine visible, straight-on three-quarter view, isolated on a plain white background, soft even studio lighting, no shadows on background, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "e06b4a70-3c4c-49b2-904c-dec5c10ef5c3",
+    "error": null
   }
 ]

@@ -22,10 +22,11 @@ public class GuildPanelUI : MonoBehaviour
     public bool pauseWhileOpen = true;
     public string[] blockedScenes = { "WorldMap", "MainMenu", "Battle", "BattleArena" };
 
-    enum Mode { Standings, Donation, Transmute }
+    enum Mode { Standings, Donation, Transmute, Join }
     Mode _mode;
     string _donationGuildId;
     string _contextLabel;
+    Vector3 _shrinePos;
 
     Canvas _canvas;
     GameObject _root;
@@ -95,8 +96,20 @@ public class GuildPanelUI : MonoBehaviour
         Show();
     }
 
+    public void OpenJoin(string guildId, string label, Vector3 shrinePos)
+    {
+        if (IsBlockedScene()) return;
+        _mode = Mode.Join;
+        _donationGuildId = guildId; // reuse the context guild slot
+        _contextLabel = label;
+        _shrinePos = shrinePos;
+        Rebuild();
+        Show();
+    }
+
     void Show()
     {
+        EnsureEventSystem();
         _root.SetActive(true);
         _open = true;
         if (pauseWhileOpen)
@@ -104,6 +117,19 @@ public class GuildPanelUI : MonoBehaviour
             _savedTimeScale = Time.timeScale;
             Time.timeScale = 0f;
         }
+    }
+
+    // Scenes built by script (Duomo, Ponte Vecchio) never got an EventSystem, so
+    // panel buttons silently ignored clicks — the old "donation ui freeze". Any
+    // UI this panel opens now guarantees one exists in the loaded scene.
+    static void EnsureEventSystem()
+    {
+        if (UnityEngine.EventSystems.EventSystem.current != null) return;
+        if (FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() != null) return;
+        var go = new GameObject("[EventSystem]",
+            typeof(UnityEngine.EventSystems.EventSystem),
+            typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+        go.name = "[EventSystem]";
     }
 
     public void Close()
@@ -126,6 +152,7 @@ public class GuildPanelUI : MonoBehaviour
             case Mode.Standings: BuildStandings(); break;
             case Mode.Donation:  BuildDonation();  break;
             case Mode.Transmute: BuildTransmute(); break;
+            case Mode.Join:      BuildJoin();      break;
         }
 
         AddSpacer();
@@ -171,6 +198,45 @@ public class GuildPanelUI : MonoBehaviour
         if (f < 0.5f) return "They speak of you, sometimes kindly.";
         if (f < 0.75f) return "Doors open a little easier now.";
         return "They are close to trusting you with more.";
+    }
+
+    // Faction pledge at a shrine (the Duomo's Santuario di San Zenobio). Rep 0 =
+    // not yet sworn: offer the pledge. Otherwise show this one guild's standing —
+    // rank gates on the other rooms' services read from the same reputation.
+    void BuildJoin()
+    {
+        var guilds = GuildSystem.Instance;
+        var g = guilds != null ? guilds.GetGuild(_donationGuildId) : null;
+        _title.text = _contextLabel;
+        if (g == null) { AddHeader("The shrine is silent."); return; }
+
+        int rep = guilds.GetRep(g.guildId);
+        if (rep <= 0)
+        {
+            AddHeader("The shrine of San Zenobio, first bishop of Florence.");
+            AddCaption("Kneel, and pledge yourself to the Church. The city's grace" +
+                       " — and its secrets — open only to the faithful.");
+            AddRow("Pledge yourself to the Church", () =>
+            {
+                guilds.AwardRep(g.guildId, 25, "pledge of faith");
+                Close(); // ceremony: panel yields to the kneel (timescale resumes)
+                FindAnyObjectByType<PlayerController>()?.KneelToward(_shrinePos, 3.2f);
+            });
+        }
+        else
+        {
+            int rank = g.RankForRep(rep);
+            AddHeader($"{g.displayName} — {g.RankName(rank)}");
+            AddCaption(ProgressWords(g, rep, rank));
+            foreach (var p in g.perks)
+            {
+                if (string.IsNullOrEmpty(p.flavorText)) continue;
+                bool unlocked = p.unlockRank <= rank;
+                AddCaption((unlocked ? "◆ " : "◇ ") + p.flavorText, unlocked
+                    ? new Color(0.96f, 0.9f, 0.72f)
+                    : new Color(0.45f, 0.42f, 0.5f));
+            }
+        }
     }
 
     void BuildDonation()

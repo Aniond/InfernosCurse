@@ -1,0 +1,95 @@
+{
+  "group_id": null,
+  "states": [
+    {
+      "character": {
+        "id": "649553a4-1ab6-42bb-a9f2-889dba621e73",
+        "name": "A 13th-century Catholic priest, mid-30s,",
+        "prompt": "A 13th-century Catholic priest, mid-30s, black hair, green eyes, tall and slender build, wearing flowing white robes with embroidered gold trim that fall to the floor, polished brass cross pendant at neck, standing upright with hands gently clasped at waist. Full body visible from head to toe, elongated figure, head occupying roughly 1/6 of total body height. Pixel art style, no anti-aliasing, transparent background, sharp pixels only, isometric RPG sprite, HD-2D art style inspired by Octopath Traveler, front-facing 3/4 view, warm soft lighting.",
+        "size": {
+          "width": 244,
+          "height": 244
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "high top-down",
+        "created_at": "2026-06-29T22:19:43.546878+00:00"
+      },
+      "folder": "A_13th-century_Catholic_priest_mid-30s",
+      "frames": {
+        "rotations": {
+          "south": "A_13th-century_Catholic_priest_mid-30s/rotations/south.png",
+          "south-east": "A_13th-century_Catholic_priest_mid-30s/rotations/south-east.png",
+          "east": "A_13th-century_Catholic_priest_mid-30s/rotations/east.png",
+          "north-east": "A_13th-century_Catholic_priest_mid-30s/rotations/north-east.png",
+          "north": "A_13th-century_Catholic_priest_mid-30s/rotations/north.png",
+          "north-west": "A_13th-century_Catholic_priest_mid-30s/rotations/north-west.png",
+          "west": "A_13th-century_Catholic_priest_mid-30s/rotations/west.png",
+          "south-west": "A_13th-century_Catholic_priest_mid-30s/rotations/south-west.png"
+        },
+        "animations": {
+          "Walk": {
+            "north": [
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/north/frame_000.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/north/frame_001.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/north/frame_002.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/north/frame_003.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/north/frame_004.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/north/frame_005.png"
+            ],
+            "south": [
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/south/frame_000.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/south/frame_001.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/south/frame_002.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/south/frame_003.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/south/frame_004.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/south/frame_005.png"
+            ],
+            "east": [
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/east/frame_000.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/east/frame_001.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/east/frame_002.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/east/frame_003.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/east/frame_004.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/east/frame_005.png"
+            ],
+            "west": [
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/west/frame_000.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/west/frame_001.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/west/frame_002.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/west/frame_003.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/west/frame_004.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/Walk/west/frame_005.png"
+            ]
+          },
+          "The_character_gently_lowers_their_body_bending_the": {
+            "south": [
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_000.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_001.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_002.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_003.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_004.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_005.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_006.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_007.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/south/frame_008.png"
+            ],
+            "north": [
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_000.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_001.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_002.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_003.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_004.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_005.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_006.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_007.png",
+              "A_13th-century_Catholic_priest_mid-30s/animations/The_character_gently_lowers_their_body_bending_the/north/frame_008.png"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "export_version": "3.0",
+  "export_date": "2026-07-03T19:41:24.269917"
+}

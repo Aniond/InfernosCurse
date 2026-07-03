@@ -322,6 +322,14 @@ MonoBehaviour:
     triggerSize: {x: 3, y: 2.5, z: 3}
     innPrice: 10
     isGuildInn: 1
+  - sceneName: Duomo_DISABLED_until_events_phase
+    kind: 3
+    guildId: church
+    label: Santuario di San Zenobio
+    position: {x: 0, y: 1, z: 0}
+    triggerSize: {x: 4.5, y: 2.5, z: 4.5}
+    innPrice: 10
+    isGuildInn: 0
 --- !u!114 &2028659444268085293
 MonoBehaviour:
   m_ObjectHideFlags: 0
