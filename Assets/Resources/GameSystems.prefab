@@ -65,8 +65,8 @@ MonoBehaviour:
     blurb: The majestic red-tiled dome of Santa Maria del Fiore rises triumphantly
       above Florence, a symbol of the city's growing wealth and devotion during the
       13th century.
-    sceneName: 
-    entryId: 
+    sceneName: Duomo
+    entryId: duomo_entrance
     previewImage: {fileID: 21300000, guid: 4de55d6d22333584983a9a6601d1687c, type: 3}
     startingCurseLevel: 0
     startingSanctity: 0.85
@@ -306,12 +306,20 @@ MonoBehaviour:
     triggerSize: {x: 2.5, y: 2, z: 2.5}
     innPrice: 10
     isGuildInn: 1
-  - sceneName: MercatoVecchio
+  - sceneName: Duomo
     kind: 2
     guildId: church
-    label: Cappella di San Tommaso
-    position: {x: -8, y: 1, z: -12}
-    triggerSize: {x: 2.5, y: 2, z: 2.5}
+    label: Cappella Maggiore
+    position: {x: 0, y: 1, z: 20.5}
+    triggerSize: {x: 4, y: 2.5, z: 4}
+    innPrice: 10
+    isGuildInn: 1
+  - sceneName: Duomo
+    kind: 1
+    guildId: church
+    label: Cassetta delle Offerte
+    position: {x: 20.5, y: 1, z: 0}
+    triggerSize: {x: 3, y: 2.5, z: 3}
     innPrice: 10
     isGuildInn: 1
 --- !u!114 &2028659444268085293

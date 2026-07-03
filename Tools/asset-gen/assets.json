@@ -31,5 +31,16 @@
     "model": "done",
     "taskId": "b53fe44c-e0b3-4bdc-bad7-c4a8a7f0c301",
     "error": null
+  },
+  {
+    "id": "duomo-floor-plan",
+    "name": "Duomo Floor Plan",
+    "prompt": "Top-down orthographic architectural floor plan of a great Italian Gothic cathedral in the plan-shape of Santa Maria del Fiore in Florence. The plan has EXACTLY FOUR arms around ONE large central octagon, arranged like a clock face: at 12 o'clock (top) the ONLY nave � a long rectangular hall with two rows of pier dots forming side aisles, ending at a triple-door entrance facade at the very top; at 3 o'clock (right) ONE octagonal tribune ringed with small radiating chapel bays; at 6 o'clock (bottom) ONE identical octagonal tribune; at 9 o'clock (left) ONE identical octagonal tribune. Exactly three octagonal tribunes total and exactly one nave � no other arms, no second nave, no fourth tribune. Clean measured architectural drawing: thick solid dark walls, piers as filled dots, door openings as gaps, pale parchment background, high contrast, straight lines, uniform line weight. Strictly top-down, no perspective, no shading, no furniture, no people, absolutely no text or letters or numbers anywhere. Tall portrait composition, full plan visible with margins.",
+    "extraPrompt": "Almost perfect � keep this exact layout, but ATTACH the three octagonal tribunes directly onto the central octagon's faces: each tribune shares its inner wall with the octagon and opens into it through a wide archway gap. No empty space between tribunes and the central octagon � the whole cathedral is one connected building.",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]
