@@ -32,6 +32,7 @@ public class ZoneExit : MonoBehaviour
     private float _dwell;
     private bool  _armed;
     private bool  _fired;
+    private bool  _requireExitFirst;   // after a cancelled map-open: leave the trigger before re-firing
 
     void Awake()
     {
@@ -54,7 +55,7 @@ public class ZoneExit : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
-        if (_fired || !_armed) return;
+        if (_fired || !_armed || _requireExitFirst) return;
         if (!other.CompareTag(playerTag)) return;
 
         _dwell += Time.deltaTime;
@@ -64,7 +65,21 @@ public class ZoneExit : MonoBehaviour
 
     void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag(playerTag)) _dwell = 0f;
+        if (other.CompareTag(playerTag))
+        {
+            _dwell = 0f;
+            _requireExitFirst = false;
+        }
+    }
+
+    // Called by GugolMapUI when the map it opened is closed without traveling:
+    // the exit may fire again, but only after the player steps out of the
+    // trigger — otherwise standing at the gate re-opens the map in a loop.
+    public void RearmAfterMapClosed()
+    {
+        _fired = false;
+        _dwell = 0f;
+        _requireExitFirst = true;
     }
 
     void Fire()
@@ -73,6 +88,14 @@ public class ZoneExit : MonoBehaviour
         switch (mode)
         {
             case ExitMode.ToWorldMap:
+                // The Gugol Mappe overlay opens in place (player keeps their
+                // position on cancel); the legacy WorldMap scene is the fallback.
+                var map = GugolMapUI.Instance;
+                if (map != null && map.OpenFromZoneExit(this))
+                {
+                    Debug.Log("[ZoneExit] Opened the world map overlay.");
+                    break;
+                }
                 Debug.Log("[ZoneExit] Returning to world map.");
                 LoadIfPossible("WorldMap");
                 break;

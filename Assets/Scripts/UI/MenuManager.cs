@@ -154,6 +154,10 @@ public class MenuManager : MonoBehaviour
 
     void Update()
     {
+        // The world map owns ESC while it's open (close card → close map);
+        // without this guard the same press would also toggle pause.
+        if (GugolMapUI.IsOpen) return;
+
         // Support both input systems
         bool escPressed = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
                        || Input.GetKeyDown(KeyCode.Escape);
@@ -242,19 +246,28 @@ public class MenuManager : MonoBehaviour
         Resume();
     }
 
-    // Hand off to the fast-travel menu. It manages its own pause/timescale, so we
+    // Hand off to the world map. It manages its own pause/timescale, so we
     // fully close the pause menu first (Resume) to avoid two systems fighting over
-    // Time.timeScale — the travel menu will re-pause itself.
+    // Time.timeScale — the map will re-pause itself. Falls back to the legacy
+    // list-style FastTravelMenu if the Gugol map is absent.
     public void OpenTravel()
     {
+        var map = GugolMapUI.Instance;
+        if (map != null)
+        {
+            Resume();      // closes panels + restores timeScale to 1
+            map.Open();    // re-pauses via its own logic
+            return;
+        }
+
         var travel = FindAnyObjectByType<FastTravelMenu>();
         if (travel == null)
         {
             Debug.LogWarning("[MenuManager] No FastTravelMenu in the scene.");
             return;
         }
-        Resume();          // closes panels + restores timeScale to 1
-        travel.Open();     // re-pauses via its own logic
+        Resume();
+        travel.Open();
     }
 
     public void OpenGuilds()

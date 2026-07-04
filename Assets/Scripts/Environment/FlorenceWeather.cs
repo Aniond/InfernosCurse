@@ -69,6 +69,7 @@ public class FlorenceWeather : MonoBehaviour
     MonthRow[] _months;
     RainSpell _spell;
     string _appliedDayKey = "";
+    string _appliedDistrictId = "";
     string _todayCondition = "";
     bool _fogBurnedOff;
 
@@ -109,6 +110,12 @@ public class FlorenceWeather : MonoBehaviour
         if (key != _appliedDayKey)
         {
             _appliedDayKey = key;
+            ApplyToday(cal);
+        }
+        // Same poll-don't-subscribe pattern for district changes: arriving in a
+        // new district re-derives its local variant of today's weather.
+        else if (DistrictTracker.CurrentNodeId != _appliedDistrictId)
+        {
             ApplyToday(cal);
         }
 
@@ -229,12 +236,99 @@ public class FlorenceWeather : MonoBehaviour
             cond = "rain"; // chained extension of yesterday's rain
 
         FloodRiskToday = _spell != null && spellDay >= _spell.floodRiskFromDay;
-        _todayCondition = cond;
-        _fogBurnedOff = false;
 
-        ApplyProfile(ProfileFor(cond, seed, spellDay), transitionSeconds);
+        // District layer: the city rolls ONE base condition (rain spells and
+        // flood logic stay city-wide), then the district the player occupies
+        // renders its own local variant of it.
+        var node = HubMap.Instance != null ? HubMap.Instance.GetNode(DistrictTracker.CurrentNodeId) : null;
+        string localCond = DeriveDistrictCondition(cond, node, seed);
+
+        _todayCondition = localCond;
+        _fogBurnedOff = false;
+        _appliedDistrictId = DistrictTracker.CurrentNodeId;
+
+        ApplyProfile(ProfileForDistrict(localCond, node, seed, spellDay), transitionSeconds);
         if (FloodRiskToday)
             Debug.Log($"[FlorenceWeather] Rain spell day {spellDay} — FLOOD RISK on the Arno (1269/1333-style).");
+    }
+
+    // ── per-district variants ────────────────────────────────────────────────
+
+    // FNV-1a — stable across runtimes/domain reloads, unlike string.GetHashCode.
+    static int NodeSalt(string id)
+    {
+        unchecked
+        {
+            uint h = 2166136261;
+            foreach (char c in id ?? "") { h ^= c; h *= 16777619; }
+            return (int)h;
+        }
+    }
+
+    // Pure function of (city condition, microclimate, date, node id): a given
+    // district always shows the same local weather on a given day.
+    static string DeriveDistrictCondition(string city, HubNode node, int daySeed)
+    {
+        if (node == null || node.microClimate == MicroClimate.Default) return city;
+        var rng = new System.Random(daySeed ^ NodeSalt(node.id));
+        switch (node.microClimate)
+        {
+            case MicroClimate.Riverside:
+                // Radiation fog pools over the Arno on days the city wakes clear.
+                if (city == "clear" && rng.NextDouble() < 0.35) return "fog";
+                return city;
+            case MicroClimate.OpenPiazza:
+                // Open squares turn gusty under an otherwise clear sky.
+                if (city == "clear" && rng.NextDouble() < 0.25) return "wind";
+                return city;
+            case MicroClimate.Sheltered:
+                // Walls and rooflines blunt the worst of it.
+                if (city == "storm") return "rain";
+                if (city == "hail")  return "rain";
+                if (city == "wind")  return "clear";
+                return city;
+            case MicroClimate.Hilltop:
+                // Hills sit above the valley's radiation fog but catch the wind.
+                if (city == "fog"   && rng.NextDouble() < 0.65) return "clear";
+                if (city == "clear" && rng.NextDouble() < 0.30) return "wind";
+                return city;
+            default:
+                return city;
+        }
+    }
+
+    string ProfileForDistrict(string cond, HubNode node, int seed, int spellDay)
+    {
+        int salt = node != null ? NodeSalt(node.id) : 0;
+        string profile = ProfileFor(cond, seed ^ salt, spellDay);
+        // The river bank catches a rain spell hardest.
+        if (node != null && node.microClimate == MicroClimate.Riverside &&
+            cond == "rain" && spellDay >= 1)
+            profile = "Heavy Rain";
+        return profile;
+    }
+
+    /// <summary>
+    /// The condition ("clear","fog","rain","storm","wind","snow","sleet","hail")
+    /// a district shows today. Pure and side-effect free — the Gugol Mappe pins
+    /// call this for their weather glyphs, including while the game is paused.
+    /// </summary>
+    public string ConditionForNode(HubNode node)
+    {
+        EnsureData();
+        var cal = GameCalendar.Instance;
+        if (cal == null || _months == null || node == null) return "clear";
+        var row = RowForDay(cal, cal.DayOfYear);
+        if (row == null) return "clear";
+
+        int seed = Seed(cal.Year, cal.DayOfYear);
+        string cond = BaseCondition(row, seed);
+        int spellDay = 0;
+        if (IsWet(cond) || InSpellSeason(row))
+            spellDay = SpellDay(cal, cal.Year, cal.DayOfYear);
+        if (spellDay >= 1 && !IsWet(cond))
+            cond = "rain";
+        return DeriveDistrictCondition(cond, node, seed);
     }
 
     string ProfileFor(string cond, int seed, int spellDay)
@@ -299,6 +393,7 @@ public class FlorenceWeather : MonoBehaviour
         // A save-restore counts as today's weather — don't re-roll over it.
         var cal = GameCalendar.Instance;
         if (cal != null) _appliedDayKey = cal.Year + ":" + cal.DayOfYear;
+        _appliedDistrictId = DistrictTracker.CurrentNodeId;
 
         Debug.Log($"[FlorenceWeather] Weather set: {profileName}");
     }

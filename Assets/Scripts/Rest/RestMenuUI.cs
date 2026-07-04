@@ -52,6 +52,8 @@ public class RestMenuUI : MonoBehaviour
 
     void Update()
     {
+        if (GugolMapUI.IsOpen) return;   // typing in the map's search bar must not open menus
+
         bool pressed =
             (Keyboard.current != null && hotkey != Key.None && Keyboard.current[hotkey].wasPressedThisFrame)
             || Input.GetKeyDown(hotkeyLegacy);

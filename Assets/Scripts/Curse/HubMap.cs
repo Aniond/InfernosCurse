@@ -13,7 +13,15 @@ using System.Collections.Generic;
 // double-drive curse growth.
 public class HubMap : MonoBehaviour
 {
-    public static HubMap Instance { get; private set; }
+    // Lazy-resolving like FlorenceWeather/GameCalendar: a mid-play domain
+    // reload (script recompile during play) wipes Awake-set statics without
+    // re-running Awake, leaving the singleton permanently null otherwise.
+    static HubMap _instance;
+    public static HubMap Instance
+    {
+        get => _instance != null ? _instance : (_instance = FindAnyObjectByType<HubMap>());
+        private set => _instance = value;
+    }
 
     [Header("Curse")]
     public CurseDefinition activeCurse;
@@ -70,6 +78,8 @@ public class HubMap : MonoBehaviour
                 sceneName   = nd.sceneName,
                 entryId     = nd.entryId,
                 previewImage = nd.previewImage,
+                microClimate = nd.microClimate,
+                kind        = nd.kind,
                 curseLevel  = nd.startingCurseLevel,
                 sanctity    = nd.startingSanctity,
                 population  = nd.population,
@@ -171,6 +181,7 @@ public class HubMap : MonoBehaviour
 
     public HubNode GetNode(string id)
     {
+        EnsureGraphBuilt();   // _nodes isn't serialized — self-heal after a mid-play domain reload
         foreach (var n in _nodes) if (n.id == id) return n;
         return null;
     }
@@ -242,13 +253,20 @@ public class HubMap : MonoBehaviour
         OnNodeChanged?.Invoke(node);
     }
 
-    // Returns average curse across all nodes (feeds globalCurseLevel)
+    // Returns average curse across all nodes (feeds globalCurseLevel).
+    // Road waypoints are excluded — near-unpopulated dots on the region map
+    // would dilute the city's corruption average.
     public float GlobalCurseLevel()
     {
-        if (_nodes.Count == 0) return 0f;
         float sum = 0f;
-        foreach (var n in _nodes) sum += n.curseLevel;
-        return sum / _nodes.Count;
+        int count = 0;
+        foreach (var n in _nodes)
+        {
+            if (n.kind == NodeKind.Waypoint) continue;
+            sum += n.curseLevel;
+            count++;
+        }
+        return count == 0 ? 0f : sum / count;
     }
 
     // Seed a battle grid's curse density from this node's curseLevel
@@ -275,6 +293,10 @@ public class HubNodeData
     public string      sceneName;        // scene to load on Enter (optional)
     public string      entryId;          // ZoneEntryPoint id to spawn at on arrival
     public Sprite      previewImage;     // location splash for the detail panel
+    [Tooltip("Local weather character — drives the per-district weather variant.")]
+    public MicroClimate microClimate = MicroClimate.Default;
+    [Tooltip("District = city-layer pin; Town/Waypoint/City = region-layer.")]
+    public NodeKind kind = NodeKind.District;
     [Range(0f, 1f)] public float startingCurseLevel = 0f;
     [Range(0f, 1f)] public float startingSanctity   = 0f;
     [Range(0f, 1f)] public float population         = 0.5f;
