@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 407752065719074716}
   - component: {fileID: 7514825637817488855}
   - component: {fileID: 2858445001899856432}
+  - component: {fileID: 8033714565646588844}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -584,6 +585,28 @@ MonoBehaviour:
   beniditoPreUnlocked:
   - {fileID: 11400000, guid: d7bf72395eb1483daf0f0ea3b646ca8b, type: 2}
   - {fileID: 11400000, guid: 7eabe3686e2340d68618e3bf750797ff, type: 2}
+--- !u!114 &8033714565646588844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da4a90bf08f9fd0478d195d08f3cc3c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AssetRegistry
+  allSkills:
+  - {fileID: 11400000, guid: d7bf72395eb1483daf0f0ea3b646ca8b, type: 2}
+  - {fileID: 11400000, guid: b9deadd23c1843dba208c1d01dd0361e, type: 2}
+  - {fileID: 11400000, guid: 7eabe3686e2340d68618e3bf750797ff, type: 2}
+  - {fileID: 11400000, guid: b5c87a90681f4ccdb795768eaccb9850, type: 2}
+  - {fileID: 11400000, guid: e71993e9476c474e9f6cf980b6b92e7c, type: 2}
+  - {fileID: 11400000, guid: 4c1a9be02d3f45e18a7c2b90d1e4f6a3, type: 2}
+  - {fileID: 11400000, guid: 7e5d3fa18b2c460f9d4a1c87e3b5f0d2, type: 2}
+  allJobs:
+  - {fileID: 11400000, guid: e244652f53734a54bbbdbc6dc0e8b188, type: 2}
 --- !u!1001 &3242152288469685475
 PrefabInstance:
   m_ObjectHideFlags: 0

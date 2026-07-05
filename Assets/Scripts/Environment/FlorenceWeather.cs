@@ -309,6 +309,26 @@ public class FlorenceWeather : MonoBehaviour
     }
 
     /// <summary>
+    /// Pure flood-risk check for an arbitrary date. DailyCurseDrift calls this
+    /// per day-tick so multi-day jumps (road travel, rest chains) charge the
+    /// Arno flood spike on exactly the days it applies — the cached static
+    /// FloodRiskToday only reflects the LAST ApplyToday and goes stale across
+    /// AdvanceDay×N loops.
+    /// </summary>
+    public bool ComputeFloodRisk(int year, int dayOfYear)
+    {
+        EnsureData();
+        var cal = GameCalendar.Instance;
+        if (cal == null || _months == null || _spell == null) return false;
+        var row = RowForDay(cal, dayOfYear);
+        if (row == null) return false;
+
+        string cond = BaseCondition(row, Seed(year, dayOfYear));
+        if (!IsWet(cond) && !InSpellSeason(row)) return false;
+        return SpellDay(cal, year, dayOfYear) >= _spell.floodRiskFromDay;
+    }
+
+    /// <summary>
     /// The condition ("clear","fog","rain","storm","wind","snow","sleet","hail")
     /// a district shows today. Pure and side-effect free — the Gugol Mappe pins
     /// call this for their weather glyphs, including while the game is paused.

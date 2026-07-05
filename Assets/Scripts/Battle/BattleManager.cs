@@ -375,24 +375,33 @@ public class BattleManager : MonoBehaviour
     {
         if (unit.QueuedSkill == null) { EndUnitTurn(unit); return; }
 
+        // Is this resolving during the unit's own LIVE turn (instant action),
+        // or between turns (a charge completing from the CT loop)? Turn-flow
+        // flags (_hasActed/_turnComplete) belong to the live active turn only —
+        // a delayed charge must never stomp another unit's (or stale) state.
+        bool liveOwnTurn = unit == _activeUnit && !_turnComplete;
+
         AbilityResolver.Resolve(unit, unit.QueuedSkill, unit.QueuedTargetPos);
         unit.QueuedSkill  = null;
         unit.QueuedTarget = null;
-        _hasActed         = true;
+        if (liveOwnTurn) _hasActed = true;
 
         if (unit.IsPlayer)
         {
             // FFT order freedom: acting first still allows the move afterward.
             // (Only for the live active player turn — a charge-resolution for a
-            // player long past their turn just completes.)
-            if (unit == _activeUnit && !_turnComplete && !_hasMoved && unit.IsAlive && !IsBattleOver())
+            // player long past their turn just completes, touching nothing.)
+            if (liveOwnTurn)
             {
-                SetState(BattleState.PlayerSelectMove);
-                ShowMoveRange(unit);
-            }
-            else
-            {
-                _turnComplete = true;
+                if (!_hasMoved && unit.IsAlive && !IsBattleOver())
+                {
+                    SetState(BattleState.PlayerSelectMove);
+                    ShowMoveRange(unit);
+                }
+                else
+                {
+                    _turnComplete = true;
+                }
             }
         }
         else

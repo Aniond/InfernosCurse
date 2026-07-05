@@ -5,10 +5,12 @@ using UnityEngine;
 // little. This — not HubMap's dormant real-time diffusion — is the hub-curse
 // driver, so time itself is the resource the player spends by resting.
 //
-// Polls the calendar by day-key instead of subscribing (same init-order and
-// domain-reload reasoning as FlorenceWeather, and a poll is idempotent per
-// day). The first key ever seen is recorded WITHOUT ticking (baseline day);
-// the key persists through saves so loading never double-ticks.
+// Ticks via GameCalendar.OnDayChanged — which fires once per AdvanceDay — so a
+// multi-day jump (road travel, rest chains) charges EVERY day it burns, not
+// just the last one. The day-key poll in Update remains as an init-order /
+// domain-reload safety net; the key check makes both paths idempotent per day.
+// The first key ever seen is recorded WITHOUT ticking (baseline day); the key
+// persists through saves so loading never double-ticks.
 //
 // Guild perks deliberately have no hook here: guilds bend REST costs and
 // enable cleansing — the tide itself is untouchable (design rule: perks
@@ -16,17 +18,43 @@ using UnityEngine;
 public class DailyCurseDrift : MonoBehaviour
 {
     [Tooltip("Nodes that touch the Arno — they take the flood spike on " +
-             "FloodRiskToday days.")]
+             "flood-risk days.")]
     public string[] riverNodeIds = { "pontevecchio", "oltrarno" };
 
     /// <summary>Last day-key applied (persisted by SaveSystem).</summary>
     public string AppliedDayKey { get; private set; } = "";
 
+    GameCalendar _subscribedTo;
+
     public void RestoreDayKey(string key) => AppliedDayKey = key;
+
+    void OnDisable()
+    {
+        if (_subscribedTo != null) _subscribedTo.OnDayChanged -= OnDayChanged;
+        _subscribedTo = null;
+    }
+
+    void OnDayChanged(GameCalendar cal) => Tick(cal);
 
     void Update()
     {
         var cal = GameCalendar.Instance;
+        if (cal == null) return;
+
+        // Lazy subscribe (calendar lives on the same prefab but init order and
+        // mid-play domain reloads make Awake-time subscription unreliable).
+        if (_subscribedTo != cal)
+        {
+            if (_subscribedTo != null) _subscribedTo.OnDayChanged -= OnDayChanged;
+            cal.OnDayChanged += OnDayChanged;
+            _subscribedTo = cal;
+        }
+
+        Tick(cal);   // safety net: catches the baseline day + anything missed
+    }
+
+    void Tick(GameCalendar cal)
+    {
         var hub = HubMap.Instance;
         if (cal == null || hub == null || hub.activeCurse == null) return;
 
@@ -37,12 +65,17 @@ public class DailyCurseDrift : MonoBehaviour
         AppliedDayKey = key;
         if (firstSight) return; // baseline day — record, don't tick
 
-        ApplyDrift(hub, hub.activeCurse);
+        ApplyDrift(hub, hub.activeCurse, cal);
     }
 
-    void ApplyDrift(HubMap hub, CurseDefinition curse)
+    void ApplyDrift(HubMap hub, CurseDefinition curse, GameCalendar cal)
     {
-        bool flood = FlorenceWeather.FloodRiskToday;
+        // Per-day flood check: the cached FloodRiskToday static goes stale
+        // across AdvanceDay×N loops (it reflects the last ApplyToday only).
+        var fw = FlorenceWeather.Instance;
+        bool flood = fw != null
+            ? fw.ComputeFloodRisk(cal.Year, cal.DayOfYear)
+            : FlorenceWeather.FloodRiskToday;
         foreach (var node in hub.AllNodes)
         {
             float delta = curse.dailyGrowthBase;

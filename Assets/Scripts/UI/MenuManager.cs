@@ -209,6 +209,13 @@ public class MenuManager : MonoBehaviour
 
     public void OpenSave()
     {
+        // Mid-battle saves capture a scene without its encounter state —
+        // loading one soft-locks. SaveSystem refuses too; this keeps the UI honest.
+        if (!SaveSystem.CanSaveHere())
+        {
+            Debug.Log("[MenuManager] Saving isn't available mid-battle.");
+            return;
+        }
         if (pausePanel) pausePanel.SetActive(false);
         RefreshSlotLabels(saveSlotLabels);
         if (savePanel) savePanel.SetActive(true);
@@ -242,8 +249,8 @@ public class MenuManager : MonoBehaviour
     {
         var data = SaveSystem.Load(slot);
         if (data == null) return;
-        SaveSystem.ApplySave(data);
-        Resume();
+        Resume();   // close menus + restore timeScale BEFORE any scene load
+        SaveSystem.LoadAndApply(data);   // loads the saved scene, then applies
     }
 
     // Hand off to the world map. It manages its own pause/timescale, so we

@@ -105,6 +105,36 @@ public static class BattleIntegrationSetup
         }
     }
 
+    // ── 4. Asset registry (save-game name→asset restore) ──────────────────────
+
+    [MenuItem("InfernosCurse/Battle Integration/4. Populate Asset Registry")]
+    public static void PopulateAssetRegistry()
+    {
+        var root = PrefabUtility.LoadPrefabContents(PrefabPath);
+        try
+        {
+            var registry = root.GetComponent<AssetRegistry>();
+            if (registry == null) registry = root.AddComponent<AssetRegistry>();
+
+            registry.allSkills = AssetDatabase.FindAssets("t:SkillDefinition", new[] { "Assets/Data" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<SkillDefinition>(AssetDatabase.GUIDToAssetPath(g)))
+                .Where(s => s != null)
+                .ToArray();
+            registry.allJobs = AssetDatabase.FindAssets("t:JobDefinition", new[] { "Assets/Data" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<JobDefinition>(AssetDatabase.GUIDToAssetPath(g)))
+                .Where(j => j != null)
+                .ToArray();
+
+            PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
+            Debug.Log($"[BattleIntegration] AssetRegistry populated: {registry.allSkills.Length} skills, " +
+                      $"{registry.allJobs.Length} jobs. Re-run after adding new skill/job assets.");
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+    }
+
     // ── 3. Build settings ──────────────────────────────────────────────────────
 
     [MenuItem("InfernosCurse/Battle Integration/3. Add BattleArena To Build Settings")]
