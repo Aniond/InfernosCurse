@@ -18,10 +18,13 @@ public class BattleUnit : MonoBehaviour
     public bool        IsPlayer;         // true = controlled by player
 
     // Queued action (charge-time abilities)
-    public SkillDefinition  QueuedSkill;
-    public BattleUnit       QueuedTarget;
-    public Vector2Int       QueuedTargetPos;
-    public int              ChargeTicksRemaining;
+    public SkillDefinition       QueuedSkill;
+    public BattleUnit            QueuedTarget;
+    public Vector2Int            QueuedTargetPos;
+    public int                   ChargeTicksRemaining;
+    // Set only when QueuedSkill came from an absorbed slot — carries the
+    // level/refine-scaled power override into AbilityResolver at resolve time.
+    public AbsorbedSkillInstance QueuedAbsorbedInstance;
 
     public StatusEffectList Status { get; private set; } = new StatusEffectList();
 
@@ -146,12 +149,13 @@ public class BattleUnit : MonoBehaviour
 
     // ── Actions ───────────────────────────────────────────────────────────────
 
-    public void QueueAction(SkillDefinition skill, BattleUnit target, Vector2Int targetPos)
+    public void QueueAction(SkillDefinition skill, BattleUnit target, Vector2Int targetPos, AbsorbedSkillInstance absorbedInstance = null)
     {
-        QueuedSkill          = skill;
-        QueuedTarget         = target;
-        QueuedTargetPos      = targetPos;
-        ChargeTicksRemaining = BattleFormulas.ActionChargeTicks(this, skill);
+        QueuedSkill             = skill;
+        QueuedTarget            = target;
+        QueuedTargetPos         = targetPos;
+        QueuedAbsorbedInstance  = absorbedInstance;
+        ChargeTicksRemaining    = BattleFormulas.ActionChargeTicks(this, skill);
 
         if (ChargeTicksRemaining > 0)
         {

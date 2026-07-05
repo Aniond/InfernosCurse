@@ -66,10 +66,12 @@ public class BattleForecastUI : MonoBehaviour
 
         label.enabled = true;
         var user = bm.ActiveUnit;
+        var absorbedInstance = bm.SelectedAbsorbedInstance;
+        float powerOverride = absorbedInstance != null ? absorbedInstance.GetEffectivePower() : -1f;
 
         if (skill.isHealing)
         {
-            int heal = BattleFormulas.CalcHeal(user, skill); // small variance — close enough for forecast
+            int heal = BattleFormulas.CalcHeal(user, skill, powerOverride); // small variance — close enough for forecast
             label.text = $"{skill.skillName} → {target.Data.displayName}\n" +
                          $"heals ~{heal}   HP {target.Data.currentHP}/{target.Data.GetTotalStats().hpMax}";
         }
@@ -80,7 +82,7 @@ public class BattleForecastUI : MonoBehaviour
         }
         else
         {
-            var (min, max, hit) = BattleFormulas.PreviewAttack(user, target, skill);
+            var (min, max, hit) = BattleFormulas.PreviewAttack(user, target, skill, powerOverride);
             string status = skill.appliesStatus ? $"  +{skill.statusType} {(int)(skill.statusChance * 100)}%" : "";
             label.text = $"{skill.skillName} → {target.Data.displayName}\n" +
                          $"{min}-{max} dmg   {(int)(hit * 100)}% hit{status}   " +

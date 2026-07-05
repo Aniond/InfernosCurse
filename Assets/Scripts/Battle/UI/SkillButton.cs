@@ -19,8 +19,12 @@ public class SkillButton : MonoBehaviour
     public static readonly Color DisabledColor     = new Color(0.30f, 0.25f, 0.22f, 0.70f); // greyed
     public static readonly Color InsufficientColor = new Color(0.80f, 0.15f, 0.10f, 0.90f); // red flash
 
-    public SkillDefinition Skill      { get; private set; }
-    public bool            HasSkill   => Skill != null;
+    public SkillDefinition       Skill            { get; private set; }
+    public bool                  HasSkill         => Skill != null;
+    // Set only for absorbed-slot buttons — carries level/refine scaling back
+    // to ActionMenu.OnSkillChosen so the cast can pass it through to the
+    // resolver instead of using the definition's raw basePower.
+    public AbsorbedSkillInstance AbsorbedInstance { get; private set; }
 
     private ActionMenu  _menu;
     private BattleUnit  _unit;
@@ -38,10 +42,11 @@ public class SkillButton : MonoBehaviour
 
     public void Setup(SkillDefinition skill, int slotIndex, ActionMenu menu, BattleUnit unit)
     {
-        Skill      = skill;
-        _slotIndex = slotIndex;
-        _menu      = menu;
-        _unit      = unit;
+        Skill            = skill;
+        AbsorbedInstance = null;
+        _slotIndex       = slotIndex;
+        _menu            = menu;
+        _unit            = unit;
 
         if (skill == null)
         {
@@ -65,9 +70,41 @@ public class SkillButton : MonoBehaviour
         if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
     }
 
+    // Absorbed-slot variant — label shows DisplayName() ("Holy X +N" / "X +N")
+    // so corrupted vs refined state and level are visible at a glance.
+    public void SetupAbsorbed(AbsorbedSkillInstance instance, int slotIndex, ActionMenu menu, BattleUnit unit)
+    {
+        AbsorbedInstance = instance;
+        Skill            = instance?.EffectiveDefinition;
+        _slotIndex       = slotIndex;
+        _menu            = menu;
+        _unit            = unit;
+
+        if (Skill == null)
+        {
+            SetEmpty();
+            return;
+        }
+
+        _btn.interactable = true;
+
+        if (skillNameLabel) skillNameLabel.text = instance.DisplayName();
+        if (spCostLabel)    spCostLabel.text    = $"SP {Skill.spCost}";
+        if (icon)
+        {
+            icon.sprite = Skill.icon;
+            icon.gameObject.SetActive(Skill.icon != null);
+        }
+
+        bool canAfford = unit.HasSP(Skill.spCost);
+        SetBackground(canAfford ? NormalColor : DisabledColor);
+        if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+    }
+
     void SetEmpty()
     {
         _btn.interactable = false;
+        AbsorbedInstance = null;
         if (skillNameLabel) skillNameLabel.text  = "—";
         if (spCostLabel)    spCostLabel.text     = "";
         if (icon)           icon.gameObject.SetActive(false);
@@ -79,8 +116,9 @@ public class SkillButton : MonoBehaviour
     public void OnClick()
     {
         if (!HasSkill) return;
-        _menu?.Select(_slotIndex);
-        _menu?.OnSkillChosen(Skill, _slotIndex);
+        if (AbsorbedInstance != null) _menu?.SelectAbsorbed(_slotIndex);
+        else                          _menu?.Select(_slotIndex);
+        _menu?.OnSkillChosen(Skill, _slotIndex, AbsorbedInstance);
     }
 
     // Called when mouse enters — mirrors keyboard highlight behavior

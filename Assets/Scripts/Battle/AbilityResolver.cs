@@ -3,8 +3,12 @@ using System.Collections.Generic;
 
 public static class AbilityResolver
 {
-    // Main entry point — resolves a skill use from user onto a target position
-    public static void Resolve(BattleUnit user, SkillDefinition skill, Vector2Int targetPos)
+    // Main entry point — resolves a skill use from user onto a target position.
+    // absorbedInstance is set only when the cast came from Dante's absorbed
+    // slots; it supplies the level/refine-scaled power in place of
+    // skill.basePower (skill here is already EffectiveDefinition — holy swap
+    // if refined — see BattleManager.PlayerSelectAbsorbedSkill).
+    public static void Resolve(BattleUnit user, SkillDefinition skill, Vector2Int targetPos, AbsorbedSkillInstance absorbedInstance = null)
     {
         if (skill == null) return;
 
@@ -19,11 +23,13 @@ public static class AbilityResolver
             user.SpendSP(skill.spCost);
         }
 
+        float powerOverride = absorbedInstance != null ? absorbedInstance.GetEffectivePower() : -1f;
+
         // Gather targets
         var targets = GatherTargets(user, skill, targetPos);
 
         foreach (var target in targets)
-            ApplySkill(user, target, skill);
+            ApplySkill(user, target, skill, powerOverride);
     }
 
     static List<BattleUnit> GatherTargets(BattleUnit user, SkillDefinition skill, Vector2Int targetPos)
@@ -50,14 +56,14 @@ public static class AbilityResolver
         return result;
     }
 
-    static void ApplySkill(BattleUnit user, BattleUnit target, SkillDefinition skill)
+    static void ApplySkill(BattleUnit user, BattleUnit target, SkillDefinition skill, float powerOverride = -1f)
     {
         if (!target.IsAlive) return;
 
         switch (skill.skillType)
         {
             case SkillType.Active:
-                ApplyActive(user, target, skill);
+                ApplyActive(user, target, skill, powerOverride);
                 break;
 
             case SkillType.Passive:
@@ -68,12 +74,12 @@ public static class AbilityResolver
         }
     }
 
-    static void ApplyActive(BattleUnit user, BattleUnit target, SkillDefinition skill)
+    static void ApplyActive(BattleUnit user, BattleUnit target, SkillDefinition skill, float powerOverride = -1f)
     {
         // Healing skills
         if (skill.isHealing)
         {
-            int heal = BattleFormulas.CalcHeal(user, skill);
+            int heal = BattleFormulas.CalcHeal(user, skill, powerOverride);
             target.Heal(heal);
             Debug.Log($"{user.Data.displayName} heals {target.Data.displayName} for {heal}.");
             return;
@@ -98,7 +104,7 @@ public static class AbilityResolver
         }
 
         // Damage
-        int dmg  = BattleFormulas.CalcDamage(user, target, skill);
+        int dmg  = BattleFormulas.CalcDamage(user, target, skill, powerOverride);
         bool crit = BattleFormulas.RollCrit(user);
         if (crit)
         {

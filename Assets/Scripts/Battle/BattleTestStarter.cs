@@ -16,6 +16,13 @@ public class BattleTestStarter : MonoBehaviour
     [Header("Enemy skills")]
     public SkillDefinition[] enemySkills;
 
+    [Header("Absorption test enemy")]
+    [Tooltip("Skill this enemy drops for Dante to absorb on defeat. Leave empty to skip spawning this enemy.")]
+    public SkillDefinition absorbTestSkill;
+    [Range(0f, 1f)]
+    [Tooltip("1.0 = guaranteed drop, for repeatable manual testing.")]
+    public float absorbTestDropChance = 1.0f;
+
     void Start()
     {
         // A real road encounter owns this scene load — stand down.
@@ -57,8 +64,21 @@ public class BattleTestStarter : MonoBehaviour
                 for (int i = 0; i < enemySkills.Length && i < 4; i++)
                     e.equippedSkills.actives[i] = enemySkills[i];
 
+        // Absorption test enemy — a weak, isolated punching bag that always
+        // drops a skill on defeat, for repeatable manual testing of the
+        // absorb -> equip -> cast loop without relying on the normal drop RNG.
+        if (absorbTestSkill != null)
+        {
+            var dummy = MakeCombatant("Skill Husk", CombatantRole.Enemy,
+                str: 4, dex: 4, con: 4, cre: 4, faith: 4, per: 4, spd: 4, hp: 15, sp: 0);
+            dummy.learnableSkills = new[] { absorbTestSkill };
+            dummy.skillDropChance = absorbTestDropChance;
+            dummy.equippedSkills.actives[0] = absorbTestSkill;
+            enemies.Add(dummy);
+        }
+
         var playerSpawns = new List<Vector2Int> { new Vector2Int(3, 3), new Vector2Int(4, 2) };
-        var enemySpawns  = new List<Vector2Int> { new Vector2Int(10, 8), new Vector2Int(9, 9) };
+        var enemySpawns  = new List<Vector2Int> { new Vector2Int(10, 8), new Vector2Int(9, 9), new Vector2Int(9, 8) };
 
         bm.StartBattle(players, enemies, playerSpawns, enemySpawns);
 

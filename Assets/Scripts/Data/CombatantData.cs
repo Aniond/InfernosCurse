@@ -11,6 +11,9 @@ public class SkillSlots
     public SkillDefinition[] actives  = new SkillDefinition[4];
     [Tooltip("3 passive skill slots.")]
     public SkillDefinition[] passives = new SkillDefinition[3];
+    [Tooltip("3 absorbed-skill slots (Dante only). Separate from actives so " +
+             "absorption never competes with job-learned skills for a slot.")]
+    public AbsorbedSkillInstance[] absorbed = new AbsorbedSkillInstance[3];
 
     public bool EquipActive(SkillDefinition skill, int slot)
     {
@@ -24,6 +27,19 @@ public class SkillSlots
         if (slot < 0 || slot >= passives.Length) return false;
         passives[slot] = skill;
         return true;
+    }
+
+    public bool EquipAbsorbed(AbsorbedSkillInstance instance, int slot)
+    {
+        if (slot < 0 || slot >= absorbed.Length) return false;
+        absorbed[slot] = instance;
+        return true;
+    }
+
+    public void UnequipAbsorbed(AbsorbedSkillInstance instance)
+    {
+        for (int i = 0; i < absorbed.Length; i++)
+            if (absorbed[i] == instance) absorbed[i] = null;
     }
 }
 

@@ -49,6 +49,7 @@ public class BattleManager : MonoBehaviour
     private HashSet<Vector2Int> _validMoves   = new HashSet<Vector2Int>();  // authoritative — UI can't teleport units
     private HashSet<Vector2Int> _validTargets = new HashSet<Vector2Int>();
     private SkillDefinition     _selectedSkill;
+    private AbsorbedSkillInstance _selectedAbsorbedInstance;
     private bool                _hasMoved;
     private bool                _hasActed;
     private bool                _turnComplete;   // set when the active player turn should end
@@ -293,9 +294,23 @@ public class BattleManager : MonoBehaviour
     {
         if (State != BattleState.PlayerSelectAction) return;
         if (_hasActed) return;                    // one action per turn
-        _selectedSkill = skill;
+        _selectedSkill            = skill;
+        _selectedAbsorbedInstance = null;
         SetState(BattleState.PlayerSelectTarget);
         ShowAttackRange(_activeUnit, skill);
+    }
+
+    // Absorbed skills carry level/refine scaling via the instance — range/AoE/
+    // targeting still read from EffectiveDefinition (holy swap if refined).
+    public void PlayerSelectAbsorbedSkill(AbsorbedSkillInstance instance)
+    {
+        if (State != BattleState.PlayerSelectAction) return;
+        if (_hasActed) return;
+        if (instance?.definition == null) return;
+        _selectedSkill            = instance.EffectiveDefinition;
+        _selectedAbsorbedInstance = instance;
+        SetState(BattleState.PlayerSelectTarget);
+        ShowAttackRange(_activeUnit, _selectedSkill);
     }
 
     public void PlayerSelectActionTarget(Vector2Int targetPos)
@@ -305,7 +320,7 @@ public class BattleManager : MonoBehaviour
         if (!_validTargets.Contains(targetPos)) return;   // authoritative range check
 
         var target = Grid.GetCell(targetPos)?.occupant;
-        _activeUnit.QueueAction(_selectedSkill, target, targetPos);
+        _activeUnit.QueueAction(_selectedSkill, target, targetPos, _selectedAbsorbedInstance);
         SetState(BattleState.ResolvingAction);
         HideRangeHighlights();
 
@@ -326,7 +341,8 @@ public class BattleManager : MonoBehaviour
     public void PlayerCancelTarget()
     {
         if (State != BattleState.PlayerSelectTarget) return;
-        _selectedSkill = null;
+        _selectedSkill            = null;
+        _selectedAbsorbedInstance = null;
         HideRangeHighlights();
         SetState(BattleState.PlayerSelectAction);
     }
@@ -381,9 +397,10 @@ public class BattleManager : MonoBehaviour
         // a delayed charge must never stomp another unit's (or stale) state.
         bool liveOwnTurn = unit == _activeUnit && !_turnComplete;
 
-        AbilityResolver.Resolve(unit, unit.QueuedSkill, unit.QueuedTargetPos);
-        unit.QueuedSkill  = null;
-        unit.QueuedTarget = null;
+        AbilityResolver.Resolve(unit, unit.QueuedSkill, unit.QueuedTargetPos, unit.QueuedAbsorbedInstance);
+        unit.QueuedSkill             = null;
+        unit.QueuedTarget            = null;
+        unit.QueuedAbsorbedInstance  = null;
         if (liveOwnTurn) _hasActed = true;
 
         if (unit.IsPlayer)
@@ -475,6 +492,10 @@ public class BattleManager : MonoBehaviour
     // Skill the player is currently aiming (null outside PlayerSelectTarget).
     // Used by the cursor's AOE preview and the forecast panel.
     public SkillDefinition SelectedSkill => State == BattleState.PlayerSelectTarget ? _selectedSkill : null;
+    // Non-null only when the aimed skill came from an absorbed slot — the
+    // forecast panel needs this to preview the level/refine-scaled power
+    // instead of the definition's raw basePower.
+    public AbsorbedSkillInstance SelectedAbsorbedInstance => State == BattleState.PlayerSelectTarget ? _selectedAbsorbedInstance : null;
 
     // ── Post-kill rewards ─────────────────────────────────────────────────────
 

@@ -56,8 +56,12 @@ public class CharacterSheet : MonoBehaviour
     public Image strBar, dexBar, conBar, creBar, faithBar, percBar, spdBar;
 
     private CharacterStats _stats;
+    private CombatantData  _combatant;   // the real party member, when known (Skills tab source)
     private bool _isOpen;
     private MenuManager _menuManager;
+
+    // ── Skills tab (absorbed skills — Dante/Benidito only) ───────────────────
+    private Transform _absorbedListParent;
 
     static readonly Color TabActive   = new Color(0.35f, 0.22f, 0.10f, 1f);
     static readonly Color TabInactive = new Color(0.15f, 0.10f, 0.05f, 1f);
@@ -86,21 +90,28 @@ public class CharacterSheet : MonoBehaviour
 
     public void Open(CharacterStats stats = null)
     {
+        _combatant = null;
+        OpenInternal(stats);
+    }
+
+    // Open for a specific party member — pulls the real CombatantData off the
+    // roster so the Skills tab can show that member's absorbed skills. Stats
+    // tab still reads the placeholder CharacterStats (job-driven stat display
+    // is separate, still-open work).
+    public void Open(int memberIndex)
+    {
+        var party = RestSystem.PartyMembers;
+        _combatant = (memberIndex >= 0 && memberIndex < party.Count) ? party[memberIndex] : null;
+        OpenInternal(stats: null);
+    }
+
+    void OpenInternal(CharacterStats stats)
+    {
         if (stats != null) _stats = stats;
         _isOpen = true;
         if (sheetPanel) sheetPanel.SetActive(true);
         Refresh();
         ShowTab(0);
-    }
-
-    // Open for a specific party member. TODO: once the party/job data system
-    // lands, look up that member's real CharacterStats here instead of the
-    // Dante placeholder. memberIndex is plumbed through now so the call sites
-    // are ready.
-    public void Open(int memberIndex)
-    {
-        // Placeholder: party roster not built yet — always shows _stats.
-        Open(stats: null);
     }
 
     public void Close()
@@ -152,11 +163,148 @@ public class CharacterSheet : MonoBehaviour
         SetTabColor(tabStats,     index == 0);
         SetTabColor(tabSkills,    index == 1);
         SetTabColor(tabEquipment, index == 2);
+
+        if (index == 1) RebuildAbsorbedSkills();
     }
 
     void SetTabColor(Button btn, bool active)
     {
         if (btn == null) return;
         btn.GetComponent<Image>().color = active ? TabActive : TabInactive;
+    }
+
+    // ── Skills tab — absorbed skills (Dante/Benidito only) ───────────────────
+    //
+    // Lists every AbsorbedSkillInstance the member holds (name, level, dupes,
+    // corrupted/holy) with an Equip button per open absorbed slot. Self-built
+    // into skillsContent the same way GuildPanelUI builds its lists, so no
+    // manual prefab wiring is required.
+
+    void RebuildAbsorbedSkills()
+    {
+        if (skillsContent == null) return;
+
+        if (_absorbedListParent == null)
+        {
+            var go = new GameObject("AbsorbedSkillsList", typeof(RectTransform),
+                typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
+            go.transform.SetParent(skillsContent.transform, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot     = new Vector2(0.5f, 1f);
+            rt.offsetMin = new Vector2(12f, rt.offsetMin.y);
+            rt.offsetMax = new Vector2(-12f, rt.offsetMax.y);
+
+            var vlg = go.GetComponent<VerticalLayoutGroup>();
+            vlg.spacing = 6;
+            vlg.childControlWidth = true;
+            vlg.childForceExpandWidth = true;
+            vlg.childControlHeight = true;
+            vlg.childForceExpandHeight = false;
+            go.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            _absorbedListParent = go.transform;
+        }
+
+        foreach (Transform child in _absorbedListParent)
+            Destroy(child.gameObject);
+
+        if (_combatant == null || _combatant.role != CombatantRole.Dante)
+        {
+            AddSkillsText("Only Dante's absorbed skills can be viewed here.", FontStyles.Italic,
+                new Color(0.6f, 0.58f, 0.62f));
+            return;
+        }
+
+        if (_combatant.absorbedSkills == null || _combatant.absorbedSkills.Count == 0)
+        {
+            AddSkillsText("No skills absorbed yet — defeat a marked enemy in battle.",
+                FontStyles.Italic, new Color(0.6f, 0.58f, 0.62f));
+            return;
+        }
+
+        var slots = _combatant.equippedSkills.absorbed;
+        foreach (var inst in _combatant.absorbedSkills)
+        {
+            if (inst == null) continue;
+
+            int equippedSlot = System.Array.IndexOf(slots, inst);
+            string state = inst.isRefined ? "Holy" : "Corrupted";
+            AddSkillsText($"{inst.DisplayName()}  ({state}, x{inst.duplicateCount})",
+                FontStyles.Bold, new Color(0.9f, 0.86f, 0.78f));
+
+            if (equippedSlot >= 0)
+            {
+                AddSkillsRow($"Equipped — Slot {equippedSlot + 1} (unequip)", () =>
+                {
+                    _combatant.equippedSkills.UnequipAbsorbed(inst);
+                    RebuildAbsorbedSkills();
+                });
+            }
+            else
+            {
+                int freeSlot = System.Array.IndexOf(slots, null);
+                if (freeSlot >= 0)
+                {
+                    AddSkillsRow($"Equip to Slot {freeSlot + 1}", () =>
+                    {
+                        _combatant.equippedSkills.EquipAbsorbed(inst, freeSlot);
+                        RebuildAbsorbedSkills();
+                    });
+                }
+                else
+                {
+                    AddSkillsText("All absorbed slots full — unequip one first.",
+                        FontStyles.Italic, new Color(0.6f, 0.4f, 0.4f));
+                }
+            }
+        }
+    }
+
+    void AddSkillsText(string text, FontStyles style, Color color)
+    {
+        var go = new GameObject("Text", typeof(RectTransform));
+        go.transform.SetParent(_absorbedListParent, false);
+        var t = go.AddComponent<TextMeshProUGUI>();
+        t.text = text;
+        t.fontSize = 22;
+        t.fontStyle = style;
+        t.color = color;
+        t.alignment = TextAlignmentOptions.MidlineLeft;
+        t.textWrappingMode = TextWrappingModes.Normal;
+        t.raycastTarget = false;
+    }
+
+    void AddSkillsRow(string label, UnityEngine.Events.UnityAction onClick)
+    {
+        var go = new GameObject("Row_" + label, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        go.transform.SetParent(_absorbedListParent, false);
+        go.GetComponent<LayoutElement>().minHeight = 40;
+
+        var img = go.GetComponent<Image>();
+        img.color = new Color(0.16f, 0.13f, 0.20f, 0.9f);
+
+        var btn = go.GetComponent<Button>();
+        btn.targetGraphic = img;
+        var colors = btn.colors;
+        colors.highlightedColor = new Color(0.30f, 0.24f, 0.36f, 1f);
+        colors.pressedColor     = new Color(0.45f, 0.36f, 0.20f, 1f);
+        colors.fadeDuration = 0.05f;
+        btn.colors = colors;
+        btn.onClick.AddListener(onClick);
+
+        var textGo = new GameObject("Text", typeof(RectTransform));
+        var t = textGo.AddComponent<TextMeshProUGUI>();
+        t.text = label;
+        t.fontSize = 20;
+        t.color = Color.white;
+        t.alignment = TextAlignmentOptions.MidlineLeft;
+        t.raycastTarget = false;
+        t.margin = new Vector4(16, 0, 8, 0);
+        var tRt = (RectTransform)t.transform;
+        tRt.SetParent(go.transform, false);
+        tRt.anchorMin = Vector2.zero; tRt.anchorMax = Vector2.one;
+        tRt.offsetMin = Vector2.zero; tRt.offsetMax = Vector2.zero;
     }
 }

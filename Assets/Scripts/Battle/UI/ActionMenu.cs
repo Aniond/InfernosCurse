@@ -13,6 +13,9 @@ public class ActionMenu : MonoBehaviour
     [Header("Skill Buttons (4 slots)")]
     public SkillButton[] skillButtons = new SkillButton[4];
 
+    [Header("Absorbed Skill Buttons (3 slots, Dante only)")]
+    public SkillButton[] absorbedSkillButtons = new SkillButton[3];
+
     [Header("Wait / Back Buttons")]
     public Button waitButton;
     public Button backButton;
@@ -29,8 +32,13 @@ public class ActionMenu : MonoBehaviour
 
     // ── Private ───────────────────────────────────────────────────────────────
     private BattleUnit      _activeUnit;
-    private int             _selectedIndex = 0;   // 0-3 = skills, 4 = wait
-    private const int       SLOT_COUNT     = 5;   // 4 skills + wait
+    // Logical slot index spans both button arrays plus Wait:
+    // [0..skillButtons.Length)                                   = actives
+    // [skillButtons.Length..skillButtons.Length+absorbed.Length) = absorbed
+    // last index                                                 = Wait
+    private int _selectedIndex = 0;
+    int SlotCount => skillButtons.Length + absorbedSkillButtons.Length + 1;
+    int WaitIndex => SlotCount - 1;
 
     void Start()
     {
@@ -73,7 +81,6 @@ public class ActionMenu : MonoBehaviour
         panel?.SetActive(true);
 
         var slots = unit.Data.equippedSkills.actives;
-
         for (int i = 0; i < skillButtons.Length; i++)
         {
             if (skillButtons[i] == null) continue;
@@ -81,7 +88,25 @@ public class ActionMenu : MonoBehaviour
             skillButtons[i].Setup(skill, i, this, unit);
         }
 
+        var absorbed = unit.Data.equippedSkills.absorbed;
+        for (int i = 0; i < absorbedSkillButtons.Length; i++)
+        {
+            if (absorbedSkillButtons[i] == null) continue;
+            var instance = (i < absorbed.Length) ? absorbed[i] : null;
+            absorbedSkillButtons[i].SetupAbsorbed(instance, i, this, unit);
+        }
+
         Select(0);
+    }
+
+    // Maps a logical slot index to its backing button, or null for Wait/OOB.
+    SkillButton ButtonAt(int index)
+    {
+        if (index < 0) return null;
+        if (index < skillButtons.Length) return skillButtons[index];
+        int absorbedIdx = index - skillButtons.Length;
+        if (absorbedIdx < absorbedSkillButtons.Length) return absorbedSkillButtons[absorbedIdx];
+        return null; // Wait or out of range
     }
 
     public void Close()
@@ -113,23 +138,29 @@ public class ActionMenu : MonoBehaviour
 
     void Navigate(int dir)
     {
-        int next = (_selectedIndex + dir + SLOT_COUNT) % SLOT_COUNT;
+        int count = SlotCount;
+        int next = (_selectedIndex + dir + count) % count;
         // Skip empty skill slots
-        for (int i = 0; i < SLOT_COUNT; i++)
+        for (int i = 0; i < count; i++)
         {
-            int candidate = (next + i) % SLOT_COUNT;
-            if (candidate == SLOT_COUNT - 1) { Select(candidate); return; } // wait is always valid
-            if (skillButtons[candidate] != null && skillButtons[candidate].HasSkill) { Select(candidate); return; }
+            int candidate = (next + i) % count;
+            if (candidate == WaitIndex) { Select(candidate); return; } // wait is always valid
+            var btn = ButtonAt(candidate);
+            if (btn != null && btn.HasSkill) { Select(candidate); return; }
         }
     }
 
     void Confirm()
     {
-        if (_selectedIndex == SLOT_COUNT - 1) { OnWait(); return; }
-        skillButtons[_selectedIndex]?.OnClick();
+        if (_selectedIndex == WaitIndex) { OnWait(); return; }
+        ButtonAt(_selectedIndex)?.OnClick();
     }
 
     // ── Selection ─────────────────────────────────────────────────────────────
+
+    // Kept for SkillButton's non-absorbed OnClick path — identical to Select,
+    // named separately so absorbed buttons have their own call site to hook.
+    public void SelectAbsorbed(int absorbedSlotIndex) => Select(skillButtons.Length + absorbedSlotIndex);
 
     public void Select(int index)
     {
@@ -137,28 +168,36 @@ public class ActionMenu : MonoBehaviour
 
         for (int i = 0; i < skillButtons.Length; i++)
             skillButtons[i]?.SetHighlight(i == index);
+        for (int i = 0; i < absorbedSkillButtons.Length; i++)
+            absorbedSkillButtons[i]?.SetHighlight((skillButtons.Length + i) == index);
 
-        SetWaitHighlight(index == SLOT_COUNT - 1);
+        SetWaitHighlight(index == WaitIndex);
 
         // Update detail panel
-        if (index < skillButtons.Length && skillButtons[index] != null && skillButtons[index].HasSkill)
-            ShowDetail(skillButtons[index].Skill);
+        var btn = ButtonAt(index);
+        if (btn != null && btn.HasSkill)
+            ShowDetail(btn.Skill);
         else
             detailPanel?.SetActive(false);
     }
 
-    // Called by SkillButton when the player clicks a skill
-    public void OnSkillChosen(SkillDefinition skill, int slotIndex)
+    // Called by SkillButton when the player clicks a skill. absorbedInstance
+    // is non-null only for absorbed-slot buttons and is forwarded so the cast
+    // uses its level/refine-scaled power instead of the definition's base.
+    public void OnSkillChosen(SkillDefinition skill, int slotIndex, AbsorbedSkillInstance absorbedInstance = null)
     {
         if (_activeUnit == null || skill == null) return;
 
         if (!_activeUnit.HasSP(skill.spCost))
         {
-            FlashNoSP(slotIndex);
+            FlashNoSP(slotIndex, absorbedInstance != null);
             return;
         }
 
-        BattleManager.Instance?.PlayerSelectSkill(skill);
+        if (absorbedInstance != null)
+            BattleManager.Instance?.PlayerSelectAbsorbedSkill(absorbedInstance);
+        else
+            BattleManager.Instance?.PlayerSelectSkill(skill);
         Close();
     }
 
@@ -201,8 +240,9 @@ public class ActionMenu : MonoBehaviour
         if (img) img.color = on ? SkillButton.HighlightColor : SkillButton.NormalColor;
     }
 
-    void FlashNoSP(int slotIndex)
+    void FlashNoSP(int slotIndex, bool isAbsorbed = false)
     {
-        skillButtons[slotIndex]?.FlashInsufficient();
+        if (isAbsorbed) absorbedSkillButtons[slotIndex]?.FlashInsufficient();
+        else            skillButtons[slotIndex]?.FlashInsufficient();
     }
 }

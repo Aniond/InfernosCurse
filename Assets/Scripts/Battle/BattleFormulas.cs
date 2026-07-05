@@ -6,9 +6,9 @@ public static class BattleFormulas
 {
     // ── Damage ────────────────────────────────────────────────────────────────
 
-    public static int CalcDamage(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    public static int CalcDamage(BattleUnit attacker, BattleUnit defender, SkillDefinition skill, float powerOverride = -1f)
     {
-        float dmg = CalcDamageCore(attacker, defender, skill);
+        float dmg = CalcDamageCore(attacker, defender, skill, powerOverride);
 
         // Random variance ±10%
         dmg *= Random.Range(0.9f, 1.1f);
@@ -17,14 +17,17 @@ public static class BattleFormulas
     }
 
     // Deterministic damage before variance/crit — shared by the real roll and
-    // the forecast preview so the two can never drift apart.
-    static float CalcDamageCore(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+    // the forecast preview so the two can never drift apart. powerOverride lets
+    // an absorbed skill substitute its level/refine-scaled power (see
+    // AbsorbedSkillInstance.GetEffectivePower) for the definition's basePower.
+    static float CalcDamageCore(BattleUnit attacker, BattleUnit defender, SkillDefinition skill, float powerOverride = -1f)
     {
         var atkStats = attacker.Data.GetTotalStats();
         var defStats = defender.Data.GetTotalStats();
 
+        float power       = powerOverride >= 0f ? powerOverride : skill.basePower;
         float scalingStat = GetScalingStat(atkStats, skill.primaryStat);
-        float baseDmg     = skill.basePower + scalingStat * skill.scalingMultiplier;
+        float baseDmg     = power + scalingStat * skill.scalingMultiplier;
 
         // Defense reduction based on damage type
         float defense = GetDefenseStat(defStats, skill.damageType);
@@ -58,9 +61,9 @@ public static class BattleFormulas
     // ── Forecast (FFT confirm-panel numbers — no RNG rolled) ──────────────────
 
     public static (int min, int max, float hitChance) PreviewAttack(
-        BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
+        BattleUnit attacker, BattleUnit defender, SkillDefinition skill, float powerOverride = -1f)
     {
-        float core = CalcDamageCore(attacker, defender, skill);
+        float core = CalcDamageCore(attacker, defender, skill, powerOverride);
         int min = Mathf.Max(1, Mathf.RoundToInt(core * 0.9f));
         int max = Mathf.Max(1, Mathf.RoundToInt(core * 1.1f));
         return (min, max, PreviewHitChance(attacker, defender, skill));
@@ -82,12 +85,13 @@ public static class BattleFormulas
 
     // ── Healing ───────────────────────────────────────────────────────────────
 
-    public static int CalcHeal(BattleUnit healer, SkillDefinition skill)
+    public static int CalcHeal(BattleUnit healer, SkillDefinition skill, float powerOverride = -1f)
     {
         var stats   = healer.Data.GetTotalStats();
         float faith = stats.faith;
         float cre   = stats.creativity;
-        float heal  = skill.basePower + faith * skill.scalingMultiplier + cre * 0.25f;
+        float power = powerOverride >= 0f ? powerOverride : skill.basePower;
+        float heal  = power + faith * skill.scalingMultiplier + cre * 0.25f;
 
         // Holy refinement bonus — if Dante is using a refined skill
         if (skill.damageType == DamageType.Holy) heal *= 1.2f;
