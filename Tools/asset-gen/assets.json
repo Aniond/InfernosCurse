@@ -235,11 +235,11 @@
     "name": "gugol map background",
     "prompt": "Top-down stylized city map of medieval Florence Italy in the year 1348, drawn in the exact visual language of a modern online map application but rendered on aged parchment: cream colored streets with pale gold arterial roads forming a clear modern-map road hierarchy, city blocks of tiny illustrated medieval buildings in muted sepia and terracotta, the Arno river crossing the lower third horizontally in muted blue-grey with a covered bridge lined with tiny shops, a huge cathedral with an enormous red-orange dome prominent in the upper center, a large open market square to its west, a fortress palace with one tall slender tower in the southeast, medieval city walls ringing everything, a few small green garden patches, subtle aged parchment texture with slightly darkened edges, soft even lighting, clean flat vector-like illustration, high detail, wide landscape 16:9 aspect ratio, NO text, NO labels, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "702941e9-07a7-4f88-b4f7-e74509326f79",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-pin",
@@ -248,8 +248,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "7ea5c5f9-3a8e-4f29-9b27-8bbd112cceb1",
     "error": null
   },
   {
@@ -257,11 +257,11 @@
     "name": "gugol you are here",
     "prompt": "A round lapis lazuli deep blue enamel dot set in a thin ornate gold ring, like a small jeweled Renaissance brooch, glossy, large in frame, centered. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "259b345a-62c4-4364-9cf7-06def732d1da",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 2 seconds.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-walker",
@@ -270,8 +270,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "0f0eb844-1b9c-4feb-9d1f-b0fd05ea7a15",
     "error": null
   },
   {
@@ -279,22 +279,22 @@
     "name": "gugol crest",
     "prompt": "Ornate circular illuminated-manuscript compass rose medallion crest, gold leaf with deep lapis blue and crimson pigment accents, Renaissance Florentine style, elaborate but readable at small size, centered. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "ddb0318d-b53c-45c4-bd69-4dbe7b440495",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-card-frame",
     "name": "gugol card frame",
     "prompt": "Rectangular vertical parchment panel card with clean straight edges, subtle aged texture, a thin sepia ink border line inset from the edge, one small red wax seal accent in the bottom right corner, flat front-on view, evenly lit. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "PLAIN border only: one thin dark sepia-brown ink line inset uniformly from the edge on all four sides. NO wax seal, NO ornaments, NO corner decorations, NO green tones. Perfectly uniform edges suitable for UI nine-slice scaling.",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "fad78c79-c8a4-4479-8207-f46ca0ac9900",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 2 seconds.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-searchbar",
@@ -303,8 +303,8 @@
     "extraPrompt": "Outline must be thin dark sepia BROWN ink, absolutely NO green anywhere. Plain aged parchment fill, no ornaments.",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "ac2cdc59-ffac-4a57-9db4-ab4a6ae75fb8",
     "error": null
   },
   {
@@ -314,8 +314,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "2fd3ab73-3943-4662-ac6d-a018e0f0adce",
     "error": null
   },
   {
@@ -323,22 +323,22 @@
     "name": "gugol icon clock",
     "prompt": "Small simple icon glyph, hand-inked in dark sepia brown, thick clean strokes, like a medieval woodcut pictogram, minimal detail, single centered symbol: a simple round clock face showing a time. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "0f1ebb15-703f-44a5-847d-920ad606776e",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-icon-sun",
     "name": "gugol icon sun",
     "prompt": "Small simple icon glyph, hand-inked in dark sepia brown, thick clean strokes, like a medieval woodcut pictogram, minimal detail, single centered symbol: a radiant sun with short wavy rays. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "f69a16d7-590b-4437-a99a-9ca57f72be08",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-icon-cloud",
@@ -347,8 +347,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "fc20b1da-5b83-4412-8d39-ce02595c063e",
     "error": null
   },
   {
@@ -358,8 +358,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "3720ae48-c419-4d1f-92ed-cebffe719c7d",
     "error": null
   },
   {
@@ -367,11 +367,11 @@
     "name": "gugol icon fog",
     "prompt": "Small simple icon glyph, hand-inked in dark sepia brown, thick clean strokes, like a medieval woodcut pictogram, minimal detail, single centered symbol: three stacked horizontal wavy fog lines. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "4306e017-68c7-4669-babd-ac35aff8a4e5",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-icon-wind",
@@ -380,8 +380,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "32c85ff5-96be-4071-964c-98ba4ab4ad3a",
     "error": null
   },
   {
@@ -391,8 +391,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "1e620cc1-aa00-4a0a-b29c-e7b42ee87231",
     "error": null
   },
   {
@@ -400,22 +400,22 @@
     "name": "gugol icon snow",
     "prompt": "Small simple icon glyph, hand-inked in dark sepia brown, thick clean strokes, like a medieval woodcut pictogram, minimal detail, single centered symbol: a six armed snowflake. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "abc79297-71d4-438e-8e7c-d9312c3779b5",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-icon-flood",
     "name": "gugol icon flood",
     "prompt": "Small simple icon glyph, hand-inked in dark sepia brown, thick clean strokes, like a medieval woodcut pictogram, minimal detail, single centered symbol: a warning triangle containing rising water waves. flat solid pure magenta background color #FF00FF filling every pixel behind the subject, no shadows on the background, no other objects, NO text, NO letters, NO watermark",
     "extraPrompt": "",
-    "status": "approved",
+    "status": "denied",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
-    "error": null
+    "model": "failed",
+    "taskId": "982cd7ca-ff38-43c1-b10f-05dd313ebf30",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
   },
   {
     "id": "gugol-region-map",
@@ -424,8 +424,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "a0e30aa5-1b4a-43ce-97f4-c661cf2762af",
     "error": null
   },
   {
@@ -435,8 +435,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "5025f649-91b9-47ba-a510-8ca9bd6f4ef1",
     "error": null
   },
   {
@@ -444,10 +444,98 @@
     "name": "gugol italy map",
     "prompt": "Top-down stylized map of the entire Italian peninsula around the year 1299, drawn in the visual language of a modern online map application but rendered on aged parchment: full boot-shaped coastline with surrounding seas in muted blue-grey, the Alps as a hatched mountain ridge across the top, the Apennine mountain spine running down the peninsula, major rivers in muted blue-grey (the Po across the north, the Arno in the center-west, the Tiber further south) with tiny stone bridges where roads cross them, a network of medieval pilgrim and trade roads as thin pale-gold lines running the length of the peninsula and branching to the coasts, small forests, rolling hills, coastal marshes, Sicily and Sardinia partially visible at the bottom edges, generous varied open geography across north center and south, ABSOLUTELY NO cities, NO towns, NO villages, NO buildings, NO castles, NO settlements of any kind, subtle aged parchment texture with slightly darkened burned edges, clean flat vector-like illustration, soft even lighting, square 1:1 aspect, NO text, NO labels, NO letters, NO watermark",
     "extraPrompt": "",
+    "status": "denied",
+    "hasImage": true,
+    "model": "failed",
+    "taskId": "5a421ffd-f17c-4d52-a103-a6a2c54918bd",
+    "error": "Tripo status 429 Too Many Requests: {\"error\":\"Request was throttled. Expected available in 1 second.\",\"error_code\":\"RATE_LIMITED\"}"
+  },
+  {
+    "id": "garden-fountain-basin",
+    "name": "Garden Fountain Basin",
+    "prompt": "A weathered stone fountain basin for a Renaissance-era Florentine rose garden: octagonal carved limestone basin with a simple central spout carving, aged and lightly mossy at the base, Tuscan garden craftsmanship, no water included (basin only). Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "82fce0fd-b5ff-4db1-a8f6-21f98e9204a6",
+    "error": null
+  },
+  {
+    "id": "garden-stone-bench",
+    "name": "Garden Stone Bench",
+    "prompt": "A simple carved stone garden bench for a Renaissance-era Italian rose garden: weathered limestone with plain curved armrests, lightly worn seat, aged Tuscan stonework, moss at the base. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "d6554bc3-b759-45de-a05f-d97bbb0caa0a",
+    "error": null
+  },
+  {
+    "id": "garden-wooden-pergola",
+    "name": "Garden Wooden Pergola",
+    "prompt": "A wooden garden pergola arch for a Renaissance-era Italian rose garden: weathered timber beams forming a simple arched trellis frame, rustic Tuscan carpentry, bare of vines. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "0b3dd2ca-3e22-473b-babf-759f51633efb",
+    "error": null
+  },
+  {
+    "id": "florist-market-stall",
+    "name": "Florist Market Stall",
+    "prompt": "A small wooden flower-seller's stall for a Renaissance-era Florentine garden: rustic timber counter and canopy frame, simple undyed canvas awning, a few empty wicker baskets on the counter, weathered medieval Italian craftsmanship. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "b5521b22-2e36-4919-9187-2a296b6a7802",
+    "error": null
+  },
+  {
+    "id": "rose-bush-crimson",
+    "name": "Rose Bush Crimson",
+    "prompt": "A full blooming rose bush, deep crimson-red velvet petals in rich abundant clusters, dark glossy green leaves, painterly heightened saturation and dreamlike golden light, like a rose from a fairy tale garden. Rounded bush form, no pot, growing directly from soil. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "792e877c-3959-4b5e-93db-0bd189695540",
+    "error": null
+  },
+  {
+    "id": "rose-bush-ivory",
+    "name": "Rose Bush Ivory",
+    "prompt": "A full blooming rose bush, luminous ivory-white petals with the faintest blush of cream at the center, abundant clusters, soft green-grey leaves, painterly heightened luminosity and dreamlike soft light, ethereal and pristine. Rounded bush form, no pot, growing directly from soil. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "4c32dd35-bf07-459c-985c-888c18c15a22",
+    "error": null
+  },
+  {
+    "id": "rose-bush-gold",
+    "name": "Rose Bush Gold",
+    "prompt": "A full blooming rose bush, radiant golden-yellow petals glowing warm like captured sunlight, abundant clusters, deep green leaves, painterly heightened saturation and dreamlike warm light. Rounded bush form, no pot, growing directly from soil. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "ee8bc828-2322-424b-878b-d51ac5835cbb",
+    "error": null
+  },
+  {
+    "id": "rose-climbing-wine",
+    "name": "Rose Climbing Wine",
+    "prompt": "A climbing rose vine trained on a rustic wooden trellis stake, deep wine-burgundy blooms cascading in layered clusters among dark green foliage, painterly heightened saturation, dreamlike and lush, romantic and slightly melancholic. Vertical climbing form. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "265f3662-e6aa-40bd-878a-0bbd27b44c4a",
     "error": null
   }
 ]
