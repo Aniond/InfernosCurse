@@ -306,6 +306,26 @@ MonoBehaviour:
     isRitualSite: 0
     isSanctuarySite: 0
     neighborIds: []
+  - id: giardino_rose
+    displayName: Giardino delle Rose
+    mapPosition: {x: 0, y: 0}
+    mapImagePosition: {x: 0.86, y: 0.2}
+    blurb: Terraced rose beds climb the hillside above the river, tended (they say)
+      by someone who still remembers what the flowers are for.
+    sceneName: GiardinoDelleRose
+    entryId: giardino_gate
+    previewImage: {fileID: 0}
+    microClimate: 4
+    kind: 0
+    mapLevel: 0
+    startingCurseLevel: 0.05
+    startingSanctity: 0.6
+    population: 0.15
+    isRitualSite: 0
+    isSanctuarySite: 0
+    neighborIds:
+    - signoria
+    - oltrarno
 --- !u!114 &6516014349141766986
 MonoBehaviour:
   m_ObjectHideFlags: 0

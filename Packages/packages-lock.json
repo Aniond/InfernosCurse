@@ -290,6 +290,14 @@
       },
       "url": "https://packages.unity.com"
     },
+    "xyz.staggart-creations.stylized-grass": {
+      "version": "file:xyz.staggart-creations.stylized-grass",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.render-pipelines.universal": "17.0.4"
+      }
+    },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
       "depth": 0,

@@ -336,6 +336,30 @@ public static class GugolMappeSetup
             neighborIds = new List<string> { "duomo", "mercato", "novella" },
         });
 
+        // Hillside district above the Arno — first zone on the Terrain
+        // pipeline (Stylized Water 3 / Grass Shader / Vegetation Spawner /
+        // Terrain Painter). Gated: quest flag unlocks the pin per
+        // docs/superpowers/specs/2026-07-05-giardino-delle-rose-design.md
+        // (unlock trigger itself not yet implemented — sceneName landing in
+        // Build Settings makes it VISIBLE; a separate quest system will need
+        // to gate visibility further once it exists, same as MapRouting's
+        // existing IsUnlocked/IsVisible split).
+        AddTeaserNode(hub, new HubNodeData
+        {
+            id = "giardino_rose",
+            displayName = "Giardino delle Rose",
+            sceneName = "GiardinoDelleRose",
+            entryId = "giardino_gate",
+            microClimate = MicroClimate.Hilltop,
+            mapImagePosition = new Vector2(0.86f, 0.20f),   // hillside above Signoria, overlooking the Arno
+            blurb = "Terraced rose beds climb the hillside above the river, tended (they " +
+                    "say) by someone who still remembers what the flowers are for.",
+            population = 0.15f,
+            startingCurseLevel = 0.05f,
+            startingSanctity = 0.6f,
+            neighborIds = new List<string> { "signoria", "oltrarno" },
+        });
+
         // ── Region layer (FFT overworld) ─────────────────────────────────────
         // City nodes deserialize kind=District (enum default 0) — correct as-is.
 

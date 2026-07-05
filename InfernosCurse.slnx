@@ -3,4 +3,13 @@
   <Project Path="DistantLands.Cozy.Runtime.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="sc.terrain.painter.editor.csproj" />
+  <Project Path="sc.stylizedwater3.runtime.csproj" />
+  <Project Path="sc.stylizedwater3.editor.csproj" />
+  <Project Path="sc.terrain.painter.runtime.csproj" />
+  <Project Path="sc.stylizedgrass.demo.runtime.csproj" />
+  <Project Path="sc.stylizedgrass.runtime.csproj" />
+  <Project Path="sc.stylizedgrass.editor.csproj" />
+  <Project Path="sc.vegetationspawner.editor.csproj" />
+  <Project Path="sc.vegetationspawner.runtime.csproj" />
 </Solution>
