@@ -8,12 +8,17 @@ using System.Collections.Generic;
 // APPEND ONLY — serialized as ints on GameSystems.prefab node data.
 public enum MicroClimate { Default, Riverside, OpenPiazza, Sheltered, Hilltop }
 
-// What a node IS on the Gugol map. Determines the map layer it renders on
-// (District → city zoom, everything else → region zoom) and its behavior:
-// Town = travelable settlement, Waypoint = road dot between towns (future
-// encounter hook, never a travel target), City = the zoom-in gateway pin
-// standing for all of Florence on the region layer.
+// What a node IS on the Gugol map: Town = travelable settlement, Waypoint =
+// road dot between towns (future encounter hook, never a travel target),
+// City = a zoom-in gateway pin standing for everything one level below it
+// (firenze on the region sheet, toscana on the Italy sheet).
 public enum NodeKind { District, Town, Waypoint, City }
+
+// Which zoom level a node renders on. The Gugol map is a stack of parchment
+// sheets: Florence districts → Tuscany region → the Italian peninsula (the
+// Nine Circles canvas — future circle-locations land there as data).
+// APPEND ONLY — serialized as ints on GameSystems.prefab node data.
+public enum MapLevel { City, Region, World }
 
 // Represents one location on the hub map (district, building, landmark).
 // Nodes are connected by edges — curse diffuses along those edges each hub tick.
@@ -29,6 +34,7 @@ public class HubNode
     public Sprite   previewImage;       // location splash shown in the detail panel
     public MicroClimate microClimate = MicroClimate.Default;
     public NodeKind kind = NodeKind.District;
+    public MapLevel mapLevel = MapLevel.City;
 
     [Range(0f, 1f)] public float curseLevel   = 0f;   // 0 = clean, 1 = fully corrupted
     [Range(0f, 1f)] public float sanctity     = 0f;   // holy resistance to spread

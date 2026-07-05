@@ -84,8 +84,8 @@ public static class GugolMappeSetup
         string srcDir = Path.Combine(projectRoot, WorkbenchImg);
         int imported = 0;
 
-        // Map backgrounds (city + region sheets): straight copy, no keying.
-        foreach (var bg in new[] { "gugol-map-background", "gugol-region-map" })
+        // Map backgrounds (city + region + Italy sheets): straight copy, no keying.
+        foreach (var bg in new[] { "gugol-map-background", "gugol-region-map", "gugol-italy-map" })
         {
             string bgSrc = Path.Combine(srcDir, bg + ".png");
             if (File.Exists(bgSrc))
@@ -206,7 +206,8 @@ public static class GugolMappeSetup
         importer.mipmapEnabled = false;
 
         string name = Path.GetFileNameWithoutExtension(path);
-        importer.maxTextureSize = name == "gugol-map-background" || name == "gugol-region-map" ? 2048
+        bool isSheet = name == "gugol-map-background" || name == "gugol-region-map" || name == "gugol-italy-map";
+        importer.maxTextureSize = isSheet ? 2048
                                 : name.StartsWith("gugol-icon") ? 256 : 512;
 
         // Panels stretch: give them 9-slice borders proportional to their size.
@@ -256,8 +257,9 @@ public static class GugolMappeSetup
             map.headerFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>($"{FontDir}/Cinzel SDF.asset");
             map.bodyFont   = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>($"{FontDir}/EBGaramond SDF.asset");
 
-            // Region layer art (parchment-color fallback until approved/imported).
+            // Region + Italy layer art (parchment-color fallback until approved/imported).
             map.regionBackground = LoadSprite($"{MapArtDir}/gugol-region-map.png");
+            map.worldBackground  = LoadSprite($"{MapArtDir}/gugol-italy-map.png");
             map.townPinSprite    = LoadSprite($"{MapArtDir}/gugol-town-pin.png");
 
             // One travel authority: the Gugol map takes M; the legacy list menu
@@ -342,6 +344,7 @@ public static class GugolMappeSetup
             id = "firenze",
             displayName = "Firenze",
             kind = NodeKind.City,
+            mapLevel = MapLevel.Region,
             mapImagePosition = new Vector2(0.54f, 0.56f),   // the walled city, gugol-region-map.png
             blurb = "The city itself — wool, florins, factions, and a curse working " +
                     "through its parishes. Zoom in to walk its districts.",
@@ -354,6 +357,7 @@ public static class GugolMappeSetup
             id = "wp_mugnone",
             displayName = "Ponte a Mugnone",
             kind = NodeKind.Waypoint,
+            mapLevel = MapLevel.Region,
             mapImagePosition = new Vector2(0.58f, 0.635f),  // on the NE road out of the city
             population = 0.05f,
             // sanlorenzo edge = the curse's road out of the city (diffusion bridge).
@@ -365,6 +369,7 @@ public static class GugolMappeSetup
             id = "fiesole",
             displayName = "Fiesole",
             kind = NodeKind.Town,
+            mapLevel = MapLevel.Region,
             sceneName = "Fiesole",
             entryId = "fiesole_gate",
             microClimate = MicroClimate.Hilltop,
@@ -376,13 +381,42 @@ public static class GugolMappeSetup
             neighborIds = new List<string> { "wp_mugnone" },
         });
 
+        // ── Italy level (the Nine Circles canvas — deliberately empty) ──────
+        // Geography only on the sheet; future circle-locations (GameBible §Nine
+        // Circles, mostly TBD) land here as data: Town nodes with scenes, or
+        // City gateways opening their own region sheets, plus generated map
+        // vignettes composited at their coords when David picks each location.
+        AddTeaserNode(hub, new HubNodeData
+        {
+            id = "toscana",
+            displayName = "Toscana",
+            kind = NodeKind.City,
+            mapLevel = MapLevel.World,
+            mapImagePosition = new Vector2(0.43f, 0.64f),   // the Arno valley, gugol-italy-map.png
+            blurb = "Wool towns, hill roads, and the Arno valley — and beneath " +
+                    "its quiet days, the first circle of something worse.",
+            population = 1.0f,
+        });
+
         // Re-runs on a prefab that predates a field addition must still land
-        // the region kinds/positions/wiring (AddTeaserNode skips existing ids).
+        // the kinds/levels/positions (AddTeaserNode skips existing ids).
         SetKind(hub, "firenze", NodeKind.City);
         SetKind(hub, "wp_mugnone", NodeKind.Waypoint);
+        SetKind(hub, "toscana", NodeKind.City);
         SetPos(hub, "firenze",    0.54f, 0.56f);    // tuned to gugol-region-map.png
         SetPos(hub, "wp_mugnone", 0.58f, 0.635f);
         SetPos(hub, "fiesole",    0.62f, 0.71f);
+        SetPos(hub, "toscana",    0.43f, 0.64f);    // tuned to gugol-italy-map.png
+
+        // MapLevel migration — EXPLICIT ids only (a blanket kind-based sweep
+        // would stomp future world-level Towns back to Region on re-runs).
+        foreach (var n in hub.nodeData)
+            if (n.kind == NodeKind.District) n.mapLevel = MapLevel.City;
+        SetLevel(hub, "firenze",    MapLevel.Region);
+        SetLevel(hub, "wp_mugnone", MapLevel.Region);
+        SetLevel(hub, "fiesole",    MapLevel.Region);
+        SetLevel(hub, "toscana",    MapLevel.World);
+
         var fs = hub.nodeData.Find(n => n.id == "fiesole");
         if (fs != null)
         {
@@ -391,6 +425,12 @@ public static class GugolMappeSetup
             if (string.IsNullOrEmpty(fs.entryId))   fs.entryId = "fiesole_gate";
             fs.microClimate = MicroClimate.Hilltop;
         }
+    }
+
+    static void SetLevel(HubMap hub, string id, MapLevel level)
+    {
+        var node = hub.nodeData.Find(n => n.id == id);
+        if (node != null) node.mapLevel = level;
     }
 
     static void SetKind(HubMap hub, string id, NodeKind kind)

@@ -80,6 +80,7 @@ public class HubMap : MonoBehaviour
                 previewImage = nd.previewImage,
                 microClimate = nd.microClimate,
                 kind        = nd.kind,
+                mapLevel    = nd.mapLevel,
                 curseLevel  = nd.startingCurseLevel,
                 sanctity    = nd.startingSanctity,
                 population  = nd.population,
@@ -295,8 +296,10 @@ public class HubNodeData
     public Sprite      previewImage;     // location splash for the detail panel
     [Tooltip("Local weather character — drives the per-district weather variant.")]
     public MicroClimate microClimate = MicroClimate.Default;
-    [Tooltip("District = city-layer pin; Town/Waypoint/City = region-layer.")]
+    [Tooltip("District = city-layer pin; Town/Waypoint/City = region/world layers.")]
     public NodeKind kind = NodeKind.District;
+    [Tooltip("Which zoom sheet this node renders on.")]
+    public MapLevel mapLevel = MapLevel.City;
     [Range(0f, 1f)] public float startingCurseLevel = 0f;
     [Range(0f, 1f)] public float startingSanctity   = 0f;
     [Range(0f, 1f)] public float population         = 0.5f;

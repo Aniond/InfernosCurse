@@ -56,6 +56,8 @@ public class GugolMapUI : MonoBehaviour
 
     [Header("Region Layer — assigned by Setup GameSystems")]
     public Sprite regionBackground;
+    [Tooltip("The Italy sheet — the Nine Circles canvas (parchment fallback until art).")]
+    public Sprite worldBackground;
     [Tooltip("Pin art for region towns; falls back to the city pin sprite.")]
     public Sprite townPinSprite;
 
@@ -72,8 +74,6 @@ public class GugolMapUI : MonoBehaviour
     public float regionWalkDuration = 2.5f;
 
     // ── Runtime ────────────────────────────────────────────────────────────────
-    enum MapLayer { City, Region }
-
     Canvas _canvas;
     GameObject _root;
     RectTransform _pinLayer;         // pins + route both position in this rect
@@ -84,7 +84,7 @@ public class GugolMapUI : MonoBehaviour
     TMP_InputField _search;
     TextMeshProUGUI _searchPlaceholder;
     Button _zoomInBtn, _zoomOutBtn;
-    MapLayer _layer = MapLayer.City;
+    MapLevel _layer = MapLevel.City;
 
     readonly Dictionary<string, GugolMapPin> _pins = new();
     readonly List<GameObject> _waypointDots = new();
@@ -166,10 +166,10 @@ public class GugolMapUI : MonoBehaviour
         // haven't awakened, and touching e.g. outlineWidth then NREs inside TMP.
         _root.SetActive(true);
 
-        // Open on the layer the player is actually on: a Florence district
+        // Open on the sheet the player is actually on: a Florence district
         // shows the city sheet; Fiesole (or any region location) the region one.
         var curNode = _hub.GetNode(DistrictTracker.CurrentNodeId);
-        SetLayer(curNode == null || curNode.kind == NodeKind.District ? MapLayer.City : MapLayer.Region);
+        SetLayer(curNode?.mapLevel ?? MapLevel.City);
 
         _hub.OnNodeChanged -= OnNodeChanged;
         _hub.OnNodeChanged += OnNodeChanged;
@@ -231,17 +231,36 @@ public class GugolMapUI : MonoBehaviour
 
     // ── Layers ─────────────────────────────────────────────────────────────────
 
-    static MapLayer LayerOf(HubNode node)
-        => node.kind == NodeKind.District ? MapLayer.City : MapLayer.Region;
+    static MapLevel LayerOf(HubNode node) => node.mapLevel;
 
-    // The Google-zoom parody: one map, two sheets. Swaps the background,
-    // rebuilds pins for the layer, and clears route/card/search state.
-    void SetLayer(MapLayer layer)
+    Sprite BackgroundFor(MapLevel level)
+    {
+        switch (level)
+        {
+            case MapLevel.City:   return mapBackground;
+            case MapLevel.Region: return regionBackground;
+            default:              return worldBackground;
+        }
+    }
+
+    static string SearchHintFor(MapLevel level)
+    {
+        switch (level)
+        {
+            case MapLevel.City:   return "Search Florence...";
+            case MapLevel.Region: return "Search Tuscany...";
+            default:              return "Search Italy...";
+        }
+    }
+
+    // The Google-zoom parody: one map, a stack of parchment sheets. Swaps the
+    // background, rebuilds pins for the level, clears route/card/search state.
+    void SetLayer(MapLevel layer)
     {
         if (_travelling) return;
         _layer = layer;
 
-        var bg = layer == MapLayer.City ? mapBackground : regionBackground;
+        var bg = BackgroundFor(layer);
         if (bg != null) { _mapImg.sprite = bg; _mapImg.color = Color.white; }
         else            { _mapImg.sprite = null; _mapImg.color = new Color(0.89f, 0.83f, 0.70f, 1f); }
         _fitter.aspectRatio = bg != null ? bg.rect.width / bg.rect.height : 1f;
@@ -256,16 +275,15 @@ public class GugolMapUI : MonoBehaviour
         _route.Clear();
         _card.Hide();
         if (_search != null) _search.SetTextWithoutNotify("");
-        if (_searchPlaceholder != null)
-            _searchPlaceholder.text = layer == MapLayer.City ? "Search Florence..." : "Search Tuscany...";
+        if (_searchPlaceholder != null) _searchPlaceholder.text = SearchHintFor(layer);
         SetAllDimmed(null);
         RefreshZoomButtons();
     }
 
     void RefreshZoomButtons()
     {
-        if (_zoomInBtn  != null) _zoomInBtn.interactable  = _layer == MapLayer.Region && !_travelling;
-        if (_zoomOutBtn != null) _zoomOutBtn.interactable = _layer == MapLayer.City   && !_travelling;
+        if (_zoomInBtn  != null) _zoomInBtn.interactable  = _layer > MapLevel.City  && !_travelling;
+        if (_zoomOutBtn != null) _zoomOutBtn.interactable = _layer < MapLevel.World && !_travelling;
     }
 
     // ── Pins ───────────────────────────────────────────────────────────────────
@@ -302,9 +320,21 @@ public class GugolMapUI : MonoBehaviour
             bool flood = FlorenceWeather.FloodRiskToday && node.microClimate == MicroClimate.Riverside;
             pin.SetWeather(GlyphFor(cond), flood);
 
-            bool here = _layer == MapLayer.City
-                ? node.id == DistrictTracker.CurrentNodeId
-                : node.id == MapRouting.RegionAnchorId(cur);
+            bool here;
+            switch (_layer)
+            {
+                case MapLevel.City:
+                    here = node.id == DistrictTracker.CurrentNodeId;
+                    break;
+                case MapLevel.Region:
+                    here = node.id == MapRouting.RegionAnchorId(cur);
+                    break;
+                default:
+                    // Everything playable sits in Tuscany today — the gateway
+                    // pin carries the dot. Revisit when a second region exists.
+                    here = node.kind == NodeKind.City;
+                    break;
+            }
             pin.SetYouAreHere(here);
         }
     }
@@ -437,11 +467,12 @@ public class GugolMapUI : MonoBehaviour
         // Road dots are scenery (belt-and-braces — they aren't raycast targets).
         if (node.kind == NodeKind.Waypoint) return;
 
-        // The Florence pin on the region layer is the zoom-in gateway — always
-        // zooms, never opens a travel card.
+        // Gateway pins (Firenze on the region sheet, Toscana on the Italy
+        // sheet) always zoom one level in — never a travel card.
         if (node.kind == NodeKind.City)
         {
-            SetLayer(MapLayer.City);
+            if (node.mapLevel > MapLevel.City)
+                SetLayer(node.mapLevel - 1);
             return;
         }
 
@@ -492,7 +523,7 @@ public class GugolMapUI : MonoBehaviour
     {
         // SetLayer destroys pins and hides the card — switch first, then work
         // with re-resolved references only.
-        if (_layer != MapLayer.Region) SetLayer(MapLayer.Region);
+        if (_layer != MapLevel.Region) SetLayer(MapLevel.Region);
 
         _pins.TryGetValue(dstAnchor, out var anchorPin);
         Select(anchorPin);   // inbound (fiesole→district) selects the city pin
@@ -834,11 +865,11 @@ public class GugolMapUI : MonoBehaviour
 
         _zoomInBtn  = MakeZoomButton(group.transform, "+", new Vector2(0f, 56f), () =>
         {
-            if (_layer == MapLayer.Region) SetLayer(MapLayer.City);
+            if (_layer > MapLevel.City) SetLayer(_layer - 1);
         });
         _zoomOutBtn = MakeZoomButton(group.transform, "−", new Vector2(0f, 0f), () =>
         {
-            if (_layer == MapLayer.City) SetLayer(MapLayer.Region);
+            if (_layer < MapLevel.World) SetLayer(_layer + 1);
         });
         RefreshZoomButtons();
     }

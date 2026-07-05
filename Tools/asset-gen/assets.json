@@ -438,5 +438,16 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "gugol-italy-map",
+    "name": "gugol italy map",
+    "prompt": "Top-down stylized map of the entire Italian peninsula around the year 1299, drawn in the visual language of a modern online map application but rendered on aged parchment: full boot-shaped coastline with surrounding seas in muted blue-grey, the Alps as a hatched mountain ridge across the top, the Apennine mountain spine running down the peninsula, major rivers in muted blue-grey (the Po across the north, the Arno in the center-west, the Tiber further south) with tiny stone bridges where roads cross them, a network of medieval pilgrim and trade roads as thin pale-gold lines running the length of the peninsula and branching to the coasts, small forests, rolling hills, coastal marshes, Sicily and Sardinia partially visible at the bottom edges, generous varied open geography across north center and south, ABSOLUTELY NO cities, NO towns, NO villages, NO buildings, NO castles, NO settlements of any kind, subtle aged parchment texture with slightly darkened burned edges, clean flat vector-like illustration, soft even lighting, square 1:1 aspect, NO text, NO labels, NO letters, NO watermark",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]
