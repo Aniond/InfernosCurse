@@ -101,9 +101,11 @@ public class BattleManager : MonoBehaviour
         for (int i = 0; i < enemyParty.Count; i++)
             SpawnUnit(enemyParty[i], enemySpawns[i], isPlayer: false);
 
-        // Seed curse density from hub map if available
+        // Seed curse density from the district the battle belongs to (road
+        // encounters point the tracker at their waypoint) — the grid's
+        // corruption reflects WHERE you fight.
         float hubCurse = HubMap.Instance != null
-            ? HubMap.Instance.GlobalCurseLevel()
+            ? HubMap.Instance.GetBattleSeedCurse(DistrictTracker.CurrentNodeId)
             : 0f;
         _worldState.ritualNodes.Clear();
         if (CurseAutomata != null)

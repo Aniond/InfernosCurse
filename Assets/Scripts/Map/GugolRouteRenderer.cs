@@ -72,14 +72,19 @@ public class GugolRouteRenderer : MonoBehaviour
 
     // ── Travel animation ───────────────────────────────────────────────────────
 
-    // ESC during the walk fast-forwards to arrival; travel is never cancelled
-    // mid-route (no ambiguous half-travelled state).
+    // ESC during the walk fast-forwards to the walk's endpoint (arrival, or the
+    // ambush when a road encounter cut the journey short); travel is never
+    // cancelled mid-route (no ambiguous half-travelled state).
     public void SkipToEnd() => _skipRequested = true;
 
-    public IEnumerator AnimateTravel(float duration, Action onComplete)
+    // stopAtFraction < 1 walks only part of the route (a road encounter):
+    // the walker halts there and dots beyond the stop stay route-blue.
+    // Callers scale duration by the fraction to keep walker speed constant.
+    public IEnumerator AnimateTravel(float duration, Action onComplete, float stopAtFraction = 1f)
     {
         if (!HasRoute) { onComplete?.Invoke(); yield break; }
 
+        float stopDist = _totalLength * Mathf.Clamp01(stopAtFraction);
         _walker = MakeImage("Walker", walkerSprite, new Vector2(walkerSize, walkerSize), Color.white);
         _skipRequested = false;
 
@@ -87,7 +92,7 @@ public class GugolRouteRenderer : MonoBehaviour
         while (t < duration && !_skipRequested)
         {
             t += Time.unscaledDeltaTime;
-            float dist = Mathf.Clamp01(t / duration) * _totalLength;
+            float dist = Mathf.Clamp01(t / duration) * stopDist;
             _walker.rectTransform.anchoredPosition = PointAt(dist);
 
             // Dots behind the walker flare wax-red.
@@ -97,8 +102,23 @@ public class GugolRouteRenderer : MonoBehaviour
             yield return null;
         }
 
-        foreach (var d in _dots) d.color = dotWalked;
+        if (_walker != null) _walker.rectTransform.anchoredPosition = PointAt(stopDist);
+        for (int i = 0; i < _dots.Count; i++)
+            _dots[i].color = _dotDistances[i] <= stopDist ? dotWalked : dotDim;
         onComplete?.Invoke();
+    }
+
+    // Fraction of the total route length at a path vertex — computed in
+    // anchored space (the same space as _totalLength; normalized space has
+    // different x/y scale factors and must not be mixed in).
+    public float FractionAtVertex(int index)
+    {
+        if (_points.Count < 2 || _totalLength <= 0f) return 1f;
+        index = Mathf.Clamp(index, 0, _points.Count - 1);
+        float dist = 0f;
+        for (int i = 1; i <= index; i++)
+            dist += Vector2.Distance(_points[i - 1], _points[i]);
+        return Mathf.Clamp01(dist / _totalLength);
     }
 
     // ── Geometry ───────────────────────────────────────────────────────────────

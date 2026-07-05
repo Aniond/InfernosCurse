@@ -73,6 +73,15 @@ public class GugolMapUI : MonoBehaviour
     [Tooltip("Seconds the walker takes to animate a region route.")]
     public float regionWalkDuration = 2.5f;
 
+    [Header("Road Encounters")]
+    [Tooltip("Base ambush chance per waypoint crossed.")]
+    public float baseEncounterChance = 0.15f;
+    [Tooltip("Added chance per point of the waypoint's curse level.")]
+    public float curseChanceScale = 0.5f;
+    [Tooltip("Ambush chance ceiling.")]
+    public float maxEncounterChance = 0.9f;
+    public string battleSceneName = "BattleArena";
+
     // ── Runtime ────────────────────────────────────────────────────────────────
     Canvas _canvas;
     GameObject _root;
@@ -541,7 +550,7 @@ public class GugolMapUI : MonoBehaviour
 
         _card.ShowRegionDestination(node, fromName, FormatRegionStats(node, hours, fare),
             glyph, unlocked, affordable,
-            () => StartCoroutine(RegionTravelSequence(node, hours, fare)));
+            () => StartCoroutine(RegionTravelSequence(node, hours, fare, path)));
     }
 
     string FormatRegionStats(HubNode node, float hours, int fare)
@@ -641,8 +650,9 @@ public class GugolMapUI : MonoBehaviour
     }
 
     // Road travel between region anchors: fare up front, walker down the road,
-    // hours or days of game time, then the destination scene.
-    IEnumerator RegionTravelSequence(HubNode dest, float hours, int fare)
+    // hours or days of game time, then the destination scene. Waypoints along
+    // the way may spring a curse-scaled ambush that interrupts the journey.
+    IEnumerator RegionTravelSequence(HubNode dest, float hours, int fare, List<HubNode> path)
     {
         if (_travelling || dest == null) yield break;
         if (!MapRouting.IsUnlocked(dest))
@@ -662,6 +672,64 @@ public class GugolMapUI : MonoBehaviour
         _travelling = true;
         RefreshZoomButtons();
         _card.Hide();
+
+        // Road encounter: first waypoint on the route that triggers wins.
+        // Deterministic per (day, node) — reloading doesn't reroll.
+        int ambushIndex = -1;
+        if (path != null)
+            for (int i = 1; i < path.Count; i++)   // skip the origin anchor
+                if (path[i] != null && path[i].kind == NodeKind.Waypoint &&
+                    EncounterRoll.ShouldTrigger(path[i], baseEncounterChance, curseChanceScale, maxEncounterChance))
+                { ambushIndex = i; break; }
+
+        if (ambushIndex >= 0)
+        {
+            var wp = path[ambushIndex];
+            // Capture the origin BEFORE the tracker is pointed at the road —
+            // defeat drags the party back here.
+            var origin = _hub.GetNode(DistrictTracker.CurrentNodeId);
+
+            float frac = _route.FractionAtVertex(ambushIndex);
+            yield return _route.AnimateTravel(regionWalkDuration * frac, null, frac);
+
+            // Same-day recrossings must not re-trigger the identical fight.
+            EncounterRoll.MarkResolved(wp.id);
+
+            PendingEncounter.Set(new PendingEncounter.Payload
+            {
+                encounterNodeId = wp.id,
+                encounterCurse  = wp.curseLevel,
+                seed            = EncounterRoll.DaySeed() ^ EncounterRoll.NodeSalt(wp.id),
+                victory = new PendingEncounter.Destination
+                {
+                    sceneName = dest.sceneName,
+                    entryId   = dest.entryId,
+                    nodeId    = dest.id,
+                    days      = hours <= sameDayTravelThresholdHours ? 0
+                                : Mathf.Max(1, Mathf.RoundToInt(hours / travelHoursPerDay)),
+                    hours     = hours,
+                },
+                defeat = new PendingEncounter.Destination
+                {
+                    sceneName = origin?.sceneName,
+                    entryId   = origin?.entryId,
+                    nodeId    = origin?.id,
+                },
+            });
+
+            // The battle belongs to the road: curse seeding and rep attribution
+            // key off the tracker.
+            DistrictTracker.CurrentNodeId = wp.id;
+
+            Debug.Log($"[GugolMapUI] Ambushed at {wp.displayName} en route to {dest.displayName}!");
+            _sourceExit = null;
+            _travelling = false;
+            CloseInternal(rearmExit: false);   // restore timeScale BEFORE the load
+            SceneManager.LoadScene(battleSceneName);
+            // NO time advance here — victory applies the journey's time on
+            // arrival; defeat charges its own day.
+            yield break;
+        }
 
         yield return _route.AnimateTravel(regionWalkDuration, null);
 

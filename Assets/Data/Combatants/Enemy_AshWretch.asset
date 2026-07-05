@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04b84be221a09f4499ab68a2411a57f2, type: 3}
+  m_Name: Enemy_AshWretch
+  m_EditorClassIdentifier: Assembly-CSharp::CombatantData
+  displayName: Ash Wretch
+  backstory: 
+  portrait: {fileID: 0}
+  role: 2
+  baseStats:
+    characterName: Dante
+    characterClass: Warrior
+    level: 1
+    hp: 100
+    hpMax: 70
+    sp: 60
+    spMax: 30
+    xp: 0
+    xpNext: 100
+    strength: 10
+    dexterity: 11
+    constitution: 8
+    creativity: 6
+    faith: 5
+    perception: 10
+    speed: 12
+  absorbedSkills: []
+  jobHistory: []
+  activeJob:
+    job: {fileID: 0}
+    jobLevel: 1
+    currentXP: 0
+    currentAP: 0
+    learnedSkills: []
+  secondaryJob:
+    job: {fileID: 0}
+    jobLevel: 1
+    currentXP: 0
+    currentAP: 0
+    learnedSkills: []
+  equippedSkills:
+    actives:
+    - {fileID: 11400000, guid: 7e5d3fa18b2c460f9d4a1c87e3b5f0d2, type: 2}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    passives:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  learnableSkills:
+  - {fileID: 11400000, guid: 7e5d3fa18b2c460f9d4a1c87e3b5f0d2, type: 2}
+  skillDropChance: 0.3

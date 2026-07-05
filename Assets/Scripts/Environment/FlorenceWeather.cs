@@ -379,6 +379,12 @@ public class FlorenceWeather : MonoBehaviour
             return;
         }
 
+        // Weather is suspended (battle scenes — CozySceneAdapter's guard).
+        // SetWeather would try to start a coroutine on the inactive sphere and
+        // error. Skip silently: the district poll re-applies on return because
+        // the arrival node differs from the one recorded here.
+        if (!cozy.gameObject.activeInHierarchy) return;
+
         var profile = FindProfile(profileName);
         if (profile == null)
         {

@@ -29,7 +29,7 @@ public class FastTravelMenu : MonoBehaviour
     [Tooltip("Tag of the player root to teleport for in-zone jumps.")]
     public string playerTag = "Player";
     [Tooltip("Scenes the menu should never appear in (menus, world map, battle).")]
-    public string[] blockedScenes = { "WorldMap", "MainMenu", "Battle" };
+    public string[] blockedScenes = { "WorldMap", "MainMenu", "Battle", "BattleArena" };
 
     // ── Runtime UI (auto-built) ──────────────────────────────────────────────
     private Canvas     _canvas;

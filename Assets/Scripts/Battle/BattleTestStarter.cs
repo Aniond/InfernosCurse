@@ -18,6 +18,9 @@ public class BattleTestStarter : MonoBehaviour
 
     void Start()
     {
+        // A real road encounter owns this scene load — stand down.
+        if (PendingEncounter.IsPending || PendingEncounter.Current != null) return;
+
         var bm = BattleManager.Instance;
         if (bm == null) { Debug.LogError("[BattleTestStarter] no BattleManager in scene"); return; }
 

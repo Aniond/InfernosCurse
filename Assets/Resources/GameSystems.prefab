@@ -21,6 +21,7 @@ GameObject:
   - component: {fileID: 2028659444268085293}
   - component: {fileID: 407752065719074716}
   - component: {fileID: 7514825637817488855}
+  - component: {fileID: 2858445001899856432}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -355,6 +356,7 @@ MonoBehaviour:
   - WorldMap
   - MainMenu
   - Battle
+  - BattleArena
 --- !u!114 &2297025142736978070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -382,6 +384,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a72097fea01a2f4e95f7e2f9f6e6bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CozySceneAdapter
+  blockedScenes:
+  - Battle
+  - BattleArena
 --- !u!114 &6323141340174849716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -559,6 +564,26 @@ MonoBehaviour:
   sameDayTravelThresholdHours: 12
   travelHoursPerDay: 12
   regionWalkDuration: 2.5
+  baseEncounterChance: 0.15
+  curseChanceScale: 0.5
+  maxEncounterChance: 0.9
+  battleSceneName: BattleArena
+--- !u!114 &2858445001899856432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13e1f29ec110a6c4b80f71cd58c3baf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PartyRoster
+  beniditoJob: {fileID: 11400000, guid: e244652f53734a54bbbdbc6dc0e8b188, type: 2}
+  beniditoPreUnlocked:
+  - {fileID: 11400000, guid: d7bf72395eb1483daf0f0ea3b646ca8b, type: 2}
+  - {fileID: 11400000, guid: 7eabe3686e2340d68618e3bf750797ff, type: 2}
 --- !u!1001 &3242152288469685475
 PrefabInstance:
   m_ObjectHideFlags: 0

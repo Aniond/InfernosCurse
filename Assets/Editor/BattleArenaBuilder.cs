@@ -217,7 +217,17 @@ public static class BattleArenaBuilder
         starter.preUnlockedJobSkills = new[] { ashwood, ergot };
         starter.enemySkills = new[] { curseClaw };
 
+        // Real road encounters: consumes PendingEncounter and owns the exit.
+        // Inert when the scene is played directly (test harness runs instead).
+        var encGo = new GameObject("EncounterBootstrap");
+        var enc = encGo.AddComponent<EncounterBootstrap>();
+        enc.cursebearer = AssetDatabase.LoadAssetAtPath<CombatantData>("Assets/Data/Combatants/Enemy_Cursebearer.asset");
+        enc.ashWretch   = AssetDatabase.LoadAssetAtPath<CombatantData>("Assets/Data/Combatants/Enemy_AshWretch.asset");
+        if (enc.cursebearer == null || enc.ashWretch == null)
+            Debug.LogWarning("[ArenaBuilder] Enemy assets missing — run 'InfernosCurse/Battle Integration/1. Create Enemy Assets' then rebuild.");
+
         bool saved = EditorSceneManager.SaveScene(scene, "Assets/Scenes/BattleArena.unity");
+        BattleIntegrationSetup.EnsureArenaInBuildSettings();
         Debug.Log($"[ArenaBuilder] BattleArena built and saved={saved}. Press Play to start a battle. " +
                   "Controls: WASD/arrows = cursor, Z/Enter = confirm, X/Esc = cancel.");
     }
