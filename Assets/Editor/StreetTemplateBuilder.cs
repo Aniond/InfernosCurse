@@ -58,12 +58,10 @@ public static class StreetTemplateBuilder
 
         // ── North row: tall shop-houses in swappable slots ────────────────────
         var north = Group(root, "[NorthRow]");
-        // Continuous backing wall BEHIND the deepest building (z 11.3 — NOT
-        // recessed just behind the facades: open-fronted shops like the smithy
-        // are ~5.5 deep and a closer wall cuts through their interiors,
-        // blanking the forge glow). Catches slivers the gap-fill houses miss.
-        Box(north, "Wall_RowBacking_N", new Vector3(0f, 3.5f, 11.3f), new Vector3(62f, 7f, 1.2f),
-            new Color(0.71f, 0.66f, 0.57f));
+        // NO backing wall: a flat lit slab behind the row reads as a "blue
+        // wall" under COZY dusk light (David 7/06). The packed gap-fill houses
+        // close the row; residual depth-slivers show the backdrop's dark band,
+        // which reads as shadow.
         for (int i = 0; i < SlotX.Length; i++)
         {
             var slot = new GameObject($"SLOT_N{i + 1}").transform;
@@ -173,7 +171,11 @@ public static class StreetTemplateBuilder
         nq.name = "Backdrop_N";
         nq.transform.SetParent(backs, false);
         Object.DestroyImmediate(nq.GetComponent<Collider>());
-        nq.transform.position = new Vector3(0f, 15f, 15f);
+        // y=23: the art's DENSE skyline band (image v 0.25-0.41) lands at world
+        // y 8-18 — exactly the over-roofline window between building heights.
+        // Lower and the window shows the art's empty sky = grey wash at dusk
+        // (David 7/06).
+        nq.transform.position = new Vector3(0f, 23f, 15f);
         nq.transform.rotation = Quaternion.identity;   // faces south (mat is Cull Back)
         nq.transform.localScale = new Vector3(90f, 60f, 1f);
         if (mat != null) nq.GetComponent<Renderer>().sharedMaterial = mat;
