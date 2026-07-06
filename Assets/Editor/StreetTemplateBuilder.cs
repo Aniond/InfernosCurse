@@ -231,6 +231,186 @@ public static class StreetTemplateBuilder
                   "then add to Build Settings.");
     }
 
+    // ── N-S variant: the Persona-5 DEPTH street (David's reference 7/06) ─────
+    // Camera (fixed yaw 0) sits behind the player looking NORTH — a N-S street
+    // recedes into the screen toward the skyline: buildings frame BOTH sides
+    // at full height (nothing sits between camera and player). Street along Z
+    // -30..30, walkable X ±5, wall lines x ±5.6.
+
+    const string NSPrefabPath = "Assets/Prefabs/Templates/Street_NS_Template.prefab";
+    const string NSScenePath = "Assets/Scenes/NewStreetNS.unity";
+    static readonly float[] NSSlotZ = { -24f, -12f, 0f, 12f, 24f };
+
+    [MenuItem("InfernosCurse/Templates/5. Build Street NS Template Prefab")]
+    public static void BuildNSTemplatePrefab()
+    {
+        var root = new GameObject("Street_NS_Template");
+        try
+        {
+            BuildNSContents(root.transform);
+            ApplyFrictionless(root);
+            if (!AssetDatabase.IsValidFolder("Assets/Prefabs/Templates"))
+                AssetDatabase.CreateFolder("Assets/Prefabs", "Templates");
+            PrefabUtility.SaveAsPrefabAsset(root, NSPrefabPath);
+            Debug.Log($"[StreetTemplateBuilder] Saved {NSPrefabPath}.");
+        }
+        finally { Object.DestroyImmediate(root); }
+    }
+
+    static void BuildNSContents(Transform root)
+    {
+        var ground = Group(root, "[Ground]");
+        Box(ground, "Street_Outskirts", new Vector3(0f, -0.19f, 0f), new Vector3(60f, 0.3f, 90f),
+            new Color(0.45f, 0.41f, 0.35f));
+        var paving = Box(ground, "Street_Paving", new Vector3(0f, -0.15f, 0f), new Vector3(14f, 0.3f, 64f), Paving);
+        ApplyRoadMaterial(paving, 14f, 64f);
+
+        // Both rows full height. Facing (measured GLB rules): Apartment_NE front
+        // south @180 → east @90 / west @270; Apartment1 door east @180 → west @0.
+        foreach (var (rowName, sideSign) in new (string, float)[] { ("[WestRow]", -1f), ("[EastRow]", 1f) })
+        {
+            var row = Group(root, rowName);
+            for (int i = 0; i < NSSlotZ.Length; i++)
+            {
+                float z = NSSlotZ[i];
+                bool wide = i % 2 == 1;
+                string path = wide
+                    ? "Assets/Environment/MarketSquare/Buildings/Apartment1.glb"
+                    : "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb";
+                float yRot = sideSign < 0f ? (wide ? 180f : 90f) : (wide ? 0f : 270f);
+                float frontOffset = wide ? 4.15f : 2.45f;   // bounds half-depth toward the street
+                float posX = sideSign * (5.0f + frontOffset);
+
+                string tag = (sideSign < 0f ? "W" : "E") + (i + 1);
+                var slot = new GameObject("SLOT_" + tag).transform;
+                slot.SetParent(row, false);
+                slot.position = new Vector3(posX, 0f, z);
+
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab == null) { Debug.LogError($"[StreetTemplateBuilder] Missing {path}"); continue; }
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                go.name = "Bldg_" + tag;
+                go.transform.SetParent(slot, false);
+                go.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
+                go.transform.localScale = Vector3.one * 8.5f;
+                go.transform.position = new Vector3(posX, 0f, z);
+                ReSeat(go, new Vector3(posX, 0f, z));
+                // Snap the street-facing bounds face exactly to x = ±5.0
+                var b = BoundsOf(go);
+                float face = sideSign < 0f ? b.max.x : b.min.x;
+                go.transform.position += new Vector3(sideSign * 5.0f - face, 0f, z - b.center.z);
+                EnsureCollider(go);
+
+                MakeDoor(row, "DOOR_" + tag, new Vector3(sideSign * 4.9f, 0f, z), "shop_" + tag.ToLower());
+            }
+        }
+
+        var backs = Group(root, "[Backdrops]");
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(SkylineMatPath);
+        foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
+        {
+            ("Backdrop_N", new Vector3(0f, 15f, 34f), 0f, 90f),      // the vanishing point
+            ("Backdrop_S", new Vector3(0f, 15f, -34f), 180f, 90f),
+            ("Backdrop_E", new Vector3(16f, 15f, 0f), 90f, 90f),
+            ("Backdrop_W", new Vector3(-16f, 15f, 0f), -90f, 90f),
+        })
+        {
+            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            q.name = name;
+            q.transform.SetParent(backs, false);
+            Object.DestroyImmediate(q.GetComponent<Collider>());
+            q.transform.position = pos;
+            q.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
+            q.transform.localScale = new Vector3(w, 60f, 1f);
+            if (mat != null) q.GetComponent<Renderer>().sharedMaterial = mat;
+        }
+
+        var travel = Group(root, "[Travel]");
+        var placer = new GameObject("[ZoneEntryPlacer]");
+        placer.transform.SetParent(travel, false);
+        placer.AddComponent<ZoneEntryPlacer>();
+        MakeEntry(travel, "street_south", "South End", new Vector3(0f, 0f, -27f), new Vector2(0f, 1f));
+        MakeEntry(travel, "street_north", "North End", new Vector3(0f, 0f, 27f), new Vector2(0f, -1f));
+        MakeExit(travel, "ExitZone_South", new Vector3(0f, 1.2f, -29.2f), new Vector3(9f, 2.4f, 1.6f));
+        MakeExit(travel, "ExitZone_North", new Vector3(0f, 1.2f, 29.2f), new Vector3(9f, 2.4f, 1.6f));
+
+        var bounds = Group(root, "[Boundaries]");
+        foreach (var (name, pos, size) in new (string, Vector3, Vector3)[]
+        {
+            ("Bound_N", new Vector3(0f, 4f, 31f), new Vector3(24f, 8f, 1f)),
+            ("Bound_S", new Vector3(0f, 4f, -31f), new Vector3(24f, 8f, 1f)),
+            ("Bound_E", new Vector3(14f, 4f, 0f), new Vector3(1f, 8f, 70f)),
+            ("Bound_W", new Vector3(-14f, 4f, 0f), new Vector3(1f, 8f, 70f)),
+        })
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(bounds, false);
+            go.transform.position = pos;
+            go.AddComponent<BoxCollider>().size = size;
+        }
+
+        // Lamps off the door lanes (x ±3.2), alternating sides down the street
+        var dressing = Group(root, "[Dressing]");
+        var lampPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/PonteVecchio/Props/LightPost.glb");
+        if (lampPrefab != null)
+            foreach (var (x, z) in new (float, float)[] { (-3.2f, -18f), (3.2f, -6f), (-3.2f, 6f), (3.2f, 18f) })
+            {
+                var lamp = (GameObject)PrefabUtility.InstantiatePrefab(lampPrefab);
+                lamp.name = "Prop_LightPost";
+                lamp.transform.SetParent(dressing, false);
+                var lb = BoundsOf(lamp);
+                if (lb.size.y > 0.0001f) lamp.transform.localScale = Vector3.one * (3f / lb.size.y);
+                lamp.transform.position = new Vector3(x, 0f, z);
+                ReSeat(lamp, new Vector3(x, 0f, z));
+                var cap = lamp.AddComponent<CapsuleCollider>();
+                cap.radius = 0.18f;
+                cap.height = 3f / Mathf.Max(0.001f, lamp.transform.lossyScale.y);
+                cap.center = new Vector3(0f, cap.height * 0.5f, 0f);
+            }
+    }
+
+    [MenuItem("InfernosCurse/Templates/6. New NS Street Scene From Template")]
+    public static void NewNSStreetScene()
+    {
+        var template = AssetDatabase.LoadAssetAtPath<GameObject>(NSPrefabPath);
+        if (template == null)
+        {
+            Debug.LogError("[StreetTemplateBuilder] NS template missing — run menu 5 first.");
+            return;
+        }
+
+        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        SceneManager.SetActiveScene(scene);
+        PrefabUtility.InstantiatePrefab(template);
+
+        var sun = new GameObject("Directional Light");
+        var light = sun.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.color = new Color(1f, 0.96f, 0.86f);
+        light.intensity = 1.2f;
+        light.shadows = LightShadows.Soft;
+        sun.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
+
+        CopyPlayer(scene, new Vector3(0f, 0f, -27f));
+
+        var kitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CameraKitPath);
+        if (kitPrefab != null)
+        {
+            var kit = (GameObject)PrefabUtility.InstantiatePrefab(kitPrefab);
+            var zoom = kit.GetComponentInChildren<DynamicZoom>(true);
+            if (zoom != null)
+            {
+                zoom.useClearanceZoom = true;
+                zoom.closeClearance = 3f;
+                zoom.wideClearance = 9f;
+                zoom.minArchitectureHeight = 2.5f;
+            }
+        }
+
+        EditorSceneManager.SaveScene(scene, NSScenePath);
+        Debug.Log($"[StreetTemplateBuilder] {NSScenePath} created (P5 depth street). Rename, dress, wire.");
+    }
+
     // ── Helpers (Signoria patterns) ───────────────────────────────────────────
 
     static Transform Group(Transform parent, string name)
