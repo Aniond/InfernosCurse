@@ -53,8 +53,11 @@ public static class StreetTemplateBuilder
         var ground = Group(root, "[Ground]");
         Box(ground, "Street_Outskirts", new Vector3(0f, -0.19f, 0f), new Vector3(90f, 0.3f, 60f),
             new Color(0.45f, 0.41f, 0.35f));
-        var paving = Box(ground, "Street_Paving", new Vector3(0f, -0.15f, 0f), new Vector3(64f, 0.3f, 14f), Paving);
-        ApplyRoadMaterial(paving, 64f, 14f);
+        // Paving runs NORTH all the way to the backdrop plane (z 15) — ground
+        // seen through gaps between row buildings is brick, not pale apron
+        // (David 7/06).
+        var paving = Box(ground, "Street_Paving", new Vector3(0f, -0.15f, 4f), new Vector3(64f, 0.3f, 22.4f), Paving);
+        ApplyRoadMaterial(paving, 64f, 22.4f);
 
         // ── North row: tall shop-houses in swappable slots ────────────────────
         var north = Group(root, "[NorthRow]");
