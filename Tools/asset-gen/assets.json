@@ -845,5 +845,49 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "fresco-battle-cavalry",
+    "name": "Fresco Battle Cavalry",
+    "prompt": "A sweeping medieval cavalry battle before the walls of Florence: knights on armored horses with lances and guild banners clashing on a dusty plain, the city towers rising behind. Painted as a monumental late-medieval Italian fresco mural in rich earth pigments with gold-leaf accents, fine aged plaster craquelure. The painting sits inside a magnificent carved and gilded gold frame. The framed panel is a WIDE HORIZONTAL rectangle occupying the central horizontal band of the image, with plain very dark neutral background above and below the frame. Epic dense composition, dozens of figures. No text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "fresco-battle-siege",
+    "name": "Fresco Battle Siege",
+    "prompt": "The siege of a Tuscan hill fortress: siege towers and ladders against stone walls, crossbowmen, banners of rival cities, smoke drifting over the battlements. Painted as a monumental late-medieval Italian fresco mural in rich earth pigments with gold-leaf accents, fine aged plaster craquelure. The painting sits inside a magnificent carved and gilded gold frame. The framed panel is a WIDE HORIZONTAL rectangle occupying the central horizontal band of the image, with plain very dark neutral background above and below the frame. Epic dense composition, dozens of figures. No text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "fresco-civic-procession",
+    "name": "Fresco Civic Procession",
+    "prompt": "A grand civic procession of the Florentine guilds through a piazza: consuls in robes, craftsmen bearing the banners of the Arti, trumpeters, wool bales and market stalls, a cathedral facade behind. Painted as a monumental late-medieval Italian fresco mural in rich earth pigments with gold-leaf accents, fine aged plaster craquelure. The painting sits inside a magnificent carved and gilded gold frame. The framed panel is a WIDE HORIZONTAL rectangle occupying the central horizontal band of the image, with plain very dark neutral background above and below the frame. Epic dense composition, dozens of figures. No text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "fresco-wool-trade",
+    "name": "Fresco Wool Trade",
+    "prompt": "The wool trade of Florence: merchants inspecting bolts of cloth, dyers at steaming vats by the river Arno, laden mules and river barges, ledgers and scales, tower-houses behind. Painted as a monumental late-medieval Italian fresco mural in rich earth pigments with gold-leaf accents, fine aged plaster craquelure. The painting sits inside a magnificent carved and gilded gold frame. The framed panel is a WIDE HORIZONTAL rectangle occupying the central horizontal band of the image, with plain very dark neutral background above and below the frame. Epic dense composition, dozens of figures. No text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]

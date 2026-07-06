@@ -99,6 +99,7 @@ public static class SaloneDelleArtiSceneBuilder
         BuildApseAndDais(arch);
         BuildColumns(arch);
         BuildVestibule(arch);
+        BuildFrescos();
 
         var turrets = new GameObject("[Turrets]").transform;
         var level2 = new GameObject("Level2_Gallery").transform;   // prefix LOAD-BEARING
@@ -213,13 +214,72 @@ public static class SaloneDelleArtiSceneBuilder
 
         foreach (var s in spots)
         {
+            // Dressed column: shaft + base plinth + gallery-line ring + capital
+            // (they share the Column_ prefix so the material pass stones them).
             var col = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             col.name = $"Column_{s.x:0}_{s.y:0}";
             col.transform.SetParent(parent, false);
             col.transform.position = new Vector3(s.x, WallH / 2f, s.y);
-            col.transform.localScale = new Vector3(0.7f, WallH / 2f, 0.7f);
+            col.transform.localScale = new Vector3(0.85f, WallH / 2f, 0.85f);
             Tint(col, LightStone);
+
+            Box(parent, $"Column_Base_{s.x:0}_{s.y:0}", new Vector3(s.x, 0.25f, s.y), new Vector3(1.25f, 0.5f, 1.25f), DarkStone);
+            Box(parent, $"Column_Ring_{s.x:0}_{s.y:0}", new Vector3(s.x, 5.05f, s.y), new Vector3(1.05f, 0.25f, 1.05f), DarkStone);
+            Box(parent, $"Column_Cap_{s.x:0}_{s.y:0}", new Vector3(s.x, 9.7f, s.y), new Vector3(1.2f, 0.55f, 1.2f), DarkStone);
         }
+    }
+
+    // ── Fresco panels (Salone dei Cinquecento reference, 7/06) ───────────────
+    //
+    // Monumental framed murals as opaque quads on the upper walls — same 2D
+    // Gemini pipeline as the banners (zero 3D credits). Art pre-cropped to the
+    // gilded frame by the workbench post step; quads sized by texture aspect.
+
+    const string FrescoDir = "Assets/Environment/SaloneDelleArti/Frescos";
+
+    static void BuildFrescos()
+    {
+        var group = new GameObject("[Frescos]").transform;
+        // (id, pos, yRot facing into the hall, target width)
+        // Unity's Quad primitive FACES -Z: yRot 0 shows the front to the south,
+        // -90 to the east (+X), +90 to the west (-X).
+        var panels = new (string id, Vector3 pos, float yRot, float width)[]
+        {
+            ("fresco-battle-cavalry",   new Vector3(-5.8f, 7.4f, 17.9f), 0f, 5.2f),
+            ("fresco-battle-siege",     new Vector3(5.8f, 7.4f, 17.9f), 0f, 5.2f),
+            ("fresco-civic-procession", new Vector3(-7.9f, 7.4f, -5.0f), -90f, 8f),
+            ("fresco-wool-trade",       new Vector3(-7.9f, 7.4f, 6.0f), -90f, 8f),
+            ("fresco-battle-siege",     new Vector3(7.9f, 7.4f, -5.0f), 90f, 8f),
+            ("fresco-battle-cavalry",   new Vector3(7.9f, 7.4f, 6.0f), 90f, 8f),
+        };
+
+        int placed = 0;
+        foreach (var (id, pos, yRot, width) in panels)
+        {
+            string path = $"{FrescoDir}/{id}.png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(path) == null) AssetDatabase.ImportAsset(path);
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (tex == null) { Debug.LogWarning($"[SaloneDelleArtiSceneBuilder] Fresco '{id}' missing — skipped."); continue; }
+
+            float aspect = (float)tex.width / tex.height;
+            float w = width, h = width / aspect;
+            if (h > 3.8f) { h = 3.8f; w = h * aspect; }   // cap height, keep aspect
+
+            var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            quad.name = $"Fresco_{placed}_{id}";
+            quad.transform.SetParent(group, false);
+            Object.DestroyImmediate(quad.GetComponent<Collider>());
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var mat = new Material(shader != null ? shader : Shader.Find("Standard"));
+            mat.mainTexture = tex;
+            mat.SetFloat("_Smoothness", 0.05f);
+            quad.GetComponent<Renderer>().sharedMaterial = mat;
+            quad.transform.localScale = new Vector3(w, h, 1f);
+            quad.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
+            quad.transform.position = pos;
+            placed++;
+        }
+        Debug.Log($"[SaloneDelleArtiSceneBuilder] Frescos placed: {placed}.");
     }
 
     // ── South vestibule + porch ───────────────────────────────────────────────
@@ -684,9 +744,11 @@ public static class SaloneDelleArtiSceneBuilder
         quad.GetComponent<Renderer>().sharedMaterial = mat;
 
         // Square quad = no distortion (concepts are square with keyed margins).
-        // Bottom hangs at 0.5 above the marker's floor.
+        // Bottom hangs at 0.5 above the marker's floor. Quad faces -Z, banner
+        // markers face INTO the hall — flip 180 so the FRONT (unmirrored
+        // heraldry, correct lighting) is the visible side.
         quad.transform.localScale = new Vector3(height, height, 1f);
-        quad.transform.rotation = marker.transform.rotation;
+        quad.transform.rotation = marker.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
         quad.transform.position = marker.transform.position + new Vector3(0f, 0.5f + height / 2f, 0f);
         return true;
     }
@@ -708,8 +770,9 @@ public static class SaloneDelleArtiSceneBuilder
         for (int i = 0; i < px.Length; i++)
         {
             var c = px[i];
-            // Generous key: Gemini's "solid magenta" wobbles a little.
-            if (c.r > 160 && c.b > 130 && c.g < 110 && c.r - c.g > 80 && c.b - c.g > 60)
+            // Gemini renders "#FF00FF" as deep pink ~(210, 30, 115) — key on
+            // MEASURED values, not the requested color (7/06: b>130 keyed 0%).
+            if (c.r > 150 && c.g < 90 && c.b > 80 && c.r - c.g > 100 && c.b - c.g > 55)
                 px[i] = new Color32(0, 0, 0, 0);
         }
         tex.SetPixels32(px);
@@ -1003,7 +1066,7 @@ public static class SaloneDelleArtiSceneBuilder
     const float WallTileWu = 2.5f;
 
     static readonly string[] FloorPieces = { "Floor_Salone", "Floor_Vestibule", "Floor_Apron" };
-    static readonly string[] WallPrefixes = { "Wall_", "Bay_", "Apse_", "Vestibule_", "Shell_", "Level2_Shell" };
+    static readonly string[] WallPrefixes = { "Wall_", "Bay_", "Apse_", "Vestibule_", "Shell_", "Level2_Shell", "Column" };
 
     [MenuItem("InfernosCurse/Salone delle Arti/5. Floor Wall Materials")]
     public static void MaterialPass()
