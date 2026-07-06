@@ -889,5 +889,159 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "signoria-piazza-plan",
+    "name": "Signoria Piazza Plan",
+    "prompt": "An antique Italian architectural engraving in the style of Pietro Ferrerio: a measured top-down site plan of a large medieval Florentine piazza as it was in the year 1299, fine black ink hatching on aged cream paper, north at the top. A broad rectangular paved square. In the NORTHEAST quadrant a fenced construction yard bounded by dashed lines: the partial footprint of a great palazzo drawn as thick hatched poche walls, visibly incomplete, with one older square tower footprint embedded in the walls, small rectangles for stone piles and a masons' lodge, and a small circle marking a great treadwheel crane. On the SOUTHEAST edge a small Romanesque church footprint with a semicircular apse. The WEST side lined by the long footprint of a guildhall with a small projecting entrance porch, flanked by narrow tower-house footprints. The SOUTHWEST corner of the square is an irregular bare waste patch rendered in stipple with tiny razed-foundation fragments. Near the center-west a small square herald's platform and a small circular wellhead. Street mouths open at the middle of the SOUTH edge and the NORTH edge. A compass rose and a scale bar in the margin, an empty decorative cartouche, no lettering anywhere, no modern elements, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "signoria-construction-concept",
+    "name": "Signoria Construction Concept",
+    "prompt": "A painted concept-art view of the civic piazza of Florence in the year 1299: the Palazzo dei Priori under construction, its rusticated golden-brown pietra forte walls risen only two storeys, wrapped in timber scaffolding with wooden platforms, ladders and diagonal braces, a great wooden treadwheel crane lifting a dressed stone block, an older weathered grey tower stump embedded in the rising new walls, piles of cut stone, a timber masons' lodge lean-to, and a rope-and-post fence around the work site. In the foreground the broad flagstone piazza: a small wooden herald's platform, two tall flagpoles flying heraldic gonfalons (a red lily on a white field, a red cross on a white field), a stone wellhead, and a barred iron lion den with a resting maned lion. At one edge a small Romanesque stone church, and at the corner a bare scorched patch of ground where the paving stops and nothing grows. Warm late-afternoon Tuscan light, long shadows, HD-2D diorama game aesthetic, tilt-shift depth of field, painterly detail, no people, no modern elements, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "treadwheel-crane",
+    "name": "Treadwheel Crane",
+    "prompt": "A medieval treadwheel crane from a 13th-century Italian construction site: a large wooden walking wheel (treadwheel) mounted on a heavy oak timber frame, a long angled jib arm with hemp rope running to a large iron hook, rope wound around the axle drum, diagonal wooden braces, weathered oak and iron fittings, sturdy medieval carpentry. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "lion-den",
+    "name": "Lion Den",
+    "prompt": "A small medieval lion house for the city lions of Florence, 13th century: rough stone walls on three sides on a low stone plinth, a front of heavy vertical wrought-iron bars with a barred gate, a low timber plank roof, straw scattered on the floor inside, a resting maned lion lying inside visible through the bars. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "masons-lodge",
+    "name": "Masons Lodge",
+    "prompt": "An open-sided medieval masons' work lodge, 13th century: a timber lean-to shelter with stout wooden posts and a single-pitch plank roof, a heavy workbench with stone-carving tools (wooden mallets, iron chisels, a wooden square), a half-carved stone block on the bench, dirt-stained weathered wood. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "stone-block-pile",
+    "name": "Stone Block Pile",
+    "prompt": "A pile of dressed golden-brown pietra forte stone blocks on a low wooden sledge at a medieval construction site: large rectangular ashlar blocks stacked two and three high, hemp rope lashing around the stack, two wooden rollers and an iron pry bar leaning against it. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "herald-platform",
+    "name": "Herald Platform",
+    "prompt": "A small medieval wooden herald's platform (a banditore's stage), 13th-century Florence: a sturdy oak stage about waist height, a simple wooden railing on three sides, three plank steps up one open side, slightly worn boards, plain civic carpentry. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "banner-comune-lily",
+    "name": "Banner Comune Lily",
+    "prompt": "A tall vertical gonfalone banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine civic heraldry painted on the cloth: a large red Florentine lily (giglio di Firenze) centered on a white field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "banner-popolo-cross",
+    "name": "Banner Popolo Cross",
+    "prompt": "A tall vertical gonfalone banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine civic heraldry painted on the cloth: a large plain red cross on a white field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "signoria-paving-flagstone",
+    "name": "Signoria Paving Flagstone",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: top-down medieval Italian piazza paving of large irregular pietra forte flagstones, warm grey-brown stone, tight mortar joints, wheel-worn smooth with subtle rutting. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no highlights hotspots, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "signoria-wall-rusticated",
+    "name": "Signoria Wall Rusticated",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: a rusticated medieval stone wall of golden-brown pietra forte ashlar blocks in level courses, deeply beveled joints, rough projecting bossage block faces, 13th-century Florentine palazzo masonry. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no highlights hotspots, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "signoria-ground-scorched",
+    "name": "Signoria Ground Scorched",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: top-down barren scorched earth, dark ashy soil with faint streaks of white salt, scattered small stone fragments, cracked dry ground where nothing grows. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no highlights hotspots, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "signoria-ground-dirt",
+    "name": "Signoria Ground Dirt",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: top-down packed construction-yard earth, pale ochre-brown dry dirt, compacted with cart-wheel ruts and boot marks, scattered pale stone chips and straw wisps, LIGHT warm tones. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "signoria-ground-ashen",
+    "name": "Signoria Ground Ashen",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: top-down barren cursed earth, medium grey-brown ashy dry soil (not black), pale streaks of white salt crusts, scattered small stone fragments, fine cracks, muted desaturated tones. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]

@@ -133,8 +133,8 @@ MonoBehaviour:
     blurb: The imposing fortress-like Palazzo Vecchio towers over this civic square,
       home to the city's governing council and a testament to the Republic's strength
       and authority.
-    sceneName: 
-    entryId: 
+    sceneName: PiazzaDellaSignoria
+    entryId: signoria_south
     previewImage: {fileID: 21300000, guid: 040f5b4b5c487a7488491a22cf940759, type: 3}
     microClimate: 2
     kind: 0
