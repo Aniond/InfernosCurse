@@ -475,38 +475,36 @@ public static class PiazzaSignoriaSceneBuilder
         // and paints straight over it — visible in Scene view (no COZY), gone
         // in play mode (David 7/06). Opaque writes depth → fog hazes it like
         // real distant geometry. Same texture + top-55% crop as Mercato.
+        // SKYLINE-ONLY art (David 7/06): Gemini silhouette of 1299 Florence —
+        // slender tower-houses/campaniles/walls on the horizon, no dome, no
+        // finished palazzo (both were anachronisms in Mercato's city sprawl).
+        const string texPath = "Assets/Environment/PiazzaSignoria/Textures/signoria-skyline-backdrop.png";
         const string matPath = "Assets/Environment/PiazzaSignoria/Materials/Gen_Backdrop_Skyline.mat";
+        AssetDatabase.ImportAsset(texPath);
+        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+        if (tex == null) { Debug.LogError("[PiazzaSignoriaSceneBuilder] " + texPath + " missing!"); return; }
         var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
         if (mat == null)
         {
-            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Environment/MarketSquare/Textures/BackdropFlorence.jpg");
-            if (tex == null) { Debug.LogError("[PiazzaSignoriaSceneBuilder] BackdropFlorence.jpg missing!"); return; }
             mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Gen_Backdrop_Skyline" };
-            mat.SetTexture("_BaseMap", tex);
             mat.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
             CreateFolders("Assets/Environment/PiazzaSignoria/Materials");
             AssetDatabase.CreateAsset(mat, matPath);
         }
-        // FULL texture, no crop: on a 60-tall quad based at y-22 the painted
-        // city band lands at world y 0..15 — the band the gameplay camera
-        // actually sees through the street mouths. (Mercato's 0.55/0.45 crop
-        // put the city BELOW y=0 here — only featureless haze-sky showed.)
+        mat.SetTexture("_BaseMap", tex);          // self-heal: always point at the skyline art
         mat.SetTextureScale("_BaseMap", Vector2.one);
         mat.SetTextureOffset("_BaseMap", Vector2.zero);
         EditorUtility.SetDirty(mat);
-        // Closer in = COZY fog hazes them instead of fully washing them out.
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
-            // y=2: city band ~y-7..+5, towers to +11 — in the mouth sightline.
-            // Planes HUG the ring (N24/S-24/E30/W-28, tightest clearance per
-            // side): at z34 the elevated pitch-40 camera saw ~13wu of bare
-            // apron edge-on through the mouth (David's "tan space") and only a
-            // 2° sliver of art; hugging the buildings makes the street run
-            // straight into the painted city (~10° of art band).
-            ("Backdrop_N", new Vector3(0f, 2f, 24f), 180f, 140f),
-            ("Backdrop_S", new Vector3(0f, 2f, -24f), 0f, 130f),
-            ("Backdrop_E", new Vector3(30f, 2f, 0f), 90f, 120f),
-            ("Backdrop_W", new Vector3(-28f, 2f, 0f), -90f, 120f),
+            // Planes HUG the ring (tightest clearance per side — farther out,
+            // the elevated pitch-40 camera sees bare apron edge-on through the
+            // mouths). y=12 puts THIS art's horizon band (image v0.28..0.45)
+            // at world y -1..+9 — dead in the through-the-mouth sightline.
+            ("Backdrop_N", new Vector3(0f, 15f, 24f), 180f, 140f),
+            ("Backdrop_S", new Vector3(0f, 15f, -24f), 0f, 130f),
+            ("Backdrop_E", new Vector3(30f, 15f, 0f), 90f, 120f),
+            ("Backdrop_W", new Vector3(-28f, 15f, 0f), -90f, 120f),
         })
         {
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);

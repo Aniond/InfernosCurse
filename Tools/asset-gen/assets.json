@@ -1043,5 +1043,16 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "signoria-skyline-backdrop",
+    "name": "Signoria Skyline Backdrop",
+    "prompt": "A painted theatrical matte backdrop of the distant skyline of medieval Florence in the year 1299, seen from inside the city: a single low horizontal band of hazy silhouetted medieval tower-houses, square defensive towers, church campaniles and crenellated city walls along the horizon, fading into warm atmospheric haze. NO cathedral dome, no renaissance buildings — only slender 13th-century towers. The horizon band sits in the LOWER THIRD of the image; everything below the horizon is soft dark warm ground haze; the upper two thirds are a large soft warm golden-hour sky with gentle clouds. Muted distant detail, strong atmospheric perspective, painterly matte-painting style, no foreground objects, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]
