@@ -70,19 +70,19 @@ public static class BattleMapTemplateBuilder
 
                 if (elev > 0)
                 {
-                    // Earth skirt under raised tiles — hides the gap the
-                    // elevation offset opens beneath the plateau edge
-                    var sq = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+                    // Cliff face: a darkened copy of the SAME tile at ground
+                    // height fills the notch under the raised tile exactly
+                    // (identical diamond geometry — nothing to mis-measure;
+                    // the UISprite-rect skirt guessed sizes and left gaps).
                     var s = new GameObject("skirt");
-                    s.transform.SetParent(t.transform, false);
+                    s.transform.SetParent(tiles, false);
                     var ss = s.AddComponent<SpriteRenderer>();
-                    ss.sprite = sq;
-                    ss.color = new Color(0.30f, 0.22f, 0.14f);
+                    ss.sprite = grass;
+                    ss.flipX = sr.flipX;
+                    ss.color = new Color(0.42f, 0.36f, 0.26f);
                     ss.sortingOrder = sr.sortingOrder - 1;
-                    // child local units = world / parent scale; oversized so
-                    // neighboring skirts overlap and no diagonal notch leaks
-                    s.transform.localPosition = new Vector3(0f, -0.6f / scale, 0f);
-                    s.transform.localScale = new Vector3(0.15f / scale, 0.095f / scale, 1f);
+                    s.transform.position = map.CellToWorld(new Vector2Int(x, y), 0);
+                    s.transform.localScale = new Vector3(scale, scale, 1f);
                 }
             }
 
