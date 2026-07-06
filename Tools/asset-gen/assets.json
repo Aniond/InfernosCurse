@@ -1109,5 +1109,27 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "battle-tile-grass",
+    "name": "Battle Tile Grass",
+    "prompt": "A single isometric diamond-shaped game ground tile, exactly 2:1 width to height diamond with crisp straight edges, filling most of the frame, centered: lush green meadow grass seen from above with tiny painted blade clusters, small daisies and subtle tonal patches, painterly tactical-RPG style (like Final Fantasy Tactics grass tiles). The diamond shape on a solid pure magenta (#FF00FF) background, even lighting, no shadows outside the diamond, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "battle-rock-boulder",
+    "name": "Battle Rock Boulder",
+    "prompt": "A single large weathered grey-white granite boulder for a tactical-RPG battlefield, painterly style, rounded with lichen flecks and cracked facets, sitting with a small grass tuft at its base, slight top-down three-quarter view. Isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadow, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]
