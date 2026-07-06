@@ -249,33 +249,39 @@ public static class PiazzaSignoriaSceneBuilder
         var group = new GameObject("[Buildings]").transform;
         var specs = new List<BuildingSpec>
         {
-            // West edge flanking the Salone facade (faces east).
-            // NO TownhouseDouble anywhere on the ring: it's twin towers with a
-            // sky-bridge — raw sky leaks through the ground-level gap between
-            // its towers (David's in-game shot, north edge).
+            // FACING (David 7/06): Apartment1's FRONT (door + balconies) is on
+            // its narrow end — door faces world EAST at yRot 180. So: north row
+            // uses yRot 270 (door south, narrow tower-house fronts), west edge
+            // yRot 180 (door east), east edge yRot 0 (door west). Apartment_NE
+            // reads correctly at 180 (plaster facade + windows south).
+            // NO TownhouseDouble anywhere: twin towers + sky-bridge leaks sky.
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_West_N", pos = new Vector3(-24f, 0f, 12f), yRot = 90f },
+                name = "Bldg_West_N", pos = new Vector3(-24f, 0f, 12f), yRot = 180f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_West_S", pos = new Vector3(-24f, 0f, -10.5f), yRot = 90f },
-            // North edge (faces south) — solid-footprint buildings packed edge
-            // to edge (slight z stagger kills coplanar side-face z-fighting),
-            // street mouth kept at x -6..-1 (widths: Apartment1 8.3, Apartment_NE 5.3)
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_NW", pos = new Vector3(-17.8f, 0f, 18.9f), yRot = 180f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_W", pos = new Vector3(-10f, 0f, 19.15f), yRot = 180f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_E", pos = new Vector3(3.5f, 0f, 19f), yRot = 180f },
+                name = "Bldg_West_S", pos = new Vector3(-24f, 0f, -10.5f), yRot = 180f },
+            // North edge — narrow fronts packed edge to edge, faces at z~17,
+            // street mouth kept at x -6..-1 (A1@270: 5.4 wide x 8.3 deep;
+            // NE@180: 5.3 wide x 4.9 deep)
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_E2", pos = new Vector3(10.5f, 0f, 19.2f), yRot = 180f },
+                name = "Bldg_North_NW", pos = new Vector3(-19.3f, 0f, 19.45f), yRot = 180f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_E3", pos = new Vector3(17.3f, 0f, 19f), yRot = 180f },
+                name = "Bldg_North_W", pos = new Vector3(-13.9f, 0f, 21.15f), yRot = 270f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
+                name = "Bldg_North_W2", pos = new Vector3(-8.6f, 0f, 19.45f), yRot = 180f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
+                name = "Bldg_North_E", pos = new Vector3(1.9f, 0f, 21.15f), yRot = 270f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
+                name = "Bldg_North_E2", pos = new Vector3(7.2f, 0f, 19.45f), yRot = 180f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
+                name = "Bldg_North_E3", pos = new Vector3(12.5f, 0f, 21.15f), yRot = 270f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
+                name = "Bldg_North_E4", pos = new Vector3(17.8f, 0f, 19.45f), yRot = 180f },
             // San Pier Scheraggio, SE edge (faces west into the piazza)
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Church1.glb",
                 name = "Bldg_SanPierScheraggio", pos = new Vector3(17f, 0f, -11.5f), yRot = -90f },
-            // East edge tower house between church and site fence (faces west)
+            // East edge tower house between church and site fence (door west)
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_East", pos = new Vector3(24f, 0f, -2f), yRot = -90f },
+                name = "Bldg_East", pos = new Vector3(24f, 0f, -2f), yRot = 0f },
         };
 
         foreach (var s in specs)
@@ -460,8 +466,25 @@ public static class PiazzaSignoriaSceneBuilder
         // all four sides — hides the raw skybox "white space" behind the ring.
         // Mercato reference: 360x60 quad @ z49.5, y8, yRot 180.
         var group = new GameObject("[Backdrop]").transform;
-        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Environment/MarketSquare/Materials/BackdropFlorence.mat");
-        if (mat == null) { Debug.LogError("[PiazzaSignoriaSceneBuilder] BackdropFlorence.mat missing!"); return; }
+        // OPAQUE UNLIT variant of Mercato's backdrop: the original transparent
+        // material writes no depth, so COZY's runtime fog sees skybox behind it
+        // and paints straight over it — visible in Scene view (no COZY), gone
+        // in play mode (David 7/06). Opaque writes depth → fog hazes it like
+        // real distant geometry. Same texture + top-55% crop as Mercato.
+        const string matPath = "Assets/Environment/PiazzaSignoria/Materials/Gen_Backdrop_Skyline.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (mat == null)
+        {
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Environment/MarketSquare/Textures/BackdropFlorence.jpg");
+            if (tex == null) { Debug.LogError("[PiazzaSignoriaSceneBuilder] BackdropFlorence.jpg missing!"); return; }
+            mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Gen_Backdrop_Skyline" };
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetTextureScale("_BaseMap", new Vector2(1f, 0.55f));
+            mat.SetTextureOffset("_BaseMap", new Vector2(0f, 0.45f));
+            mat.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
+            CreateFolders("Assets/Environment/PiazzaSignoria/Materials");
+            AssetDatabase.CreateAsset(mat, matPath);
+        }
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
             ("Backdrop_N", new Vector3(0f, 8f, 44f), 180f, 170f),
