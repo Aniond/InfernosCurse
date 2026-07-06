@@ -647,5 +647,27 @@
     "model": "done",
     "taskId": "6383e605-0ce8-4e04-bfa4-89ef62d12a13",
     "error": null
+  },
+  {
+    "id": "salone-floorplan-terra",
+    "name": "Salone Floorplan Terra",
+    "prompt": "A 17th-century Italian architectural engraving of a building floor plan, fine black ink etching on aged cream laid paper: the ground floor of a medieval Florentine guild hall. One large rectangular great hall dominating the sheet, thick masonry walls rendered as solid black poche. At the bottom (south) edge a small entrance vestibule with a wide central doorway opening into the hall. Along the left (west) wall four evenly spaced semicircular alcove bays; along the right (east) wall three matching semicircular alcove bays. At the top (north) end a raised rectangular council dais platform with a short flight of steps drawn as parallel lines. In the two northern corners, small circular spiral staircases drawn as radial wedge segments. A single row of five small column dots down the central axis of the hall. Below the plan an elegant engraved cartouche caption reading PIANTA DEL SALONE DELLE ARTI in period lettering, with a horizontal graduated scale bar beneath. Hand-crafted slightly irregular artisan linework, unique original composition, pure orthographic top-down plan, no perspective, no shading gradients, no text anywhere except the cartouche and scale bar, no watermark, plan fills the frame on the aged paper.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "salone-floorplan-galleria",
+    "name": "Salone Floorplan Galleria",
+    "prompt": "A 17th-century Italian architectural engraving of a building floor plan, fine black ink etching on aged cream laid paper: the upper gallery level of a medieval Florentine guild hall. A continuous rectangular gallery walkway ring running around all four sides, rendered between the outer masonry wall (solid black poche) and an inner balustrade drawn as a thin double line; the large central area is an open void down to the hall below, left empty. In the two northern corners, small circular spiral staircases drawn as radial wedge segments connecting to the floor below. At the top (north) end of the ring a small chapel alcove with a tiny altar mark. Below the plan an elegant engraved cartouche caption reading PIANTA DELLA GALLERIA in period lettering, with a horizontal graduated scale bar beneath. Hand-crafted slightly irregular artisan linework, unique original composition, pure orthographic top-down plan, no perspective, no shading gradients, no text anywhere except the cartouche and scale bar, no watermark, plan fills the frame on the aged paper.",
+    "extraPrompt": "The gallery ring must be RECTANGULAR with straight sides and sharp right-angle corners, exactly matching the tall portrait-proportioned rectangular hall of the ground floor sheet: a long narrow rectangular walkway ring around all four sides of a large RECTANGULAR open central void (no curves, no oval, no horseshoe). Tall rectangle, portrait orientation, longer north-south than east-west. Spiral stairs stay in the two top corners, chapel alcove at top center of the ring.",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]
