@@ -122,3 +122,10 @@ Refrences/3dassets/*.glb
 # asset-gen tool secrets + output
 Tools/asset-gen/.env
 Tools/asset-gen/output/
+
+# Machine-local Claude settings
+.claude/settings.local.json
+
+# Unity crash-recovery scenes
+Assets/_Recovery/
+Assets/_Recovery.meta
