@@ -537,5 +537,60 @@
     "model": "done",
     "taskId": "265f3662-e6aa-40bd-878a-0bbd27b44c4a",
     "error": null
+  },
+  {
+    "id": "gardeners-cottage",
+    "name": "Gardeners Cottage",
+    "prompt": "A small rustic medieval Tuscan gardener's cottage from the 13th century: rough fieldstone walls, small terracotta tiled roof, low wooden plank door, one tiny shuttered window, a simple wooden lean-to shelter on one side, humble and weathered. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "12c38915-11bb-4fac-9f60-18bababde833",
+    "error": null
+  },
+  {
+    "id": "shrine-tabernacolo",
+    "name": "Shrine Tabernacolo",
+    "prompt": "A medieval Florentine wayside shrine (tabernacolo) from the 13th century: a small stone aedicule niche on a weathered stone pillar, pointed arch top, a faded painted Madonna panel inside the niche, worn pietra serena stone, moss at the base. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "a86630ab-156f-4ab5-a12b-5cac2fc3cba8",
+    "error": null
+  },
+  {
+    "id": "ancient-marble-figure",
+    "name": "Ancient Marble Figure",
+    "prompt": "A weathered ancient Roman marble statue fragment in an overgrown garden: a standing robed figure with features almost completely worn away by centuries, missing one arm, uncanny and serene, heavy age staining and moss, on a cracked stone base. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "a00fbf1a-e080-4b8a-aab2-62019bd89017",
+    "error": null
+  },
+  {
+    "id": "stone-wellhead",
+    "name": "Stone Wellhead",
+    "prompt": "A medieval octagonal stone well-head from 13th century Tuscany: carved weathered limestone rim, simple wooden windlass frame with two posts and a crossbeam above, rope and wooden bucket, aged and mossy. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "c8b98b8f-a8e5-407b-9385-55a6ad47b282",
+    "error": null
+  },
+  {
+    "id": "boxwood-hedge-segment",
+    "name": "Boxwood Hedge Segment",
+    "prompt": "A single straight segment of dense clipped boxwood hedge from a medieval garden: rectangular block shape, about twice as long as tall, small tight green leaves, neatly trimmed flat top and sides, slightly weathered and natural at the base. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "d1ec330a-a3dd-4b7d-b7c9-72f0564567d5",
+    "error": null
   }
 ]
