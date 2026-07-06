@@ -678,8 +678,8 @@
     "status": "approved",
     "hasImage": true,
     "model": "done",
-    "taskId": "66e6693b-ac56-48fd-b2ef-612ff85d3e45",
-    "error": "GLB pending download: task FINISHED server-side, presigned URL expired; run Tools/asset-gen/recover_glbs.py with a fresh key (do NOT resubmit)"
+    "taskId": "2c9f07f7-f4e1-4598-ac4b-51661b46717e",
+    "error": null
   },
   {
     "id": "notary-lectern",
@@ -689,8 +689,8 @@
     "status": "approved",
     "hasImage": true,
     "model": "done",
-    "taskId": "6383e605-0ce8-4e04-bfa4-89ef62d12a13",
-    "error": "GLB pending download: task FINISHED server-side, presigned URL expired; run Tools/asset-gen/recover_glbs.py with a fresh key (do NOT resubmit)"
+    "taskId": "4d366cea-aae4-4029-925b-4a5cdfdf10d7",
+    "error": null
   },
   {
     "id": "iron-chandelier",
@@ -699,8 +699,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "77b43fa3-8305-42cf-8528-94a39e5d6181",
     "error": null
   },
   {
@@ -710,8 +710,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "00e217dc-9c8b-4105-8e2e-927d2c766a5e",
     "error": null
   },
   {
@@ -721,8 +721,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "bdd2c00a-009e-464f-be1d-93ea80a2dab4",
     "error": null
   },
   {
@@ -732,8 +732,8 @@
     "extraPrompt": "",
     "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "4e4c000d-eea8-4d29-ae13-305332686ec1",
     "error": null
   },
   {
