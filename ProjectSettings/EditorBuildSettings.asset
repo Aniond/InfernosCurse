@@ -29,6 +29,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/PiazzaDellaSignoria.unity
     guid: 6abb4543f4956b346ac9410a717fde0b
+  - enabled: 1
+    path: Assets/Scenes/ViaCalimala.unity
+    guid: ac6f77fca6391264f94f38b2d81991da
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

@@ -16325,9 +16325,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12aae285abf9bdd48a1a0fd3ad3b2eeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZoneExit
-  mode: 0
-  targetScene: WorldMap
-  targetEntryId: 
+  mode: 1
+  targetScene: ViaCalimala
+  targetEntryId: street_east
   playerTag: Player
   dwellTime: 0.15
   armDelay: 0.5

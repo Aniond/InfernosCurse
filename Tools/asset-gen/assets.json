@@ -1054,5 +1054,27 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "blacksmith-shop",
+    "name": "Blacksmith Shop",
+    "prompt": "A small 13th-century Florentine blacksmith's shop building: rough stone lower walls with a timber-framed upper storey, a wide OPEN working front showing a glowing orange forge and tools inside, a stone chimney with a hint of smoke stain, an anvil on a stump beside the entrance, horseshoes and iron tongs hung on the wall, and a prominent wrought-iron bracket arm over the door holding a hanging shop sign shaped like a large black ANVIL WITH A CROSSED HAMMER pictogram. Weathered medieval craftsmanship, red-tile roof. Single building, three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text or lettering anywhere, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "4b88621b-570b-4b14-b089-35601c3be805",
+    "error": null
+  },
+  {
+    "id": "item-shop",
+    "name": "Item Shop",
+    "prompt": "A small 13th-century Florentine merchant's bottega building: timber-fronted shop with a striped canvas awning over a wooden display counter open to the street, the counter laden with clay jars, rope coils, sacks and baskets of goods, shuttered window above, and a prominent wrought-iron bracket arm over the door holding a hanging shop sign shaped like large brass MERCHANT'S BALANCE SCALES pictogram. Warm plaster walls, red-tile roof, weathered medieval craftsmanship. Single building, three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text or lettering anywhere, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "5c4fd016-bf14-4d96-a76a-fff21f2ed321",
+    "error": null
   }
 ]

@@ -126,6 +126,7 @@ MonoBehaviour:
     - duomo
     - novella
     - signoria
+    - via_calimala
   - id: signoria
     displayName: Piazza della Signoria
     mapPosition: {x: 0, y: 0}
@@ -148,6 +149,7 @@ MonoBehaviour:
     - mercato
     - duomo
     - pontevecchio
+    - via_calimala
   - id: pontevecchio
     displayName: Ponte Vecchio
     mapPosition: {x: 0, y: 0}
@@ -344,6 +346,26 @@ MonoBehaviour:
     isRitualSite: 0
     isSanctuarySite: 0
     neighborIds:
+    - signoria
+  - id: via_calimala
+    displayName: Via Calimala
+    mapPosition: {x: 0, y: 0}
+    mapImagePosition: {x: 0.58, y: 0.45}
+    blurb: "The guild street of the cloth-finishers \u2014 smoke from the smithy,
+      awnings over laden counters, and every second doorway selling something."
+    sceneName: ViaCalimala
+    entryId: street_west
+    previewImage: {fileID: 0}
+    microClimate: 2
+    kind: 0
+    mapLevel: 0
+    startingCurseLevel: 0.25
+    startingSanctity: 0.05
+    population: 0.8
+    isRitualSite: 0
+    isSanctuarySite: 0
+    neighborIds:
+    - mercato
     - signoria
 --- !u!114 &6516014349141766986
 MonoBehaviour:

@@ -417,8 +417,10 @@ public static class PiazzaSignoriaSceneBuilder
 
         MakeExit("ExitZone_South", new Vector3(1f, 1.2f, -16.5f), new Vector3(5.6f, 2.4f, 1.6f),
             ZoneExit.ExitMode.ToWorldMap, null, null);
+        // North mouth walks into Via Calimala (wired 7/06; keep in sync with
+        // the street's ExitZone_East -> signoria_north)
         MakeExit("ExitZone_North", new Vector3(-4.6f, 1.2f, 16.5f), new Vector3(6.6f, 2.4f, 1.6f),
-            ZoneExit.ExitMode.ToWorldMap, null, null);
+            ZoneExit.ExitMode.ToScene, "ViaCalimala", "street_east");
         MakeExit("ExitZone_SaloneDoor", new Vector3(-20.1f, 1.2f, 1f), new Vector3(1.5f, 2.4f, 2.6f),
             ZoneExit.ExitMode.ToScene, "SaloneDelleArti", "salone_door");
     }

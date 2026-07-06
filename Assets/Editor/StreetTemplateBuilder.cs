@@ -157,7 +157,10 @@ public static class StreetTemplateBuilder
             go.AddComponent<BoxCollider>().size = size;
         }
 
-        // Street dressing: lamp posts by the doors
+        // Street dressing: lamp posts by the doors. SLIM CAPSULE collider around
+        // the shaft, NOT a bounds box — the lantern arm inflates the bounds to
+        // ~1.2 deep and a fat box on the shopfront walk lane wedges the player
+        // (ViaCalimala playtest 7/06: pinned on Prop_LightPost for 6 legs).
         var dressing = Group(root, "[Dressing]");
         var lampPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/PonteVecchio/Props/LightPost.glb");
         if (lampPrefab != null)
@@ -168,9 +171,14 @@ public static class StreetTemplateBuilder
                 lamp.transform.SetParent(dressing, false);
                 var b = BoundsOf(lamp);
                 if (b.size.y > 0.0001f) lamp.transform.localScale = Vector3.one * (3f / b.size.y);
-                lamp.transform.position = new Vector3(x, 0f, 4.6f);
-                ReSeat(lamp, new Vector3(x, 0f, 4.6f));
-                EnsureCollider(lamp);
+                // z 3.2: OFF the shopfront door lane (z 4.2-4.9) — even slim
+                // colliders on a desire line cause driver stalls/wedges.
+                lamp.transform.position = new Vector3(x, 0f, 3.2f);
+                ReSeat(lamp, new Vector3(x, 0f, 3.2f));
+                var cap = lamp.AddComponent<CapsuleCollider>();
+                cap.radius = 0.18f;
+                cap.height = 3f / Mathf.Max(0.001f, lamp.transform.lossyScale.y);
+                cap.center = new Vector3(0f, cap.height * 0.5f, 0f);
             }
     }
 
