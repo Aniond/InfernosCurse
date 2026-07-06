@@ -306,6 +306,8 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 9. **Never author a directional light expecting it at runtime** — `CozySceneAdapter` disables all non-COZY suns on scene load. Scene suns are edit-mode-only. Don't fight the adapter.
 10. **Don't put non-URP-Lit materials on `Building`-tagged objects** (breaks `OcclusionFade`'s transparent conversion), and don't rename Duomo geometry prefixes (`Oct_`, `Nave_Wall_`, `PierModel_<name>` …) — occlusion is name-coupled.
 11. TorchFlicker cookies: Spot lights only (URP point lights reject 2D cookies).
+42. **Never save in-memory materials into a PREFAB asset** — `new Material(...)` on a renderer serializes fine into a `.unity` scene but goes MAGENTA in any prefab instance (Street template incident 7/06). Prefab tints must be material ASSETS (`Assets/Prefabs/Templates/Materials/Street_<RRGGBB>.mat` pattern).
+43. **Skyline backdrop quads: single-sided (Cull Back) + faces pointing INWARD** (N-quad yRot 0, S 180, E +90, W −90). DynamicZoom's pullback (offsets reach −20 behind the player) can put the camera BEHIND the south quad — double-sided art fills the whole screen (street/Signoria incident 7/06). Also: opaque URP-Unlit only — transparent mats write no depth and COZY's fog erases them in play mode.
 
 ### 4.3 Time / calendar / weather
 12. **Backward `GameClock.SetHour` ⇒ must call `GameCalendar.ResyncClock()`** (else spurious `AdvanceDay` from the >6 h wrap detector). **Forward jump ⇒ never ResyncClock** (the wrap must roll the day). Multi-day = `AdvanceDay()×N` + `SetHour(morning)` + `ResyncClock()`.
@@ -438,8 +440,31 @@ Resolution-log schema (what the trailer must encode):
 | Gugol Mappe | `1. Create TMP Fonts` → `2. Import Map Art` (magenta-key: corner-sampled key, chroma test `m=min(r,b)-g`) → `3. Setup GameSystems` (WireNodes = THE zone-registration idiom) → `4. Build Fiesole Scene` |
 | Battle | Integration `1. Create Enemy Assets` → `2. Setup GameSystems` → `3. Add BattleArena To Build Settings` → `4. Populate Asset Registry` (re-run after adding Skill/Job assets!) → `Build Battle Arena` |
 | Duomo | `Duomo Tile Pass` (world-aligned per-piece floor mats, binned wall mats, saves) · `Duomo Tile Shots (no save)` (inspection lighting, never saves) |
+| **Content templates** | `Templates/1. Build Street Template Prefab` (destructive prefab rebuild) → `2. New Street Scene From Template` (fresh scene + player + clearance-zoom kit → `Assets/Scenes/NewStreet.unity`, rename after) · `3. Build Battle Map Prefabs` (Field + Ruins) → `4. Use Field Map In Arena` (swaps arena terrain). See §6.3. |
 
 Marker contract: `MARKER_<assetId>@<height>` — assetId is the kebab-case Tools/asset-gen id (keep `@`-free), height `{h:0.##}` InvariantCulture. Placement: pivot under `[PlacedProps]`, GLB child `<assetId>_mesh`, AxisFix pre-rotation, bounds-scaled to height, footprint-max grounding − sink, BoxCollider unless in the `NoCollider` walk-through table (pergolas).
+
+### 6.3 Content template kits (duplicate-and-dress — spec: `Docs/superpowers/specs/2026-07-06-content-templates.md`, built 7/06 `1b47350`)
+
+**Street kit** (`Assets/Prefabs/Templates/Street_EW_Template.prefab`): Persona-5
+E-W corridor — street along X −30..30, walkable Z ±5; tall shop-houses north in
+swappable `SLOT_N1..5` anchors (replace the child GLB to re-dress), LOW botteghe
+south (≤4.2 wu so the pitch-40 camera sees over — the P5 near-side treatment);
+10 `ShopDoor` triggers (`Assets/Scripts/Map/ShopDoor.cs`, ZoneExit dwell
+pattern: `targetScene` set = door travel, empty = logs "closed"); skyline caps;
+end exits default ToWorldMap — retarget to door-link zones (Salone↔Signoria
+pattern). New street = menu 2 → rename scene → swap slots → set door targets →
+wire exits → Build Settings.
+
+**Battle map kit**: the battle system is ALREADY FFT-isometric (BattleGrid
+diamond projection, `GridCell.elevation` half-units + `walkable`). Map prefabs
+live in `Assets/Prefabs/Battle/Maps/`; root = `BattleMapAuthoring` (size,
+plateau rects+elevations, suggested spawns; stamps the scene BattleGrid on
+Awake), props = `BattleObstacle` (cell, makeUnwalkable, addedElevation — 2+
+blocks LoS via the existing Bresenham rule; ContextMenu → Snap To Cell). New
+map = duplicate a Maps/ prefab, move/add obstacle sprites, snap, adjust
+plateaus. **RULE: spawn columns (x 1-2 and 11-12) stay walkable** — callers
+pass spawns to `StartBattle`; authored spawns await encounter tables.
 
 ### 6.2 Asset generation (Tools/asset-gen, port 3311)
 
@@ -459,6 +484,7 @@ Marker contract: `MARKER_<assetId>@<height>` — assetId is the kebab-case Tools
 | `docs/HD2D_Camera.md` | **Current** | Camera rig is FOV 36 / pitch 40° / yaw 0° perspective — "do not revisit without reading this doc". New-zone checklist. |
 | `docs/DuomoScene.md` | Current (scene reference) | Coordinate contract, name-prefix occlusion coupling, MCP working notes. |
 | `docs/superpowers/specs/2026-07-05-giardino-delle-rose-design.md` | Design of record | "Nothing built yet" status line stale (v3 committed `6f67425` + polish pass). |
+| `docs/superpowers/specs/2026-07-06-content-templates.md` | **Current** | Street kit + FFT battle-map kit: duplicate-and-dress workflows, coordinate contracts, spawn-column rule. Read before making streets or battle maps. |
 | `docs/AI_HANDOVER_BLUEPRINT.md` | This file | Regenerate section facts when subsystems change; code wins over doc. |
 
 **Update contract for agents:** when you fix a bug → log per §5.2-7. When you add a zone/system → extend §1.1 JSON + §2 map + relevant doc. When you learn a new constraint the hard way → add it to §4 with the incident, and to the owning system doc.
