@@ -108,30 +108,53 @@ public static class StreetTemplateBuilder
             MakeDoor(south, $"DOOR_S{i + 1}", new Vector3(x, 0f, -5.1f), $"shop_s{i + 1}");
         }
 
-        // ── Skyline caps (Signoria edge recipe: opaque unlit, hug the ring) ───
+        // ── Street ends are capped with BUILDINGS, not backdrop planes ────────
+        // (David 7/06: approaching an end must show architecture, never a flat
+        // background plane.) Facades face back down the street; the end exits
+        // sit just in front of them.
+        var caps = Group(root, "[EndCaps]");
+        var capA1 = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/MarketSquare/Buildings/Apartment1.glb");
+        var capNE = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb");
+        if (capA1 != null && capNE != null)
+            foreach (float side in new[] { -1f, 1f })   // -1 = west end, +1 = east end
+            {
+                // Apartment1 door faces east @180 / west @0; Apartment_NE front
+                // east @90 / west @270. Facade line at |x| = 31.
+                foreach (var (prefab, yRot, z, tag) in new (GameObject, float, float, string)[]
+                {
+                    (capA1, side < 0f ? 180f : 0f, -4f, "A"),
+                    (capNE, side < 0f ? 90f : 270f, 3.7f, "B"),
+                    (capNE, side < 0f ? 90f : 270f, 8.8f, "C"),   // overlaps the row corner
+                })
+                {
+                    var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                    go.name = "Cap_" + (side < 0f ? "W" : "E") + tag;
+                    go.transform.SetParent(caps, false);
+                    go.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
+                    go.transform.localScale = Vector3.one * 8.5f;
+                    go.transform.position = new Vector3(side * 33f, 0f, z);
+                    ReSeat(go, new Vector3(side * 33f, 0f, z));
+                    var cb = BoundsOf(go);
+                    float capFace = side < 0f ? cb.max.x : cb.min.x;
+                    go.transform.position += new Vector3(side * 31f - capFace, 0f, 0f);
+                    EnsureCollider(go);
+                }
+            }
+        else Debug.LogError("[StreetTemplateBuilder] End-cap GLBs missing.");
+
+        // Single skyline quad NORTH only — seen over the roofline at distance,
+        // never up close. E/W/S planes removed: end caps + rows own those views.
         var backs = Group(root, "[Backdrops]");
         var mat = AssetDatabase.LoadAssetAtPath<Material>(SkylineMatPath);
         if (mat == null) Debug.LogError("[StreetTemplateBuilder] Skyline material missing — run Signoria menu 5 once.");
-        foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
-        {
-            // Quads FACE THE INTERIOR (material is Cull Back): when the camera's
-            // pullback offset crosses the south quad, it sees through the back
-            // instead of a screen-filling orange wall.
-            ("Backdrop_E", new Vector3(34f, 15f, 0f), 90f, 70f),     // faces west
-            ("Backdrop_W", new Vector3(-34f, 15f, 0f), -90f, 70f),   // faces east
-            ("Backdrop_N", new Vector3(0f, 15f, 15f), 0f, 90f),      // faces south
-            ("Backdrop_S", new Vector3(0f, 15f, -13.5f), 180f, 90f), // faces north
-        })
-        {
-            var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            q.name = name;
-            q.transform.SetParent(backs, false);
-            Object.DestroyImmediate(q.GetComponent<Collider>());
-            q.transform.position = pos;
-            q.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
-            q.transform.localScale = new Vector3(w, 60f, 1f);
-            if (mat != null) q.GetComponent<Renderer>().sharedMaterial = mat;
-        }
+        var nq = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        nq.name = "Backdrop_N";
+        nq.transform.SetParent(backs, false);
+        Object.DestroyImmediate(nq.GetComponent<Collider>());
+        nq.transform.position = new Vector3(0f, 15f, 15f);
+        nq.transform.rotation = Quaternion.identity;   // faces south (mat is Cull Back)
+        nq.transform.localScale = new Vector3(90f, 60f, 1f);
+        if (mat != null) nq.GetComponent<Renderer>().sharedMaterial = mat;
 
         // ── Travel + boundaries ───────────────────────────────────────────────
         var travel = Group(root, "[Travel]");
@@ -425,20 +448,25 @@ public static class StreetTemplateBuilder
     public static void ApplyRoadMaterial(GameObject paving, float sizeX, float sizeZ, float tileWu = 3.2f)
     {
         const string texPath = "Assets/Prefabs/Templates/Materials/street-road-brick.png";
-        const string matPath = "Assets/Prefabs/Templates/Materials/Street_Road.mat";
         var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
         if (tex == null) { Debug.LogWarning("[StreetTemplateBuilder] Road tile missing — paving stays tinted."); return; }
+        // Material asset PER TILING — a single shared mat gets its tiling
+        // stomped by whichever street builds last (E-W Calimala's herringbone
+        // stretched into streaks when the N-S template set 14x64; 7/06).
+        int repX = Mathf.Max(1, Mathf.RoundToInt(sizeX / tileWu));
+        int repZ = Mathf.Max(1, Mathf.RoundToInt(sizeZ / tileWu));
+        string matPath = $"Assets/Prefabs/Templates/Materials/Street_Road_{repX}x{repZ}.mat";
         var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
         if (mat == null)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit");
-            mat = new Material(shader != null ? shader : Shader.Find("Standard")) { name = "Street_Road" };
+            mat = new Material(shader != null ? shader : Shader.Find("Standard")) { name = $"Street_Road_{repX}x{repZ}" };
             AssetDatabase.CreateAsset(mat, matPath);
         }
         mat.SetTexture("_BaseMap", tex);
         mat.SetColor("_BaseColor", Color.white);
         mat.SetFloat("_Smoothness", 0.12f);
-        mat.SetTextureScale("_BaseMap", new Vector2(sizeX / tileWu, sizeZ / tileWu));
+        mat.SetTextureScale("_BaseMap", new Vector2(repX, repZ));
         EditorUtility.SetDirty(mat);
         paving.GetComponent<Renderer>().sharedMaterial = mat;
     }
