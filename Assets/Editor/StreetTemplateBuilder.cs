@@ -110,12 +110,23 @@ public static class StreetTemplateBuilder
         }
 
         // ── South row: low botteghe (camera sees over them) ───────────────────
+        // Dressed, not blockout: the camera mostly sees their TOPS, so they get
+        // pitched terracotta roofs + plaster walls (David 7/06 — "add graphics
+        // to the south buildings"; blank tops read as beige void).
         var south = Group(root, "[SouthRow]");
+        var plasterMat = TexMat("street-wall-plaster", new Vector2(3.5f, 1.6f), "Street_Plaster");
+        var roofMat = TexMat("street-roof-tiles", new Vector2(4f, 2f), "Street_Roof");
         for (int i = 0; i < SlotX.Length; i++)
         {
             float x = SlotX[i];
             var shop = Box(south, $"Bottega_S{i + 1}", new Vector3(x, 2.1f, -7.5f),
                 new Vector3(9f, 4.2f, 4f), i % 2 == 0 ? Plaster : PlasterAlt);
+            if (plasterMat != null) shop.GetComponent<Renderer>().sharedMaterial = plasterMat;
+            var roof = Box(south, $"Bottega_S{i + 1}_Roof", new Vector3(x, 4.45f, -7.4f),
+                new Vector3(9.7f, 0.16f, 4.9f), Timber);
+            roof.transform.rotation = Quaternion.Euler(12f, 0f, 0f);   // lean-to: low edge toward the street
+            if (roofMat != null) roof.GetComponent<Renderer>().sharedMaterial = roofMat;
+            Object.DestroyImmediate(roof.GetComponent<Collider>());     // dressing above head height
             Box(south, $"Bottega_S{i + 1}_Awning", new Vector3(x, 3.15f, -5.05f),
                 new Vector3(9.4f, 0.14f, 1.5f), Timber);
             // Door recess on the street-facing (north) face — Quad faces -Z, flip 180
@@ -540,6 +551,28 @@ public static class StreetTemplateBuilder
         go.transform.localScale = size;
         Tint(go, color);
         return go;
+    }
+
+    // Textured material asset (shared, created once) for template pieces.
+    public static Material TexMat(string texName, Vector2 tiling, string matName)
+    {
+        string texPath = $"Assets/Prefabs/Templates/Materials/{texName}.png";
+        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+        if (tex == null) { Debug.LogWarning($"[StreetTemplateBuilder] {texPath} missing."); return null; }
+        string matPath = $"Assets/Prefabs/Templates/Materials/{matName}.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (mat == null)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            mat = new Material(shader != null ? shader : Shader.Find("Standard")) { name = matName };
+            AssetDatabase.CreateAsset(mat, matPath);
+        }
+        mat.SetTexture("_BaseMap", tex);
+        mat.SetColor("_BaseColor", Color.white);
+        mat.SetFloat("_Smoothness", 0.1f);
+        mat.SetTextureScale("_BaseMap", tiling);
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     // Prefab assets can't reference in-memory materials (they go magenta in

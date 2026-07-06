@@ -1087,5 +1087,27 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "street-roof-tiles",
+    "name": "Street Roof Tiles",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: overlapping rows of curved terracotta barrel roof tiles (coppi) seen from directly above, warm orange-red with weathering, moss flecks and tonal variation between tiles, rows running horizontally. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no text, no watermark.",
+    "extraPrompt": "Replace with: rows of CURVED barrel-shaped terracotta coppi tiles seen from above at a slight angle, strong dark shadow lines between each overlapping row, pronounced half-round ridges, warm orange-red, weathered. Unmistakably a Mediterranean tiled ROOF, not flat bricks.",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "street-wall-plaster",
+    "name": "Street Wall Plaster",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: a weathered Tuscan plaster wall surface, warm cream-ochre lime render with subtle patching, hairline cracks and stains, small areas where plaster has chipped to reveal brick beneath. Photorealistic material detail, perfectly even diffuse lighting, no shadows, no text, no watermark.",
+    "extraPrompt": "Replace with: completely uniform weathered Tuscan lime plaster surface, soft warm ochre-cream tonal variation and faint hairline cracks ONLY, no chips, no holes, no exposed brick, no distinct blemishes (they repeat as polka dots when tiled).",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]
