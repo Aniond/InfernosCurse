@@ -1076,5 +1076,16 @@
     "model": "done",
     "taskId": "5c4fd016-bf14-4d96-a76a-fff21f2ed321",
     "error": null
+  },
+  {
+    "id": "street-road-brick",
+    "name": "Street Road Brick",
+    "prompt": "A perfectly seamless tileable texture, square, filling the entire frame edge to edge with no border or vignette: top-down medieval Italian street paving of small terracotta bricks laid in a herringbone pattern, worn smooth by cart wheels with two subtle parallel wear ruts of lighter polished brick running straight across, occasional chipped or replaced grey stone bricks, tight sandy mortar joints. Warm earthy reds and browns, photorealistic material detail, perfectly even diffuse lighting, no shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]

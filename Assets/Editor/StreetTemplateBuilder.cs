@@ -53,7 +53,8 @@ public static class StreetTemplateBuilder
         var ground = Group(root, "[Ground]");
         Box(ground, "Street_Outskirts", new Vector3(0f, -0.19f, 0f), new Vector3(90f, 0.3f, 60f),
             new Color(0.45f, 0.41f, 0.35f));
-        Box(ground, "Street_Paving", new Vector3(0f, -0.15f, 0f), new Vector3(64f, 0.3f, 14f), Paving);
+        var paving = Box(ground, "Street_Paving", new Vector3(0f, -0.15f, 0f), new Vector3(64f, 0.3f, 14f), Paving);
+        ApplyRoadMaterial(paving, 64f, 14f);
 
         // ── North row: tall shop-houses in swappable slots ────────────────────
         var north = Group(root, "[NorthRow]");
@@ -237,6 +238,29 @@ public static class StreetTemplateBuilder
         var g = new GameObject(name).transform;
         g.SetParent(parent, false);
         return g;
+    }
+
+    // Herringbone brick road (workbench tile) — world-aligned tiling so
+    // duplicated streets of any length keep the same brick scale.
+    public static void ApplyRoadMaterial(GameObject paving, float sizeX, float sizeZ, float tileWu = 3.2f)
+    {
+        const string texPath = "Assets/Prefabs/Templates/Materials/street-road-brick.png";
+        const string matPath = "Assets/Prefabs/Templates/Materials/Street_Road.mat";
+        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+        if (tex == null) { Debug.LogWarning("[StreetTemplateBuilder] Road tile missing — paving stays tinted."); return; }
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (mat == null)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            mat = new Material(shader != null ? shader : Shader.Find("Standard")) { name = "Street_Road" };
+            AssetDatabase.CreateAsset(mat, matPath);
+        }
+        mat.SetTexture("_BaseMap", tex);
+        mat.SetColor("_BaseColor", Color.white);
+        mat.SetFloat("_Smoothness", 0.12f);
+        mat.SetTextureScale("_BaseMap", new Vector2(sizeX / tileWu, sizeZ / tileWu));
+        EditorUtility.SetDirty(mat);
+        paving.GetComponent<Renderer>().sharedMaterial = mat;
     }
 
     static void MakeDoor(Transform parent, string name, Vector3 pos, string shopId)
