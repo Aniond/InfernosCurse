@@ -19,10 +19,15 @@ wins over docs; docs win over guesses.
 
 ## Reusable content templates (blueprint §6.3; spec `Docs/superpowers/specs/2026-07-06-content-templates.md`)
 
-**New street** (Persona-5 E-W corridor): menu
-`InfernosCurse/Templates/2. New Street Scene From Template` → rename the
-scene → swap buildings under `SLOT_N1..5` → set `ShopDoor.targetScene` per
+**New street**: menu `InfernosCurse/Templates/2` (E-W side-view street) or
+`Templates/6` (N-S DEPTH street — the Persona-5 down-the-road view; with the
+fixed yaw-0 camera, N-S streets recede into the screen and both sides get
+full-height buildings — prefer this for shop streets) → rename the scene →
+swap buildings under the `SLOT_*` anchors → set `ShopDoor.targetScene` per
 entrance (empty = closed) → retarget the end `ZoneExit`s → Build Settings.
+Prefab-INSTANCE component edits need
+`PrefabUtility.RecordPrefabInstancePropertyModifications` or SaveScene drops
+them. Keep prop colliders slim (capsules) and off door lanes.
 
 **New battle map** (FFT): duplicate a prefab in
 `Assets/Prefabs/Battle/Maps/` → move/add `BattleObstacle` props (right-click
