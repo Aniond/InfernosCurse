@@ -917,10 +917,10 @@
     "name": "Treadwheel Crane",
     "prompt": "A medieval treadwheel crane from a 13th-century Italian construction site: a large wooden walking wheel (treadwheel) mounted on a heavy oak timber frame, a long angled jib arm with hemp rope running to a large iron hook, rope wound around the axle drum, diagonal wooden braces, weathered oak and iron fittings, sturdy medieval carpentry. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
     "extraPrompt": "",
-    "status": "generated",
+    "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "acb2f195-39a3-4266-88b1-baa988069bf6",
     "error": null
   },
   {
@@ -928,10 +928,10 @@
     "name": "Lion Den",
     "prompt": "A small medieval lion house for the city lions of Florence, 13th century: rough stone walls on three sides on a low stone plinth, a front of heavy vertical wrought-iron bars with a barred gate, a low timber plank roof, straw scattered on the floor inside, a resting maned lion lying inside visible through the bars. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
     "extraPrompt": "",
-    "status": "generated",
+    "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "56eb3481-7ca7-439f-9b57-9fbacb84ae65",
     "error": null
   },
   {
@@ -939,10 +939,10 @@
     "name": "Masons Lodge",
     "prompt": "An open-sided medieval masons' work lodge, 13th century: a timber lean-to shelter with stout wooden posts and a single-pitch plank roof, a heavy workbench with stone-carving tools (wooden mallets, iron chisels, a wooden square), a half-carved stone block on the bench, dirt-stained weathered wood. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
     "extraPrompt": "",
-    "status": "generated",
+    "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "7088172b-2bb5-4bf7-a0e0-86de74d28736",
     "error": null
   },
   {
@@ -950,10 +950,10 @@
     "name": "Stone Block Pile",
     "prompt": "A pile of dressed golden-brown pietra forte stone blocks on a low wooden sledge at a medieval construction site: large rectangular ashlar blocks stacked two and three high, hemp rope lashing around the stack, two wooden rollers and an iron pry bar leaning against it. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
     "extraPrompt": "",
-    "status": "generated",
+    "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "0bc860a1-4ad3-49ab-acb2-54aed1c6fd50",
     "error": null
   },
   {
@@ -961,10 +961,10 @@
     "name": "Herald Platform",
     "prompt": "A small medieval wooden herald's platform (a banditore's stage), 13th-century Florence: a sturdy oak stage about waist height, a simple wooden railing on three sides, three plank steps up one open side, slightly worn boards, plain civic carpentry. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
     "extraPrompt": "",
-    "status": "generated",
+    "status": "approved",
     "hasImage": true,
-    "model": null,
-    "taskId": null,
+    "model": "done",
+    "taskId": "a8dd7a2e-dae0-4cce-bf1f-bd1195f615dc",
     "error": null
   },
   {
