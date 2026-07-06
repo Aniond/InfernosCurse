@@ -1,0 +1,31 @@
+{
+    "asset": "f271da1e8667f7a42b09b1a1e09e16cd",
+    "fileName": "019f35f8-7427-7277-a011-0200cd8357f9.png",
+    "prompt": "strict top down view, viewed directly from above, zero perspective angle, no isometric, no 3/4 view, flat 90 degree overhead only, no angles, no side view, no front elevation, rooftops clearly visible from overhead, facing south. 16-bit pixel art style game sprite, transparent background, black outline. Bloated rose bush monster, huge splitting blood-red bloom as head, thick thorned vine tentacles, swollen woody stem body",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 384
+    },
+    "spriteSheet": false,
+    "duration": 0.0,
+    "dynamicParams": {
+        "serializedData": []
+    }
+}
