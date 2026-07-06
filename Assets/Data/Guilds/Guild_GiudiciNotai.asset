@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5649c560b99d9fd4cbf1b77b65b7dc86, type: 3}
+  m_Name: Guild_GiudiciNotai
+  m_EditorClassIdentifier: Assembly-CSharp::GuildDefinition
+  guildId: giudici_notai
+  displayName: Giudici e Notai
+  blurb: "Judges and notaries \u2014 the guild of the written word. Nothing in Florence
+    is sold, wed, or buried without their ink, and they never forget whose name is
+    on which page."
+  crest: {fileID: 0}
+  isChurch: 0
+  homeNodeId: santacroce
+  repPerRank: 000000003c000000b4000000a401000052030000
+  rankNames:
+  - Straniero
+  - Scrivano
+  - Notaio
+  - Giudice
+  - Proconsolo
+  repPerHomeKill: 5
+  florinsPerRep: 2
+  perks:
+  - type: 3
+    unlockRank: 2
+    magnitude: 0.9
+    flavorText: "A notary's companion signs nothing twice \u2014 and is not overcharged."
+  - type: 4
+    unlockRank: 3
+    magnitude: 1.25
+    flavorText: Gifts entered into the record accrue like compound clauses.
+  - type: 0
+    unlockRank: 4
+    magnitude: 0.85
+    flavorText: Contracts sealed in good faith keep bad dreams at the door.

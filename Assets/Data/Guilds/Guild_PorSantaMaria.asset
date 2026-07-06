@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5649c560b99d9fd4cbf1b77b65b7dc86, type: 3}
+  m_Name: Guild_PorSantaMaria
+  m_EditorClassIdentifier: Assembly-CSharp::GuildDefinition
+  guildId: por_santa_maria
+  displayName: Por Santa Maria
+  blurb: "Silk weavers and goldsmiths of the street running down to the old bridge
+    \u2014 everything that glitters between the Mercato and the Arno passes through
+    their hands."
+  crest: {fileID: 0}
+  isChurch: 0
+  homeNodeId: pontevecchio
+  repPerRank: 0000000032000000960000005e010000bc020000
+  rankNames:
+  - Straniero
+  - Filatore
+  - Setaiolo
+  - Maestro Setaiolo
+  - Console della Porta
+  repPerHomeKill: 5
+  florinsPerRep: 2
+  perks:
+  - type: 4
+    unlockRank: 1
+    magnitude: 1.15
+    flavorText: The silk-weavers notice a bright thread in any purse.
+  - type: 3
+    unlockRank: 3
+    magnitude: 0.85
+    flavorText: Guild silk on your shoulders is worth a discount at any door.
+  - type: 0
+    unlockRank: 4
+    magnitude: 0.85
+    flavorText: "Silk-hung chambers \u2014 the night slides off like water."

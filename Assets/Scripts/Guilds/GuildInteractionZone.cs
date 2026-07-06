@@ -6,7 +6,8 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class GuildInteractionZone : MonoBehaviour
 {
-    public enum Kind { Inn, Donation, Transmute, Join }
+    // APPEND ONLY — serialized as ints in scenes and the GameSystems prefab.
+    public enum Kind { Inn, Donation, Transmute, Join, Standings }
 
     [Header("Service")]
     public Kind kind = Kind.Inn;
@@ -78,6 +79,9 @@ public class GuildInteractionZone : MonoBehaviour
                 break;
             case Kind.Join:
                 GuildPanelUI.Instance?.OpenJoin(guildId, label, transform.position);
+                break;
+            case Kind.Standings:
+                GuildPanelUI.Instance?.OpenStandings();
                 break;
         }
     }

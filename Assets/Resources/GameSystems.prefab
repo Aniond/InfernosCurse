@@ -326,6 +326,25 @@ MonoBehaviour:
     neighborIds:
     - signoria
     - oltrarno
+  - id: salone_arti
+    displayName: Salone delle Arti
+    mapPosition: {x: 0, y: 0}
+    mapImagePosition: {x: 0.74, y: 0.3}
+    blurb: "One roof over the seven great Arti \u2014 banners, ledgers, and the low
+      murmur of half the city's money changing hands beneath the council dais."
+    sceneName: SaloneDelleArti
+    entryId: salone_door
+    previewImage: {fileID: 0}
+    microClimate: 3
+    kind: 0
+    mapLevel: 0
+    startingCurseLevel: 0.3
+    startingSanctity: 0.2
+    population: 0.7
+    isRitualSite: 0
+    isSanctuarySite: 0
+    neighborIds:
+    - signoria
 --- !u!114 &6516014349141766986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -423,6 +442,13 @@ MonoBehaviour:
   guilds:
   - {fileID: 11400000, guid: e9fe5b150f42cb449b87b6a5b0a90016, type: 2}
   - {fileID: 11400000, guid: 0e8f4cda0a4e10745b10eb537a8fcb3c, type: 2}
+  - {fileID: 11400000, guid: ae934d5357d591b4aa730421d8bd3325, type: 2}
+  - {fileID: 11400000, guid: 2de8a9abe112fbe449b3dabc9cdf74cc, type: 2}
+  - {fileID: 11400000, guid: fae69f6fd0f47ad4882c1c1c7c21cda1, type: 2}
+  - {fileID: 11400000, guid: d312a70e924c00346a52e6cd20f4d392, type: 2}
+  - {fileID: 11400000, guid: b0c1704111421484d8b5e34b0c440c32, type: 2}
+  - {fileID: 11400000, guid: 8b8d3506f1f7bc74097d6697bc60d5f8, type: 2}
+  - {fileID: 11400000, guid: 9792c7c89a5122f4db7999a437d9dcc7, type: 2}
   _memberships: []
 --- !u!114 &3918837222480738804
 MonoBehaviour:
@@ -491,6 +517,150 @@ MonoBehaviour:
     position: {x: 0, y: 1, z: 0}
     triggerSize: {x: 4.5, y: 2.5, z: 4.5}
     innPrice: 10
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: albergatori
+    label: Arte degli Albergatori
+    position: {x: -6.8, y: 1, z: -11.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: albergatori
+    label: Arte degli Albergatori
+    position: {x: -6.8, y: 1, z: -7.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: vaiai_pellicciai
+    label: Vaiai e Pellicciai
+    position: {x: -6.8, y: 1, z: -5.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: vaiai_pellicciai
+    label: Vaiai e Pellicciai
+    position: {x: -6.8, y: 1, z: -1.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: medici_speziali
+    label: Medici e Speziali
+    position: {x: -6.8, y: 1, z: 0.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: medici_speziali
+    label: Medici e Speziali
+    position: {x: -6.8, y: 1, z: 4.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: cambio
+    label: Arte del Cambio
+    position: {x: -6.8, y: 1, z: 6.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: cambio
+    label: Arte del Cambio
+    position: {x: -6.8, y: 1, z: 10.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: por_santa_maria
+    label: Por Santa Maria
+    position: {x: 6.8, y: 1, z: -11.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: por_santa_maria
+    label: Por Santa Maria
+    position: {x: 6.8, y: 1, z: -7.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: giudici_notai
+    label: Giudici e Notai
+    position: {x: 6.8, y: 1, z: -5.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: giudici_notai
+    label: Giudici e Notai
+    position: {x: 6.8, y: 1, z: -1.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: lana
+    label: Arte della Lana
+    position: {x: 6.8, y: 1, z: 0.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: lana
+    label: Arte della Lana
+    position: {x: 6.8, y: 1, z: 4.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: calimala
+    label: Arte di Calimala
+    position: {x: 6.8, y: 1, z: 6.9}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 3
+    guildId: calimala
+    label: Arte di Calimala
+    position: {x: 6.8, y: 1, z: 10.1}
+    triggerSize: {x: 1.8, y: 2, z: 1.6}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 4
+    guildId: 
+    label: Guild Standings
+    position: {x: 3.2, y: 1, z: 12.8}
+    triggerSize: {x: 2.2, y: 2, z: 2}
+    innPrice: 0
+    isGuildInn: 0
+  - sceneName: SaloneDelleArti
+    kind: 1
+    guildId: church
+    label: Gallery Chapel
+    position: {x: 0, y: 6, z: 15.8}
+    triggerSize: {x: 3, y: 2, z: 2.5}
+    innPrice: 0
     isGuildInn: 0
 --- !u!114 &2028659444268085293
 MonoBehaviour:

@@ -669,5 +669,181 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "dais-council-bench",
+    "name": "Dais Council Bench",
+    "prompt": "A long ceremonial wooden council bench for a medieval Florentine guildhall dais, 13th century: dark oak, tall carved backrest with a row of rounded arcading, bench seat wide enough for five consuls, sturdy plinth base, worn gilt edging on the crest rail, aged and polished by use. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "66e6693b-ac56-48fd-b2ef-612ff85d3e45",
+    "error": "GLB pending download: task FINISHED server-side, presigned URL expired; run Tools/asset-gen/recover_glbs.py with a fresh key (do NOT resubmit)"
+  },
+  {
+    "id": "notary-lectern",
+    "name": "Notary Lectern",
+    "prompt": "A medieval notary's standing lectern, 13th-century Tuscan: dark oak sloped writing desk on a carved pedestal column with a heavy round base, small ledge with ink pot recesses, worn smooth at the edges, plain sturdy guildhall furniture. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "6383e605-0ce8-4e04-bfa4-89ef62d12a13",
+    "error": "GLB pending download: task FINISHED server-side, presigned URL expired; run Tools/asset-gen/recover_glbs.py with a fresh key (do NOT resubmit)"
+  },
+  {
+    "id": "iron-chandelier",
+    "name": "Iron Chandelier",
+    "prompt": "A large circular wrought-iron candle chandelier for a medieval hall: two concentric forged iron hoops with candle spikes and drip pans, thick beeswax candles, three hanging chains meeting at a central iron ring above, black hammered iron, medieval craftsmanship. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "bay-bench",
+    "name": "Bay Bench",
+    "prompt": "A plain medieval oak waiting bench for a guildhall alcove, 13th century: thick plank seat, solid board ends, no backrest, visible iron nail heads, worn smooth by wool merchants, simple sturdy joinery. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "bay-strongbox",
+    "name": "Bay Strongbox",
+    "prompt": "A medieval iron-bound oak strongbox for guild donations, 13th century: heavy dark wood chest with riveted iron straps, large hasp lock, slightly domed lid with a coin slot, scuffed and trustworthy. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "chapel-altar",
+    "name": "Chapel Altar",
+    "prompt": "A small stone chapel altar for a gallery oratory, 13th-century Florentine: pietra serena stone altar table on two carved supports, white linen runner, small gilded cross and two brass candlesticks on top, quiet and devotional. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-albergatori",
+    "name": "Guild Banner Albergatori",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a large white eight-pointed star centered on a deep crimson field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-calimala",
+    "name": "Guild Banner Calimala",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a golden eagle with spread wings perched atop a round white bale of wool, on a red field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-lana",
+    "name": "Guild Banner Lana",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a white haloed lamb (Agnus Dei) bearing a small cross-pennant, on a royal blue field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-cambio",
+    "name": "Guild Banner Cambio",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a scatter of round gold florin coins on a crimson field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-giudici-notai",
+    "name": "Guild Banner Giudici Notai",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a single large eight-pointed golden star on a dark blue field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-por-santa-maria",
+    "name": "Guild Banner Por Santa Maria",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a red arched city gate with open doors on a white field. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-medici-speziali",
+    "name": "Guild Banner Medici Speziali",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a seated Madonna and Child painted icon-style in reds and blues on a gold ground. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "guild-banner-vaiai-pellicciai",
+    "name": "Guild Banner Vaiai Pellicciai",
+    "prompt": "A tall vertical gonfalone guild banner of heavy wool cloth hanging from a short dark wooden rod, gently rippled, ornamental fringe along the bottom edge, 13th-century Florentine guild heraldry painted on the cloth: a heraldic vair pattern of alternating blue and white bell shapes in tidy rows. Aged pigment, slightly faded medieval painted texture. Flat front view, the entire banner and rod fully visible, isolated on a solid pure magenta (#FF00FF) background, even lighting, no cast shadows, no lettering, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "salone-floor-terracotta",
+    "name": "Salone Floor Terracotta",
+    "prompt": "Seamless repeating texture of a 13th-century Florentine guildhall floor seen from directly above: large square terracotta tiles laid in a simple grid with thin pale mortar joints, warm earthy red-brown clay, centuries of wear polishing the centers darker, a few hairline cracks and subtle tonal variation between tiles. Top-down flat orthographic view, perfectly seamless repeating texture that tiles edge to edge with no visible seam, even flat lighting, no shadows, no vignette, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "salone-wall-pietra-serena",
+    "name": "Salone Wall Pietra Serena",
+    "prompt": "Seamless repeating texture of a medieval Florentine interior wall of dressed pietra serena sandstone blocks: cool blue-grey ashlar masonry in regular courses with fine chiseled surfaces and thin mortar lines, subtle tonal variation block to block, quietly elegant civic stonework. Top-down flat orthographic view, perfectly seamless repeating texture that tiles edge to edge with no visible seam, even flat lighting, no shadows, no vignette, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
   }
 ]

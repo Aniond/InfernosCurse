@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5649c560b99d9fd4cbf1b77b65b7dc86, type: 3}
+  m_Name: Guild_Calimala
+  m_EditorClassIdentifier: Assembly-CSharp::GuildDefinition
+  guildId: calimala
+  displayName: Arte di Calimala
+  blurb: "The refiners of foreign cloth \u2014 the oldest and proudest of the Arti.
+    Their fulling mills beat wool in the streams below Fiesole, and their seal opens
+    markets from London to the Levant."
+  crest: {fileID: 0}
+  isChurch: 0
+  homeNodeId: fiesole
+  repPerRank: 000000003c000000b4000000a401000052030000
+  rankNames:
+  - Straniero
+  - Apprendista
+  - Panniere
+  - Mercante d'Oltremonte
+  - Console di Calimala
+  repPerHomeKill: 5
+  florinsPerRep: 3
+  perks:
+  - type: 3
+    unlockRank: 2
+    magnitude: 0.85
+    flavorText: "A Calimala seal on the purse \u2014 hosts sharpen their prices."
+  - type: 4
+    unlockRank: 3
+    magnitude: 1.25
+    flavorText: The Arte remembers a generous hand twice as long.
+  - type: 0
+    unlockRank: 4
+    magnitude: 0.8
+    flavorText: "Foreign linens, washed and blessed \u2014 sleep sits lighter on
+      you."
