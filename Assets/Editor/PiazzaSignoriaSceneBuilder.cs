@@ -497,10 +497,13 @@ public static class PiazzaSignoriaSceneBuilder
         // Closer in = COZY fog hazes them instead of fully washing them out.
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
-            ("Backdrop_N", new Vector3(0f, 8f, 34f), 180f, 140f),
-            ("Backdrop_S", new Vector3(0f, 8f, -34f), 0f, 130f),
-            ("Backdrop_E", new Vector3(36f, 8f, 0f), 90f, 120f),
-            ("Backdrop_W", new Vector3(-36f, 8f, 0f), -90f, 120f),
+            // y=2 (pulled down from 8, David 7/06): drops the painted rooftop
+            // band + sunset horizon into the through-the-mouth sightline
+            // (city band lands ~y -7..+5, towers to +11).
+            ("Backdrop_N", new Vector3(0f, 2f, 34f), 180f, 140f),
+            ("Backdrop_S", new Vector3(0f, 2f, -34f), 0f, 130f),
+            ("Backdrop_E", new Vector3(36f, 2f, 0f), 90f, 120f),
+            ("Backdrop_W", new Vector3(-36f, 2f, 0f), -90f, 120f),
         })
         {
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
