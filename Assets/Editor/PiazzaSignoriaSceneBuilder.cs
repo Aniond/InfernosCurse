@@ -91,6 +91,12 @@ public static class PiazzaSignoriaSceneBuilder
     static void BuildPaving()
     {
         var group = new GameObject("[Ground]").transform;
+        // Outskirt apron: ground continues under and far past the building
+        // ring, out beyond the backdrops — buildings never hang over void and
+        // ground-level sightlines through gaps land on earth, not skybox
+        // (David's in-game shot 7/06 #2).
+        Box(group, "Floor_Outskirts", new Vector3(0f, -0.19f, 0f),
+            new Vector3(100f, 0.3f, 92f), new Color(0.45f, 0.41f, 0.35f));
         Box(group, "Floor_Piazza", new Vector3(0f, -0.15f, 0f),
             new Vector3(HalfW * 2f, 0.3f, HalfL * 2f), Paving);
         // Work-yard dirt (thin overlay, top at +0.015 — never coplanar)
@@ -449,16 +455,19 @@ public static class PiazzaSignoriaSceneBuilder
 
     static void BuildBackdrop()
     {
-        // Hazy stone-city quads past every edge — DoF melts them. Quad faces -Z.
-        // 32 tall: at 20 the gameplay camera's sightline cleared the top through
-        // street mouths / building gaps and showed raw skybox (David 7/06).
+        // Painted Florence-skyline quads (Mercato's [Backdrop_Florence] recipe:
+        // BackdropFlorence.mat, transparent painted skyline, double-sided) on
+        // all four sides — hides the raw skybox "white space" behind the ring.
+        // Mercato reference: 360x60 quad @ z49.5, y8, yRot 180.
         var group = new GameObject("[Backdrop]").transform;
+        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Environment/MarketSquare/Materials/BackdropFlorence.mat");
+        if (mat == null) { Debug.LogError("[PiazzaSignoriaSceneBuilder] BackdropFlorence.mat missing!"); return; }
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
-            ("Backdrop_N", new Vector3(0f, 13f, 42f), 0f, 150f),    // faces south (camera side)
-            ("Backdrop_S", new Vector3(0f, 13f, -40f), 180f, 140f),
-            ("Backdrop_E", new Vector3(42f, 13f, 0f), 90f, 130f),   // faces west
-            ("Backdrop_W", new Vector3(-42f, 13f, 0f), -90f, 130f), // faces east
+            ("Backdrop_N", new Vector3(0f, 8f, 44f), 180f, 170f),
+            ("Backdrop_S", new Vector3(0f, 8f, -42f), 0f, 160f),
+            ("Backdrop_E", new Vector3(44f, 8f, 0f), 90f, 150f),
+            ("Backdrop_W", new Vector3(-44f, 8f, 0f), -90f, 150f),
         })
         {
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -467,8 +476,8 @@ public static class PiazzaSignoriaSceneBuilder
             Object.DestroyImmediate(q.GetComponent<Collider>());
             q.transform.position = pos;
             q.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
-            q.transform.localScale = new Vector3(w, 32f, 1f);
-            Tint(q, Haze);
+            q.transform.localScale = new Vector3(w, 60f, 1f);   // Mercato height — top clears steep look-up angles
+            q.GetComponent<Renderer>().sharedMaterial = mat;
         }
     }
 
