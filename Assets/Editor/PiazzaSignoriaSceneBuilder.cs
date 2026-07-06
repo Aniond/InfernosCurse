@@ -97,8 +97,12 @@ public static class PiazzaSignoriaSceneBuilder
         // (David's in-game shot 7/06 #2).
         Box(group, "Floor_Outskirts", new Vector3(0f, -0.19f, 0f),
             new Vector3(100f, 0.3f, 92f), new Color(0.45f, 0.41f, 0.35f));
+        // Paving extends UNDER the building ring and through both street
+        // mouths (60x56 > the 44x34 piazza): buildings sit ON tiles instead of
+        // floating 4cm above the lower apron, and the mouths read as paved
+        // streets running on toward the backdrop (David 7/06 #3).
         Box(group, "Floor_Piazza", new Vector3(0f, -0.15f, 0f),
-            new Vector3(HalfW * 2f, 0.3f, HalfL * 2f), Paving);
+            new Vector3(60f, 0.3f, 56f), Paving);
         // Work-yard dirt (thin overlay, top at +0.015 — never coplanar)
         Box(group, "Floor_Yard", new Vector3((YardMin.x + YardMax.x) / 2f, -0.135f, (YardMin.y + YardMax.y) / 2f),
             new Vector3(YardMax.x - YardMin.x, 0.33f, YardMax.y - YardMin.y), YardDirt);
@@ -262,20 +266,20 @@ public static class PiazzaSignoriaSceneBuilder
             // North edge — narrow fronts packed edge to edge, faces at z~17,
             // street mouth kept at x -6..-1 (A1@270: 5.4 wide x 8.3 deep;
             // NE@180: 5.3 wide x 4.9 deep)
+            // Row aligned to the tile line (David 7/06 #4): all BOUNDS fronts
+            // at z=16.2 so wall bases sit on the piazza grid, eaves overhang.
+            // Measured at yRot 270 Apartment1 is 8.3 WIDE x 5.4 deep (door
+            // south, wide front) — packed by real widths (NE=5.3, A1=8.3).
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_NW", pos = new Vector3(-19.3f, 0f, 19.45f), yRot = 180f },
+                name = "Bldg_North_NW", pos = new Vector3(-19.3f, 0f, 18.65f), yRot = 180f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_W", pos = new Vector3(-13.9f, 0f, 21.15f), yRot = 270f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_W2", pos = new Vector3(-8.6f, 0f, 19.45f), yRot = 180f },
+                name = "Bldg_North_W", pos = new Vector3(-12.4f, 0f, 18.9f), yRot = 270f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_E", pos = new Vector3(1.9f, 0f, 21.15f), yRot = 270f },
+                name = "Bldg_North_E", pos = new Vector3(3.15f, 0f, 18.9f), yRot = 270f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_E2", pos = new Vector3(7.2f, 0f, 19.45f), yRot = 180f },
+                name = "Bldg_North_E2", pos = new Vector3(9.95f, 0f, 18.65f), yRot = 180f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_E3", pos = new Vector3(12.5f, 0f, 21.15f), yRot = 270f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_E4", pos = new Vector3(17.8f, 0f, 19.45f), yRot = 180f },
+                name = "Bldg_North_E3", pos = new Vector3(16.75f, 0f, 18.9f), yRot = 270f },
             // San Pier Scheraggio, SE edge (faces west into the piazza)
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Church1.glb",
                 name = "Bldg_SanPierScheraggio", pos = new Vector3(17f, 0f, -11.5f), yRot = -90f },
@@ -360,7 +364,7 @@ public static class PiazzaSignoriaSceneBuilder
             ("Assets/Environment/GiardinoDelleRose/Props/tuscan-cypress.glb", "Prop_Cypress_2", new Vector3(12.5f, 0f, -16.3f), 70f, 5.2f),
             ("Assets/Environment/PonteVecchio/Props/LightPost.glb", "Prop_LightPost_SW", new Vector3(-2.8f, 0f, -15.6f), 0f, 3f),
             ("Assets/Environment/PonteVecchio/Props/LightPost.glb", "Prop_LightPost_SE", new Vector3(4.8f, 0f, -15.6f), 0f, 3f),
-            ("Assets/Environment/PonteVecchio/Props/LightPost.glb", "Prop_LightPost_N", new Vector3(-7.2f, 0f, 14.8f), 0f, 3f),
+            ("Assets/Environment/PonteVecchio/Props/LightPost.glb", "Prop_LightPost_N", new Vector3(-9f, 0f, 14.8f), 0f, 3f),
         })
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
@@ -409,11 +413,11 @@ public static class PiazzaSignoriaSceneBuilder
 
         MakeEntry("signoria_south", "South Gate", new Vector3(1f, 0f, -14.5f), new Vector2(0f, 1f));
         MakeEntry("signoria_salone", "Salone delle Arti", new Vector3(-18.6f, 0f, 1f), new Vector2(1f, 0f));
-        MakeEntry("signoria_north", "North Street", new Vector3(-3.5f, 0f, 14.5f), new Vector2(0f, -1f));
+        MakeEntry("signoria_north", "North Street", new Vector3(-4.6f, 0f, 14.5f), new Vector2(0f, -1f));
 
         MakeExit("ExitZone_South", new Vector3(1f, 1.2f, -16.5f), new Vector3(5.6f, 2.4f, 1.6f),
             ZoneExit.ExitMode.ToWorldMap, null, null);
-        MakeExit("ExitZone_North", new Vector3(-3.5f, 1.2f, 16.5f), new Vector3(4.6f, 2.4f, 1.6f),
+        MakeExit("ExitZone_North", new Vector3(-4.6f, 1.2f, 16.5f), new Vector3(6.6f, 2.4f, 1.6f),
             ZoneExit.ExitMode.ToWorldMap, null, null);
         MakeExit("ExitZone_SaloneDoor", new Vector3(-20.1f, 1.2f, 1f), new Vector3(1.5f, 2.4f, 2.6f),
             ZoneExit.ExitMode.ToScene, "SaloneDelleArti", "salone_door");
@@ -479,18 +483,24 @@ public static class PiazzaSignoriaSceneBuilder
             if (tex == null) { Debug.LogError("[PiazzaSignoriaSceneBuilder] BackdropFlorence.jpg missing!"); return; }
             mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Gen_Backdrop_Skyline" };
             mat.SetTexture("_BaseMap", tex);
-            mat.SetTextureScale("_BaseMap", new Vector2(1f, 0.55f));
-            mat.SetTextureOffset("_BaseMap", new Vector2(0f, 0.45f));
             mat.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
             CreateFolders("Assets/Environment/PiazzaSignoria/Materials");
             AssetDatabase.CreateAsset(mat, matPath);
         }
+        // FULL texture, no crop: on a 60-tall quad based at y-22 the painted
+        // city band lands at world y 0..15 — the band the gameplay camera
+        // actually sees through the street mouths. (Mercato's 0.55/0.45 crop
+        // put the city BELOW y=0 here — only featureless haze-sky showed.)
+        mat.SetTextureScale("_BaseMap", Vector2.one);
+        mat.SetTextureOffset("_BaseMap", Vector2.zero);
+        EditorUtility.SetDirty(mat);
+        // Closer in = COZY fog hazes them instead of fully washing them out.
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
-            ("Backdrop_N", new Vector3(0f, 8f, 44f), 180f, 170f),
-            ("Backdrop_S", new Vector3(0f, 8f, -42f), 0f, 160f),
-            ("Backdrop_E", new Vector3(44f, 8f, 0f), 90f, 150f),
-            ("Backdrop_W", new Vector3(-44f, 8f, 0f), -90f, 150f),
+            ("Backdrop_N", new Vector3(0f, 8f, 34f), 180f, 140f),
+            ("Backdrop_S", new Vector3(0f, 8f, -34f), 0f, 130f),
+            ("Backdrop_E", new Vector3(36f, 8f, 0f), 90f, 120f),
+            ("Backdrop_W", new Vector3(-36f, 8f, 0f), -90f, 120f),
         })
         {
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
