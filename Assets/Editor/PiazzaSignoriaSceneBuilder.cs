@@ -243,26 +243,27 @@ public static class PiazzaSignoriaSceneBuilder
         var group = new GameObject("[Buildings]").transform;
         var specs = new List<BuildingSpec>
         {
-            // West edge flanking the Salone facade (faces east)
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/TownhouseDouble.glb",
+            // West edge flanking the Salone facade (faces east).
+            // NO TownhouseDouble anywhere on the ring: it's twin towers with a
+            // sky-bridge — raw sky leaks through the ground-level gap between
+            // its towers (David's in-game shot, north edge).
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
                 name = "Bldg_West_N", pos = new Vector3(-24f, 0f, 12f), yRot = 90f },
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
                 name = "Bldg_West_S", pos = new Vector3(-24f, 0f, -10.5f), yRot = 90f },
-            // North edge (faces south) — five buildings walling the edge, with
-            // the street mouth at x -6..-1 (measured widths: Townhouse 6.6,
-            // Apartment1 8.3, Apartment_NE 5.3)
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/TownhouseDouble.glb",
-                name = "Bldg_North_NW", pos = new Vector3(-19f, 0f, 19f), yRot = 180f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/TownhouseDouble.glb",
-                name = "Bldg_North_W", pos = new Vector3(-13f, 0f, 19f), yRot = 180f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_W2", pos = new Vector3(-8.4f, 0f, 19f), yRot = 180f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
-                name = "Bldg_North_E", pos = new Vector3(1.8f, 0f, 19f), yRot = 180f },
-            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/TownhouseDouble.glb",
-                name = "Bldg_North_E2", pos = new Vector3(8f, 0f, 19f), yRot = 180f },
+            // North edge (faces south) — solid-footprint buildings packed edge
+            // to edge (slight z stagger kills coplanar side-face z-fighting),
+            // street mouth kept at x -6..-1 (widths: Apartment1 8.3, Apartment_NE 5.3)
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
-                name = "Bldg_North_E3", pos = new Vector3(15.5f, 0f, 19f), yRot = 180f },
+                name = "Bldg_North_NW", pos = new Vector3(-17.8f, 0f, 18.9f), yRot = 180f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
+                name = "Bldg_North_W", pos = new Vector3(-10f, 0f, 19.15f), yRot = 180f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
+                name = "Bldg_North_E", pos = new Vector3(3.5f, 0f, 19f), yRot = 180f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb",
+                name = "Bldg_North_E2", pos = new Vector3(10.5f, 0f, 19.2f), yRot = 180f },
+            new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Apartment1.glb",
+                name = "Bldg_North_E3", pos = new Vector3(17.3f, 0f, 19f), yRot = 180f },
             // San Pier Scheraggio, SE edge (faces west into the piazza)
             new BuildingSpec { path = "Assets/Environment/MarketSquare/Buildings/Church1.glb",
                 name = "Bldg_SanPierScheraggio", pos = new Vector3(17f, 0f, -11.5f), yRot = -90f },
@@ -449,13 +450,15 @@ public static class PiazzaSignoriaSceneBuilder
     static void BuildBackdrop()
     {
         // Hazy stone-city quads past every edge — DoF melts them. Quad faces -Z.
+        // 32 tall: at 20 the gameplay camera's sightline cleared the top through
+        // street mouths / building gaps and showed raw skybox (David 7/06).
         var group = new GameObject("[Backdrop]").transform;
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
-            ("Backdrop_N", new Vector3(0f, 6.5f, 42f), 0f, 130f),   // faces south (camera side)
-            ("Backdrop_S", new Vector3(0f, 6f, -40f), 180f, 120f),
-            ("Backdrop_E", new Vector3(42f, 6.5f, 0f), 90f, 110f),  // faces west
-            ("Backdrop_W", new Vector3(-42f, 6.5f, 0f), -90f, 110f), // faces east
+            ("Backdrop_N", new Vector3(0f, 13f, 42f), 0f, 150f),    // faces south (camera side)
+            ("Backdrop_S", new Vector3(0f, 13f, -40f), 180f, 140f),
+            ("Backdrop_E", new Vector3(42f, 13f, 0f), 90f, 130f),   // faces west
+            ("Backdrop_W", new Vector3(-42f, 13f, 0f), -90f, 130f), // faces east
         })
         {
             var q = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -464,7 +467,7 @@ public static class PiazzaSignoriaSceneBuilder
             Object.DestroyImmediate(q.GetComponent<Collider>());
             q.transform.position = pos;
             q.transform.rotation = Quaternion.Euler(0f, yRot, 0f);
-            q.transform.localScale = new Vector3(w, 20f, 1f);
+            q.transform.localScale = new Vector3(w, 32f, 1f);
             Tint(q, Haze);
         }
     }
