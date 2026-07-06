@@ -78,6 +78,11 @@ public static class GiardinoDelleRosePropPlacement
         _ => null,
     };
 
+    // Walk-through structures must NOT get a bounds-encapsulating BoxCollider —
+    // it seals their opening solid (the gate pergola blocked the whole trail:
+    // player moved 0.5m in a 10s walk test). Decorative pass-through only.
+    static bool NoCollider(string assetId) => assetId == "garden-wooden-pergola";
+
     static void PlaceAsset(GameObject prefab, string assetId, float targetHeight, GameObject marker)
     {
         // Pivot carries the marker's placement rotation; the mesh child
@@ -100,7 +105,7 @@ public static class GiardinoDelleRosePropPlacement
         }
 
         mesh.transform.SetParent(pivot.transform, true);
-        EnsureCollider(mesh);
+        if (!NoCollider(assetId)) EnsureCollider(mesh);
 
         // Rotation FIRST (grounding measures world bounds — rotating after
         // grounding would swing an off-pivot mesh away from where we measured).
@@ -111,15 +116,40 @@ public static class GiardinoDelleRosePropPlacement
         {
             var b = renderers[0].bounds;
             foreach (var r in renderers) b.Encapsulate(r.bounds);
-            // One combined correction: bottom of bounds to the marker's Y,
+            // One combined correction: bottom of bounds to the GROUND under the
+            // prop (sampled terrain, not the marker's analytic Y — those
+            // disagree by ~15cm on slopes and props visibly float; David 7/05),
             // bounds center over the marker's XZ.
+            float groundY = MaxGroundY(b, marker.transform.position.y);
             var offset = new Vector3(
                 b.center.x - marker.transform.position.x,
-                b.min.y - marker.transform.position.y,
+                b.min.y - (groundY - SinkAmount(assetId)),
                 b.center.z - marker.transform.position.z);
             pivot.transform.position -= offset;
         }
     }
+
+    // Highest terrain under the footprint — props on slopes or terrace rims
+    // rest on the high side (a center-only sample under a rim-hugging hedge
+    // reads the bank BELOW and sinks the prop meters down).
+    static float MaxGroundY(Bounds b, float fallback)
+    {
+        var t = Terrain.activeTerrain;
+        if (t == null) return fallback;
+        float best = float.MinValue;
+        foreach (var f in new[] { 0.5f, 0.9f })
+            foreach (var sx in new[] { -1f, 0f, 1f })
+                foreach (var sz in new[] { -1f, 0f, 1f })
+                {
+                    var p = new Vector3(b.center.x + sx * b.extents.x * f, 0f, b.center.z + sz * b.extents.z * f);
+                    best = Mathf.Max(best, t.SampleHeight(p) + t.transform.position.y);
+                }
+        return best;
+    }
+
+    // Bushy shapes nestle into the grass; hard-based props sit nearly flush.
+    static float SinkAmount(string assetId) =>
+        assetId.StartsWith("rose-") ? 0.12f : 0.03f;
 
     static void EnsureFallbackVisual(GameObject marker, string assetId)
     {

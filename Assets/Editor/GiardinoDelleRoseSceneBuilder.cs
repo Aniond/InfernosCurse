@@ -55,9 +55,12 @@ public static class GiardinoDelleRoseSceneBuilder
         var terrain = BuildTerrain();
         PaintTerrain(terrain);
         SpawnVegetation(terrain);
+        ScatterTrees(terrain);
+        ScatterTrailFlora();
         BuildHedgeBlockout();
         BuildMarkers();
         BuildPond();
+        BuildFountainWater();
         BuildBoundaries();
         BuildTravelMarkers();
         BuildFloristPlaceholder();
@@ -180,14 +183,17 @@ public static class GiardinoDelleRoseSceneBuilder
     {
         if (!AssetDatabase.IsValidFolder(LayerFolder)) CreateFolderRecursive(LayerFolder);
 
-        var grassLayer = CreateTerrainLayer("TL_Garden_Grass", new Color(0.42f, 0.55f, 0.30f));
-        var pathLayer = CreateTerrainLayer("TL_Garden_Path", new Color(0.66f, 0.60f, 0.50f));
-        terrain.terrainData.terrainLayers = new[] { grassLayer, pathLayer };
+        // Real generated seamless tiles (Gemini, Duomo-tile workflow) — the
+        // earlier flat solid-color placeholders read as lifeless green soup.
+        var meadowLayer = CreateTerrainLayer("TL_Meadow", new Color(0.42f, 0.55f, 0.30f), "ground-grass-meadow", 5f);
+        var dryLayer = CreateTerrainLayer("TL_DryGrass", new Color(0.55f, 0.52f, 0.30f), "ground-grass-dry", 5f);
+        var pathLayer = CreateTerrainLayer("TL_Gravel", new Color(0.66f, 0.60f, 0.50f), "ground-path-gravel", 3.5f);
+        terrain.terrainData.terrainLayers = new[] { meadowLayer, dryLayer, pathLayer };
 
         var data = terrain.terrainData;
         data.alphamapResolution = 512;
         int res = data.alphamapResolution;
-        var alpha = new float[res, res, 2];
+        var alpha = new float[res, res, 3];
 
         const float edge = 0.7f; // soft trail edge in meters
 
@@ -217,8 +223,15 @@ public static class GiardinoDelleRoseSceneBuilder
                     pathWeight = Mathf.Max(pathWeight, 1f - Mathf.Clamp01((pdd - r) / edge));
                 }
 
-                alpha[iz, ix, 0] = 1f - pathWeight;
-                alpha[iz, ix, 1] = pathWeight;
+                // Meadow/dry blend by low-frequency noise — natural tonal
+                // patchiness instead of one uniform green.
+                float noise = Mathf.PerlinNoise(wx * 0.07f + 13.7f, wz * 0.07f + 7.3f);
+                float dryWeight = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.42f, 0.72f, noise)) * 0.8f;
+
+                float grass = 1f - pathWeight;
+                alpha[iz, ix, 0] = grass * (1f - dryWeight);
+                alpha[iz, ix, 1] = grass * dryWeight;
+                alpha[iz, ix, 2] = pathWeight;
             }
         }
 
@@ -234,26 +247,38 @@ public static class GiardinoDelleRoseSceneBuilder
         return Vector2.Distance(p, a + ab * t);
     }
 
-    static TerrainLayer CreateTerrainLayer(string name, Color tint)
+    // Builds a TerrainLayer from a generated seamless tile in the asset-gen
+    // workbench output (copied into the project), falling back to a flat
+    // solid-color texture when the tile hasn't been generated. Never use
+    // Texture2D.whiteTexture here — the built-in singleton renders as the
+    // missing-texture checker when referenced from a .terrainlayer asset.
+    static TerrainLayer CreateTerrainLayer(string name, Color fallbackTint, string generatedTileId, float tileMeters)
     {
         string layerPath = $"{LayerFolder}/{name}.terrainlayer";
         var existing = AssetDatabase.LoadAssetAtPath<TerrainLayer>(layerPath);
         if (existing != null) return existing;
 
-        // Real saved texture asset — Texture2D.whiteTexture renders as the
-        // missing-texture checker when referenced from a .terrainlayer asset.
         string texPath = $"{LayerFolder}/{name}_Diffuse.png";
-        var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
-        var pixels = new Color[16];
-        for (int i = 0; i < pixels.Length; i++) pixels[i] = tint;
-        tex.SetPixels(pixels);
-        tex.Apply();
-        System.IO.File.WriteAllBytes(texPath, tex.EncodeToPNG());
-        Object.DestroyImmediate(tex);
+        string sourceTile = $"Tools/asset-gen/output/images/{generatedTileId}.png";
+        if (!string.IsNullOrEmpty(generatedTileId) && System.IO.File.Exists(sourceTile))
+        {
+            System.IO.File.Copy(sourceTile, texPath, overwrite: true);
+        }
+        else
+        {
+            Debug.LogWarning($"[GiardinoDelleRoseSceneBuilder] Tile '{generatedTileId}' not generated — flat color fallback for {name}.");
+            var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+            var pixels = new Color[16];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = fallbackTint;
+            tex.SetPixels(pixels);
+            tex.Apply();
+            System.IO.File.WriteAllBytes(texPath, tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+        }
         AssetDatabase.ImportAsset(texPath);
         var savedTex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
 
-        var layer = new TerrainLayer { diffuseTexture = savedTex, tileSize = new Vector2(8f, 8f) };
+        var layer = new TerrainLayer { diffuseTexture = savedTex, tileSize = new Vector2(tileMeters, tileMeters) };
         AssetDatabase.CreateAsset(layer, layerPath);
         EditorUtility.SetDirty(layer);
         return layer;
@@ -279,29 +304,14 @@ public static class GiardinoDelleRoseSceneBuilder
         spawner.terrains = new List<Terrain> { terrain };
         spawner.waterHeight = MidY - PondDepth + 0.4f; // reject details inside the pond bowl
 
-        var cypress = FindPackPrefab("EA03_Nature_Tree", new[] { "Assets/EmaceArt/Slavic World Free/Prefabs" });
-        if (cypress != null)
-        {
-            // Fan terraces — scattered trees lining the lower trails.
-            var fanTrees = VegetationSpawner.TreeType.New(cypress);
-            fanTrees.probability = 30f;
-            fanTrees.slopeRange = new Vector2(0f, 14f);
-            fanTrees.heightRange = new Vector2(LowerY - 0.5f, LowerY + 1.5f); // world meters
-            fanTrees.distance = 6f;
-            fanTrees.collisionCheck = true;
-            spawner.treeTypes.Add(fanTrees);
+        // Trees are NOT terrain trees: the generated Prism GLBs have a
+        // center pivot and Unity's tree-prototype path rejected the old pack
+        // prefab outright ("no valid mesh renderer" — trees rendered invisible).
+        // ScatterTrees places them as plain GameObjects instead, same idiom as
+        // the hero props.
 
-            // Road line — the Via's tree row band.
-            var roadTrees = VegetationSpawner.TreeType.New(cypress);
-            roadTrees.probability = 45f;
-            roadTrees.slopeRange = new Vector2(0f, 10f);
-            roadTrees.heightRange = new Vector2(UpperY - 0.5f, UpperY + 2f);
-            roadTrees.distance = 5f;
-            roadTrees.collisionCheck = true;
-            spawner.treeTypes.Add(roadTrees);
-        }
-        else Debug.LogWarning("[GiardinoDelleRoseSceneBuilder] No tree prefab found — trees skipped.");
-
+        // Detail grass kept SPARSE — the ground texture carries the green now;
+        // dense swaying detail over it read as "animated flowing soup" (David).
         const string grassPatchPath = "Packages/xyz.staggart-creations.stylized-grass/Prefabs/TerrainGrass/GrassPatch_Terrain.prefab";
         var grassPatch = AssetDatabase.LoadAssetAtPath<GameObject>(grassPatchPath);
         if (grassPatch != null)
@@ -310,22 +320,20 @@ public static class GiardinoDelleRoseSceneBuilder
             {
                 prefab = grassPatch,
                 type = VegetationSpawner.GrassType.Mesh,
-                probability = 80f,
+                probability = 35f,
                 slopeRange = new Vector2(0f, 40f),
             });
         }
 
-        // Wildflower underplanting (the crowded trail edges in David's photo
-        // reference) — poppies read as the red valerian in that shot.
-        const string poppiesPath = "Packages/xyz.staggart-creations.stylized-grass/Prefabs/TerrainFlowers/Flower_Dandelions_Terrain.prefab";
-        var poppies = AssetDatabase.LoadAssetAtPath<GameObject>(poppiesPath);
-        if (poppies != null)
+        const string dandelionsPath = "Packages/xyz.staggart-creations.stylized-grass/Prefabs/TerrainFlowers/Flower_Dandelions_Terrain.prefab";
+        var dandelions = AssetDatabase.LoadAssetAtPath<GameObject>(dandelionsPath);
+        if (dandelions != null)
         {
             spawner.grassPrefabs.Add(new VegetationSpawner.GrassPrefab
             {
-                prefab = poppies,
+                prefab = dandelions,
                 type = VegetationSpawner.GrassType.Mesh,
-                probability = 25f,
+                probability = 12f,
                 slopeRange = new Vector2(0f, 30f),
             });
         }
@@ -335,10 +343,122 @@ public static class GiardinoDelleRoseSceneBuilder
         spawner.Respawn(grass: true, trees: true);
     }
 
-    static GameObject FindPackPrefab(string search, string[] folders)
+    // Actual (heightmap-discretized) ground height — use this for grounding
+    // objects; HeightAt is the analytic design surface and sits up to ~15cm
+    // above the sampled terrain on slopes.
+    static float SampleGroundY(float x, float z)
     {
-        var guid = AssetDatabase.FindAssets($"{search} t:prefab", folders).FirstOrDefault();
-        return guid != null ? AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid)) : null;
+        var t = Terrain.activeTerrain;
+        if (t == null) return HeightAt(x, z);
+        return t.SampleHeight(new Vector3(x, 0f, z)) + t.transform.position.y;
+    }
+
+    // Raise-only heightmap shelf: lifts every cell inside the world-space
+    // rect (center, halfExtents) to at least targetY, with a one-cell
+    // feathered ring. Never lowers terrain.
+    static void RaiseShelf(Terrain terrain, Vector2 center, Vector2 halfExtents, float targetY)
+    {
+        if (terrain == null) return;
+        var data = terrain.terrainData;
+        int res = data.heightmapResolution;
+        Vector3 tPos = terrain.transform.position;
+        float targetNorm = Mathf.Clamp01((targetY - tPos.y) / data.size.y);
+
+        int x0 = Mathf.Clamp(Mathf.FloorToInt((center.x - halfExtents.x - tPos.x) / data.size.x * (res - 1)) - 1, 0, res - 1);
+        int x1 = Mathf.Clamp(Mathf.CeilToInt((center.x + halfExtents.x - tPos.x) / data.size.x * (res - 1)) + 1, 0, res - 1);
+        int z0 = Mathf.Clamp(Mathf.FloorToInt((center.y - halfExtents.y - tPos.z) / data.size.z * (res - 1)) - 1, 0, res - 1);
+        int z1 = Mathf.Clamp(Mathf.CeilToInt((center.y + halfExtents.y - tPos.z) / data.size.z * (res - 1)) + 1, 0, res - 1);
+        if (x1 <= x0 || z1 <= z0) return;
+
+        var h = data.GetHeights(x0, z0, x1 - x0 + 1, z1 - z0 + 1);
+        for (int iz = 0; iz <= z1 - z0; iz++)
+            for (int ix = 0; ix <= x1 - x0; ix++)
+            {
+                float wx = tPos.x + (x0 + ix) / (float)(res - 1) * data.size.x;
+                float wz = tPos.z + (z0 + iz) / (float)(res - 1) * data.size.z;
+                bool inside = Mathf.Abs(wx - center.x) <= halfExtents.x && Mathf.Abs(wz - center.y) <= halfExtents.y;
+                float goal = inside ? targetNorm : (h[iz, ix] + targetNorm) * 0.5f; // feather ring
+                if (goal > h[iz, ix]) h[iz, ix] = goal;
+            }
+        data.SetHeights(x0, z0, h);
+    }
+
+    // ── Trees (generated Prism 3.1 GLBs, placed as GameObjects) ─────────────
+
+    const string PropsFolder = "Assets/Environment/GiardinoDelleRose/Props";
+
+    // Wrapper prefab = base pivot + capsule collider around a unit-height,
+    // center-pivot GLB. Rebuilt from the GLB if the prefab asset is missing.
+    static GameObject EnsureTreePrefab(string glbId, string prefabName, float height, float colRadius)
+    {
+        string prefabPath = $"{PropsFolder}/{prefabName}.prefab";
+        var existing = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+        if (existing != null) return existing;
+
+        var glb = AssetDatabase.LoadAssetAtPath<GameObject>($"{PropsFolder}/{glbId}.glb");
+        if (glb == null)
+        {
+            Debug.LogWarning($"[GiardinoDelleRoseSceneBuilder] {glbId}.glb missing — generate it in the asset workbench first.");
+            return null;
+        }
+
+        var root = new GameObject(prefabName);
+        var mesh = (GameObject)PrefabUtility.InstantiatePrefab(glb);
+        mesh.name = glbId + "_mesh";
+        mesh.transform.SetParent(root.transform, false);
+        mesh.transform.localScale = Vector3.one * height;
+        mesh.transform.localPosition = new Vector3(0f, height * 0.5f, 0f);
+
+        var cap = root.AddComponent<CapsuleCollider>();
+        cap.center = new Vector3(0f, height * 0.5f, 0f);
+        cap.height = height;
+        cap.radius = colRadius;
+
+        var saved = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+        Object.DestroyImmediate(root);
+        return saved;
+    }
+
+    static void ScatterTrees(Terrain terrain)
+    {
+        var cypress = EnsureTreePrefab("tuscan-cypress", "Tree_TuscanCypress", 6f, 0.5f);
+        var pine = EnsureTreePrefab("italian-stone-pine", "Tree_StonePine", 7.5f, 0.45f);
+        if (cypress == null || pine == null) return;
+
+        var group = new GameObject("[Trees]");
+        var rng = new System.Random(1299); // deterministic rebuilds
+        int placed = 0;
+
+        void Place(GameObject prefab, float x, float z, float scaleJitter)
+        {
+            float y = terrain.SampleHeight(new Vector3(x, 0f, z)) + terrain.transform.position.y;
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            go.transform.SetParent(group.transform, false);
+            go.transform.position = new Vector3(x, y, z);
+            go.transform.rotation = Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f);
+            float s = 1f + ((float)rng.NextDouble() * 2f - 1f) * scaleJitter;
+            go.transform.localScale = new Vector3(s, s, s);
+            placed++;
+        }
+
+        // Via road line — staggered cypress rows flanking the hilltop road
+        // (z=20, w=4), clear of the overlook pad (0,24) and the trail gap at x~0.
+        foreach (float x in new[] { -30f, -24f, -18f, -12f, -6f, 6f, 12f, 18f, 24f, 30f })
+            Place(cypress, x, 17.6f, 0.12f);
+        foreach (float x in new[] { -27f, -21f, -15f, -9f, 9f, 15f, 21f, 27f })
+            Place(cypress, x, 22.4f, 0.12f);
+
+        // Fan terraces — stone pines scattered on the lower slopes, off-trail.
+        var pineSpots = new Vector2[]
+        {
+            new Vector2(-11f, -25f), new Vector2(-19f, -21f), new Vector2(-27f, -14f),
+            new Vector2(-30f, -4f), new Vector2(-22f, 5f),
+            new Vector2(9f, -20f), new Vector2(15f, -26f), new Vector2(22f, -16f),
+            new Vector2(28f, -7f),
+        };
+        foreach (var p in pineSpots) Place(pine, p.x, p.y, 0.15f);
+
+        Debug.Log($"[GiardinoDelleRoseSceneBuilder] Trees: {placed} placed.");
     }
 
     // ── Formal garden hedge blockout ─────────────────────────────────────────
@@ -364,10 +484,28 @@ public static class GiardinoDelleRoseSceneBuilder
                 var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 seg.name = "MARKER_boxwood-hedge-segment@1.1";
                 seg.transform.SetParent(group.transform, false);
-                seg.transform.position = new Vector3(c2.x, MidY + 0.55f, c2.y);
+                // Sample the REAL terrain, not the analytic MidY — the
+                // discretized heightmap sits slightly below it and the
+                // hedges read as hovering (David, 7/05). Perimeter hedges
+                // straddle the terrace rim, so take the HIGHEST ground along
+                // the segment, never the bank below it. Sunk 5cm.
+                Vector2 a2 = from + dir * (segLen * i);
+                Vector2 b2 = from + dir * (segLen * (i + 1));
+                float gy = Mathf.Max(SampleGroundY(c2.x, c2.y),
+                    Mathf.Max(SampleGroundY(a2.x, a2.y), SampleGroundY(b2.x, b2.y)));
+                seg.transform.position = new Vector3(c2.x, gy + 0.55f - 0.05f, c2.y);
                 seg.transform.localScale = new Vector3(segLen, 1.1f, 0.7f);
                 seg.transform.rotation = Quaternion.LookRotation(new Vector3(-dir.y, 0f, dir.x), Vector3.up);
                 Tint(seg, new Color(0.24f, 0.38f, 0.18f));
+
+                // Rim segments overhang the terrace bank (downhill gaps up to
+                // 4m at the corners) — raise a retaining berm under the
+                // footprint so the hedge never floats. Raise-only.
+                RaiseShelf(Terrain.activeTerrain,
+                    new Vector2(c2.x, c2.y), Mathf.Abs(dir.x) > 0.5f
+                        ? new Vector2(segLen / 2f + 0.25f, 0.35f + 0.25f)
+                        : new Vector2(0.35f + 0.25f, segLen / 2f + 0.25f),
+                    gy - 0.01f);
             }
         }
 
@@ -401,18 +539,33 @@ public static class GiardinoDelleRoseSceneBuilder
         }
 
         // Centerpiece
-        M("garden-fountain-basin", 1.2f, new Vector3(0f, MidY, 2f));
+        // Centerpiece — taller than the player (David 7/05): it should command
+        // the garden, not disappear behind the rose rows.
+        M("garden-fountain-basin", 2.2f, new Vector3(0f, MidY, 2f));
         M("garden-stone-bench", 0.9f, new Vector3(-5f, MidY, 5.5f), 125f);   // faces fountain
         M("garden-stone-bench", 0.9f, new Vector3(5f, MidY, -1.5f), -55f);   // faces fountain
         M("shrine-tabernacolo", 2.2f, new Vector3(-2.2f, MidY, -11f), 20f);  // south entrance
 
-        // Quadrant rose grids — 4 per quadrant, colors mixed per bed.
-        string[] roses = { "rose-bush-crimson", "rose-bush-ivory", "rose-bush-gold", "rose-climbing-wine" };
-        var quadCenters = new[] { new Vector2(-6.5f, 7.5f), new Vector2(6.5f, 7.5f), new Vector2(-6.5f, -3.5f), new Vector2(6.5f, -3.5f) };
-        int r = 0;
-        foreach (var q in quadCenters)
-            foreach (var off in new[] { new Vector2(-2f, -1.8f), new Vector2(2f, -1.8f), new Vector2(-2f, 1.8f), new Vector2(2f, 1.8f) })
-                M(roses[r++ % roses.Length], Random.Range(0.85f, 1.15f), new Vector3(q.x + off.x, MidY, q.y + off.y), Random.Range(0f, 360f));
+        // Quadrant rose beds — planted in ROWS FILLING THE BED (David's photo
+        // reference: real rose gardens line them up in batches), one variety
+        // per quadrant like a classic quadripartite garden. The wine climbers
+        // (built-in trellis stakes) read as a pillar-rose bed.
+        var quadrants = new (Vector2 center, string rose)[]
+        {
+            (new Vector2(-6.5f, 7.5f), "rose-bush-ivory"),
+            (new Vector2(6.5f, 7.5f), "rose-bush-crimson"),
+            (new Vector2(-6.5f, -3.5f), "rose-bush-gold"),
+            (new Vector2(6.5f, -3.5f), "rose-climbing-wine"),
+        };
+        foreach (var (qc, rose) in quadrants)
+            for (int row = -1; row <= 1; row++)               // 3 rows
+                for (int col = 0; col < 4; col++)             // 4 per row
+                {
+                    float dx = -3.3f + col * 2.2f;
+                    float dz = row * 2.2f;
+                    M(rose, Random.Range(0.82f, 0.98f),
+                      new Vector3(qc.x + dx, MidY, qc.y + dz), Random.Range(-14f, 14f));
+                }
 
         // East buildings (rose1.jpg puts the structures on the plaza's east side)
         M("gardeners-cottage", 3.2f, new Vector3(21f, MidY, 7f), -90f);      // faces west toward garden
@@ -431,20 +584,102 @@ public static class GiardinoDelleRoseSceneBuilder
         M("garden-wooden-pergola", 2.6f, new Vector3(0f, UpperY, 23f));
         M("rose-climbing-wine", 2.2f, new Vector3(1.5f, UpperY, 21.7f));
 
-        // Fan terrace rose clusters along the west loop trail
-        var fanClusters = new[] { new Vector3(-10f, LowerY, -21f), new Vector3(-17f, LowerY, -12f), new Vector3(-22f, MidY, -2f) };
-        foreach (var c in fanClusters)
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 j = Random.insideUnitCircle * 1.4f;
-                M(roses[r++ % roses.Length], Random.Range(0.85f, 1.25f), c + new Vector3(j.x, 0f, j.y), Random.Range(0f, 360f));
-            }
+        // Fan terrace beds along the west loop trail — row batches beside the
+        // path (2 rows of 4, one color per row), same lined-up planting.
+        var fanBeds = new (Vector2 origin, Vector2 rowDir, string roseA, string roseB)[]
+        {
+            (new Vector2(-8f, -20f), new Vector2(-0.97f, -0.22f), "rose-bush-crimson", "rose-bush-ivory"),
+            (new Vector2(-19f, -13f), new Vector2(-0.71f, 0.71f), "rose-bush-gold", "rose-bush-crimson"),
+            (new Vector2(-24f, -4f), new Vector2(0.71f, 0.71f), "rose-bush-ivory", "rose-bush-gold"),
+        };
+        foreach (var (origin, rowDir, roseA, roseB) in fanBeds)
+        {
+            Vector2 normal = new Vector2(-rowDir.y, rowDir.x);
+            for (int row = 0; row < 2; row++)
+                for (int col = 0; col < 4; col++)
+                {
+                    Vector2 p = origin + rowDir * (col * 1.9f) + normal * (row * 2.1f);
+                    string rose = row == 0 ? roseA : roseB;
+                    M(rose, Random.Range(0.82f, 1.05f),
+                      new Vector3(p.x, HeightAt(p.x, p.y), p.y), Random.Range(-14f, 14f));
+                }
+        }
 
         // West fan tip — the worn Roman marble, half lost in the growth.
         M("ancient-marble-figure", 1.8f, new Vector3(-28f, LowerY, -16f), 140f);
 
         // Overlook bench, facing south over the city.
         M("garden-stone-bench", 0.9f, new Vector3(3f, UpperY, 24.5f), 180f);
+    }
+
+    // ── Trail-edge flowers (David's photo: blooms crowding the path) ────────
+
+    static void ScatterTrailFlora()
+    {
+        string[] flowerPaths =
+        {
+            "Packages/xyz.staggart-creations.stylized-grass/Prefabs/Flowers/Flower_Aster.prefab",
+            "Packages/xyz.staggart-creations.stylized-grass/Prefabs/Flowers/Flower_Chamomile.prefab",
+            "Packages/xyz.staggart-creations.stylized-grass/Prefabs/Flowers/Groundcover_Poppies.prefab",
+            "Packages/xyz.staggart-creations.stylized-grass/Prefabs/Flowers/Groundcover_Daisies.prefab",
+        };
+        var flowers = flowerPaths
+            .Select(p => AssetDatabase.LoadAssetAtPath<GameObject>(p))
+            .Where(p => p != null)
+            .ToArray();
+        if (flowers.Length == 0) { Debug.LogWarning("[GiardinoDelleRoseSceneBuilder] No flower prefabs found — trail flora skipped."); return; }
+
+        var group = new GameObject("[TrailFlora]");
+        var rng = new System.Random(1299); // deterministic rebuilds
+        int count = 0;
+
+        foreach (var t in Trails)
+        {
+            for (int i = 0; i < t.pts.Length - 1; i++)
+            {
+                Vector2 a = t.pts[i], b = t.pts[i + 1];
+                float segLen = Vector2.Distance(a, b);
+                Vector2 dir = (b - a) / Mathf.Max(0.001f, segLen);
+                Vector2 normal = new Vector2(-dir.y, dir.x);
+
+                for (float s = 2f; s < segLen; s += 3.5f)
+                {
+                    // Alternate sides, jittered offset just past the path edge.
+                    float side = (count % 2 == 0) ? 1f : -1f;
+                    float off = t.width / 2f + 0.9f + (float)rng.NextDouble() * 1.3f;
+                    Vector2 p2 = a + dir * s + normal * side * off;
+
+                    // Keep flora out of the formal garden interior (the beds
+                    // are the roses' show) and inside the terrain.
+                    if (p2.x > GardenMin.x && p2.x < GardenMax.x && p2.y > GardenMin.y && p2.y < GardenMax.y) { count++; continue; }
+                    if (Mathf.Abs(p2.x) > TerrainWidth / 2f - 2f || Mathf.Abs(p2.y) > TerrainLength / 2f - 2f) { count++; continue; }
+
+                    var prefab = flowers[rng.Next(flowers.Length)];
+                    var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+                    go.transform.SetParent(group.transform, false);
+                    go.transform.position = new Vector3(p2.x, SampleGroundY(p2.x, p2.y), p2.y);
+                    go.transform.rotation = Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f);
+                    float sc = 0.8f + (float)rng.NextDouble() * 0.6f;
+                    go.transform.localScale = new Vector3(sc, sc, sc);
+                    count++;
+                }
+            }
+        }
+        Debug.Log($"[GiardinoDelleRoseSceneBuilder] Trail flora: {group.transform.childCount} flower clumps placed.");
+    }
+
+    // ── Fountain water (small disk inside the basin) ─────────────────────────
+
+    static void BuildFountainWater()
+    {
+        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Stylized Water 3/Materials/StylizedWater3_Clear.mat");
+        if (mat == null) return;
+        // Sized/heighted for the 2.2m basin (was 1.6f disk at +0.78 for 1.2m).
+        var mesh = StylizedWater3.WaterMesh.Create(StylizedWater3.WaterMesh.Shape.Disk, 2.9f, 0.2f);
+        var wo = StylizedWater3.WaterObject.New(mat, mesh);
+        wo.gameObject.name = "FountainWater";
+        wo.transform.position = new Vector3(GardenCenter.x,
+            SampleGroundY(GardenCenter.x, GardenCenter.y) + 1.43f, GardenCenter.y);
     }
 
     // ── Pond (Stylized Water 3 in the dug basin) ─────────────────────────────

@@ -592,5 +592,60 @@
     "model": "done",
     "taskId": "d1ec330a-a3dd-4b7d-b7c9-72f0564567d5",
     "error": null
+  },
+  {
+    "id": "ground-grass-meadow",
+    "name": "Ground Grass Meadow",
+    "prompt": "Seamless repeating texture of lush Tuscan meadow grass seen from directly above: rich medium-green blades with subtle natural tonal variation, a few tiny scattered wild daisies and clover, dense healthy garden lawn. Top-down flat orthographic view, perfectly seamless repeating texture that tiles edge to edge with no visible seam, even flat lighting, no shadows, no vignette, fills entire frame, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "ground-grass-dry",
+    "name": "Ground Grass Dry",
+    "prompt": "Seamless repeating texture of drier Tuscan hillside grass seen from directly above: green-gold blades with patches of straw-colored dry grass and small bare earth spots, natural sun-worn meadow. Top-down flat orthographic view, perfectly seamless repeating texture that tiles edge to edge with no visible seam, even flat lighting, no shadows, no vignette, fills entire frame, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "ground-path-gravel",
+    "name": "Ground Path Gravel",
+    "prompt": "Seamless repeating texture of a worn medieval garden path seen from directly above: compacted pale sandy gravel with small embedded weathered stones and a few flat worn cobbles, warm grey-tan tones, centuries of foot traffic. Top-down flat orthographic view, perfectly seamless repeating texture that tiles edge to edge with no visible seam, even flat lighting, no shadows, no vignette, fills entire frame, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "generated",
+    "hasImage": true,
+    "model": null,
+    "taskId": null,
+    "error": null
+  },
+  {
+    "id": "tuscan-cypress",
+    "name": "Tuscan Cypress",
+    "prompt": "A tall slender Italian cypress tree, deep dark-green dense foliage in an elegant flame-like columnar silhouette with a gently leaning tip, short visible trunk at the base, painterly heightened saturation and dreamlike golden light, like a tree from a fairy tale Tuscan hillside. Full standalone tree, no pot, growing directly from bare soil. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "66e6693b-ac56-48fd-b2ef-612ff85d3e45",
+    "error": null
+  },
+  {
+    "id": "italian-stone-pine",
+    "name": "Italian Stone Pine",
+    "prompt": "An Italian stone pine tree, broad rounded umbrella-shaped canopy of deep green needle foliage atop a tall bare gently-curving reddish-brown trunk, painterly heightened saturation and dreamlike golden light, like a tree from a fairy tale Tuscan garden. Full standalone tree, no pot, growing directly from bare soil. Three-quarter view, isolated on a plain white background, soft even studio lighting, no cast shadows, no text, no watermark.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "6383e605-0ce8-4e04-bfa4-89ef62d12a13",
+    "error": null
   }
 ]

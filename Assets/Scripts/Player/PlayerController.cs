@@ -9,12 +9,20 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float walkSpeed = 3f;
     [SerializeField] private float runSpeed = 6f;
 
+    [Header("Ground (terrain zones)")]
+    [Tooltip("Ground steeper than this doesn't lift the player — terrace banks " +
+             "stay walls, ramps stay walkable.")]
+    [SerializeField] private float maxWalkableSlope = 40f;
+    [Tooltip("How fast the player's height tracks the ground (m/s).")]
+    [SerializeField] private float groundSnapSpeed = 8f;
+
     private Rigidbody _rb;
     private Animator _anim;
     private Transform _cam;
     private Vector2 _moveInput;
     private Vector2 _snapped;
     private bool _isRunning;
+    private float _footOffset;
 
     private static readonly int MoveX = Animator.StringToHash("MoveX");
     private static readonly int MoveY = Animator.StringToHash("MoveY");
@@ -32,13 +40,30 @@ public class PlayerController : MonoBehaviour
 
         _rb.freezeRotation = true;
         _rb.useGravity = false;
-        _rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionY;
+        // Y is NOT frozen anymore (it was, when every zone was a flat floor) —
+        // terrain zones (Giardino delle Rose) need the player to climb ramps.
+        // Height is position-controlled by SnapToGround instead of physics,
+        // so flat scenes behave exactly as before.
+        _rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        // Feet-to-pivot distance, so ground snapping keeps the sprite's feet
+        // on the ground rather than burying the pivot.
+        var col = GetComponent<Collider>();
+        _footOffset = col != null ? transform.position.y - col.bounds.min.y : 1.1f;
+        if (_footOffset < 0.01f) _footOffset = 1.1f;
     }
 
     public void OnMove(InputValue value)
     {
         _moveInput = value.Get<Vector2>();
     }
+
+#if UNITY_EDITOR
+    // Editor-only hook so automated playtests can drive movement through the
+    // full controller path (PlayerInput events can't be synthesized from
+    // editor tooling). Not compiled into builds.
+    public void DebugSetMove(Vector2 input) => _moveInput = input;
+#endif
 
     public void OnRun(InputValue value)
     {
@@ -49,7 +74,7 @@ public class PlayerController : MonoBehaviour
     {
         if (Time.time < _kneelUntil)
         {
-            _rb.linearVelocity = new Vector3(0f, _rb.linearVelocity.y, 0f);
+            _rb.linearVelocity = Vector3.zero;
             _anim.SetFloat(Speed, 0f);
             return;
         }
@@ -75,7 +100,9 @@ public class PlayerController : MonoBehaviour
         Vector3 fwd = _cam ? Vector3.ProjectOnPlane(_cam.forward, Vector3.up).normalized : Vector3.forward;
         Vector3 right = _cam ? Vector3.ProjectOnPlane(_cam.right, Vector3.up).normalized : Vector3.right;
         Vector3 move = (right * _snapped.x + fwd * _snapped.y) * speed;
-        _rb.linearVelocity = new Vector3(move.x, _rb.linearVelocity.y, move.z);
+        _rb.linearVelocity = new Vector3(move.x, 0f, move.z); // Y is snap-controlled
+
+        SnapToGround();
 
         // Update animator only when moving so idle holds last facing direction
         if (_snapped.sqrMagnitude > 0.01f)
@@ -84,6 +111,42 @@ public class PlayerController : MonoBehaviour
             _anim.SetFloat(MoveY, _snapped.y);
         }
         _anim.SetFloat(Speed, speed);
+    }
+
+    // Keeps the player's feet on the walkable ground beneath them. Ground
+    // steeper than maxWalkableSlope never lifts the player, so terrace banks
+    // still act as walls (the collider stops horizontal motion) while ramp
+    // corridors (~20-25 degrees) walk normally. On flat floors the snap
+    // target equals the current height and this is a no-op.
+    //
+    // A surface only counts as ground if it sits within maxStepUp of the
+    // feet — otherwise any prop collider under the player (bench top,
+    // rose-bush box) reads as "floor" and the snap hoists the player onto it.
+    private const float MaxStepUp = 0.45f;
+
+    private void SnapToGround()
+    {
+        Vector3 origin = _rb.position + Vector3.up * 2f;
+        var hits = Physics.RaycastAll(origin, Vector3.down, 12f, ~0, QueryTriggerInteraction.Ignore);
+        float feetY = _rb.position.y - _footOffset;
+
+        // Highest surface that is still at most a step above the feet.
+        bool found = false;
+        RaycastHit best = default;
+        foreach (var h in hits)
+        {
+            if (h.collider.transform.root == transform.root) continue;
+            if (h.point.y > feetY + MaxStepUp) continue;
+            if (!found || h.point.y > best.point.y) { best = h; found = true; }
+        }
+        if (!found) return;
+
+        float targetY = best.point.y + _footOffset;
+        bool tooSteep = Vector3.Angle(best.normal, Vector3.up) > maxWalkableSlope;
+        if (targetY > _rb.position.y && tooSteep) return; // never climb walls
+
+        float newY = Mathf.MoveTowards(_rb.position.y, targetY, groundSnapSpeed * Time.fixedDeltaTime);
+        _rb.position = new Vector3(_rb.position.x, newY, _rb.position.z);
     }
 
     // Set the idle facing without moving — used when spawning at an entry point.
