@@ -58,6 +58,12 @@ public static class StreetTemplateBuilder
 
         // ── North row: tall shop-houses in swappable slots ────────────────────
         var north = Group(root, "[NorthRow]");
+        // Continuous backing wall BEHIND the deepest building (z 11.3 — NOT
+        // recessed just behind the facades: open-fronted shops like the smithy
+        // are ~5.5 deep and a closer wall cuts through their interiors,
+        // blanking the forge glow). Catches slivers the gap-fill houses miss.
+        Box(north, "Wall_RowBacking_N", new Vector3(0f, 3.5f, 11.3f), new Vector3(62f, 7f, 1.2f),
+            new Color(0.71f, 0.66f, 0.57f));
         for (int i = 0; i < SlotX.Length; i++)
         {
             var slot = new GameObject($"SLOT_N{i + 1}").transform;
@@ -84,6 +90,22 @@ public static class StreetTemplateBuilder
             EnsureCollider(go);
 
             MakeDoor(north, $"DOOR_N{i + 1}", new Vector3(SlotX[i], 0f, 4.9f), $"shop_n{i + 1}");
+        }
+
+        // Gap-fill houses between the slots — the row reads as a continuous
+        // street wall (David 7/06: "add more buildings to close the gaps").
+        foreach (float fx in new[] { -18.75f, -5.25f, 5.25f, 18.75f })
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/MarketSquare/Buildings/Apartment_NE.glb");
+            if (prefab == null) break;
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            go.name = $"Fill_N_{fx:0}";
+            go.transform.SetParent(north, false);
+            go.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            go.transform.localScale = Vector3.one * 8.5f;
+            go.transform.position = new Vector3(fx, 0f, 5.0f + 2.43f);
+            ReSeat(go, new Vector3(fx, 0f, 7.43f));
+            EnsureCollider(go);
         }
 
         // ── South row: low botteghe (camera sees over them) ───────────────────
