@@ -494,6 +494,10 @@ public static class PiazzaSignoriaSceneBuilder
         mat.SetTexture("_BaseMap", tex);          // self-heal: always point at the skyline art
         mat.SetTextureScale("_BaseMap", Vector2.one);
         mat.SetTextureOffset("_BaseMap", Vector2.zero);
+        // Single-sided: the camera's pullback can cross the S quad (offset up
+        // to -20 behind the player) — Cull Back + inward-facing quads means a
+        // crossed quad vanishes instead of filling the screen.
+        mat.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Back);
         EditorUtility.SetDirty(mat);
         foreach (var (name, pos, yRot, w) in new (string, Vector3, float, float)[]
         {
@@ -501,8 +505,9 @@ public static class PiazzaSignoriaSceneBuilder
             // the elevated pitch-40 camera sees bare apron edge-on through the
             // mouths). y=12 puts THIS art's horizon band (image v0.28..0.45)
             // at world y -1..+9 — dead in the through-the-mouth sightline.
-            ("Backdrop_N", new Vector3(0f, 15f, 24f), 180f, 140f),
-            ("Backdrop_S", new Vector3(0f, 15f, -24f), 0f, 130f),
+            // All faces point INWARD (mat is Cull Back — see above)
+            ("Backdrop_N", new Vector3(0f, 15f, 24f), 0f, 140f),
+            ("Backdrop_S", new Vector3(0f, 15f, -24f), 180f, 130f),
             ("Backdrop_E", new Vector3(30f, 15f, 0f), 90f, 120f),
             ("Backdrop_W", new Vector3(-28f, 15f, 0f), -90f, 120f),
         })
