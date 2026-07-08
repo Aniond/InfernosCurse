@@ -75,12 +75,19 @@ public static class EncounterRoll
         }
     }
 
+    // Each point of carried corruption makes the road's predators a little
+    // more certain where you are (David 7/08: insanity raises random-battle
+    // chance while traveling). Balance knob.
+    const float InsanityPull = 0.02f;
+
     public static bool ShouldTrigger(HubNode node, float baseChance, float curseScale, float maxChance)
     {
         if (node == null) return false;
         if (_resolved.Contains(DaySeed() + ":" + node.id)) return false;
 
-        float chance = Mathf.Clamp(baseChance + node.curseLevel * curseScale, 0f, maxChance);
+        float chance = Mathf.Clamp(
+            baseChance + node.curseLevel * curseScale + InsanityState.Current() * InsanityPull,
+            0f, maxChance);
         var rng = new System.Random(DaySeed() ^ NodeSalt(node.id));
         return rng.NextDouble() < chance;
     }

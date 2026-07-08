@@ -73,4 +73,8 @@ public class SkillDefinition : ScriptableObject
     public StatScaling bonusStat = StatScaling.None;
     [Tooltip("Stat points per level. Level x this = the equipped bonus (cap = maxLevel x this).")]
     public int bonusStatPerLevel = 1;
+
+    [Header("Corruption — the insanity price (CoC-style storytelling layer)")]
+    [Tooltip("Insanity carried by EQUIPPING this skill unrefined (the in-fiction 'corruption'). Stronger skills cost more mind. Church refinement burns it to zero. Never shown to the player as a number — the world just... changes.")]
+    public int insanityCost = 1;
 }

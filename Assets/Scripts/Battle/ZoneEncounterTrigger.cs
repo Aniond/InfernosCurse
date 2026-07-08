@@ -45,12 +45,17 @@ public class ZoneEncounterTrigger : MonoBehaviour
         var pc = new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
                                 Mathf.FloorToInt(player.transform.position.z));
 
+        // Carried corruption is a scent: each point of insanity widens how far
+        // staged creatures notice Ben (David 7/08 — insanity raises encounter
+        // chance in zones). Balance knob.
+        float insanityScent = 1f + InsanityState.Current() * 0.05f;
+
         foreach (var enemy in _staged)
         {
             if (enemy == null) continue;
             float dx = enemy.gridPosition.x - pc.x, dz = enemy.gridPosition.y - pc.y;
             float d2 = dx * dx + dz * dz;
-            float sight = enemy.SightRange * WeatherVision.SightMultiplier();
+            float sight = enemy.SightRange * WeatherVision.SightMultiplier() * insanityScent;
             bool sees = d2 <= sight * sight;   // LoS refined below with a real grid
             if (d2 <= proximityTrigger * proximityTrigger || sees)
             {

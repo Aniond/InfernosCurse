@@ -74,6 +74,14 @@ public class AbsorbedSkillInstance
         return definition.bonusStatPerLevel * level;
     }
 
+    // The insanity price of wearing this orb — the corruption the Church
+    // rite burns away. Refined = purified = free to carry.
+    public int GetInsanityCost()
+    {
+        if (definition == null || isRefined) return 0;
+        return definition.insanityCost;
+    }
+
     public string DisplayName()
     {
         if (definition == null) return "???";
