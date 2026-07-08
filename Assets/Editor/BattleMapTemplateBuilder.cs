@@ -42,10 +42,22 @@ public static class BattleMapTemplateBuilder
 
         var root = NewMapRoot("BattleMap_Plains", out var map);
         map.plateaus.Clear();
+        // Terraced knoll (FFT remaster ref 7/07): h1 shoulder ring first,
+        // h2 crown second — ElevationAt takes the LAST matching plateau.
+        map.plateaus.Add(new BattleMapAuthoring.Plateau
+        {
+            cells = new RectInt(8, 6, 5, 5),   // h1 terrace around the knoll
+            elevation = 1,
+        });
         map.plateaus.Add(new BattleMapAuthoring.Plateau
         {
             cells = new RectInt(9, 7, 3, 3),   // NE high ground (reference's 'Height 2' knoll)
             elevation = 2,
+        });
+        map.plateaus.Add(new BattleMapAuthoring.Plateau
+        {
+            cells = new RectInt(2, 2, 4, 3),   // SW low rise — breaks the flat west field
+            elevation = 1,
         });
 
         var tiles = new GameObject("[MapTiles]").transform;
@@ -86,6 +98,8 @@ public static class BattleMapTemplateBuilder
                 }
             }
 
+        BuildHillSkirt(tiles, map, grass);
+
         // Boulders roughly like the reference: cluster NW, spine down the E,
         // a couple mid-field. Spawn columns (x 1-2, 11-12) stay walkable —
         // x11-12 rocks sit on rows the default spawns don't use.
@@ -114,6 +128,90 @@ public static class BattleMapTemplateBuilder
         }
 
         SavePrefab(root, "BattleMap_Plains");
+    }
+
+    // Hill skirt: without it the grid reads as a slab floating in the void
+    // (David, 7/07). Rings of the SAME grass diamond continue past the
+    // playfield and step DOWN on a hill-shoulder curve, so the battlefield
+    // becomes the flat crown of a rise. Visual only — width/height and every
+    // gameplay cell stay untouched. Sorting reuses the painter formula
+    // -(x+y), which stays correct for out-of-grid coordinates.
+    static void BuildHillSkirt(Transform tiles, BattleMapAuthoring map, Sprite grass)
+    {
+        const int rings = 5;
+
+        // Backing silhouette: one huge dark-soil diamond behind everything.
+        // The stacked diamonds above inevitably leave tip-pinholes at
+        // three-way corners; with this behind them the pinholes read as
+        // crevice shading instead of holes into the sky.
+        {
+            var mass = new GameObject("hillmass");
+            mass.transform.SetParent(tiles, false);
+            var ms = mass.AddComponent<SpriteRenderer>();
+            ms.sprite = grass;
+            ms.color = new Color(0.14f, 0.11f, 0.08f);
+            ms.sortingOrder = -200;
+            float w = (W + H) * 0.5f + rings + 3f;              // cover full skirt extent
+            float s = w / Mathf.Max(0.0001f, grass.bounds.size.x);
+            mass.transform.localScale = new Vector3(s, s, 1f);
+            // Place by top tip: tucked just below the skirt's back corner so
+            // it never pokes above the silhouette, while its bulk hangs far
+            // below the front edge.
+            Vector3 backTip = map.CellToWorld(new Vector2Int(W - 1 + rings, H - 1 + rings), -8);
+            float topTipY = backTip.y - 0.35f;
+            float pivotToTop = grass.bounds.max.y * s;           // pivot(center) -> sprite top
+            mass.transform.position = new Vector3(map.CellToWorld(new Vector2Int(W / 2, H / 2)).x,
+                                                  topTipY - pivotToTop, 0f);
+        }
+        int[] drop = { 0, 1, 2, 4, 6, 8 };   // cumulative elev below ring r
+        float scale = 1.0f / Mathf.Max(0.0001f, grass.bounds.size.x);
+        for (int x = -rings; x < W + rings; x++)
+            for (int y = -rings; y < H + rings; y++)
+            {
+                int dx = Mathf.Max(0, Mathf.Max(-x, x - (W - 1)));
+                int dy = Mathf.Max(0, Mathf.Max(-y, y - (H - 1)));
+                int r = Mathf.Max(dx, dy);
+                if (r == 0 || r > rings) continue;
+
+                int elev = -drop[r];
+                var t = new GameObject($"hill_{x}_{y}");
+                t.transform.SetParent(tiles, false);
+                var sr = t.AddComponent<SpriteRenderer>();
+                sr.sprite = grass;
+                int seed = (x + 97) * 7 + (y + 89) * 13;
+                float v = 0.92f + 0.08f * ((seed * 31) % 7) / 6f;
+                float dim = 1f - 0.06f * r;     // shoulder rolls away into shade
+                sr.color = new Color(v * dim, v * dim, v * dim * 0.97f);
+                sr.flipX = (seed % 3) == 0;
+                sr.sortingOrder = -(x + y);
+                t.transform.position = map.CellToWorld(new Vector2Int(x, y), elev);
+                t.transform.localScale = new Vector3(scale, scale, 1f);
+
+                // Solid hill body: stack diamond fills beneath every skirt
+                // tile down to one shared base line. Kills the see-through
+                // slits between terraces and gives the mound real mass. First
+                // layer is shadowed grass (turf lip), the rest darkening earth.
+                // First fill only 1 elev down: the sprite's painted thickness
+                // tapers at the diamond tips, so a 2-step gap leaves pinhole
+                // slits at every tip. Overlapping by half a step seals them.
+                const int baseElev = -16;
+                int k = 0;
+                for (int e = elev - 1; e >= baseElev; e -= 2)
+                {
+                    k++;
+                    var s = new GameObject("fill");
+                    s.transform.SetParent(tiles, false);
+                    var ss = s.AddComponent<SpriteRenderer>();
+                    ss.sprite = grass;
+                    ss.flipX = sr.flipX;
+                    ss.color = k == 1
+                        ? new Color(0.30f * dim, 0.38f * dim, 0.18f * dim)
+                        : new Color(0.42f, 0.36f, 0.26f) * dim * Mathf.Max(0.45f, 1f - 0.10f * k);
+                    ss.sortingOrder = sr.sortingOrder - 1;
+                    s.transform.position = map.CellToWorld(new Vector2Int(x, y), e);
+                    s.transform.localScale = new Vector3(scale, scale, 1f);
+                }
+            }
     }
 
     static Sprite ImportSprite(string id)
