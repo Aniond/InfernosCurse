@@ -170,37 +170,46 @@ public static class GiardinoWalledGardenBuilder
 
     static void BuildWallsAndTrees()
     {
-        var walls = new GameObject("[Walls]");
-        // Real masonry, not flat tint (v1's untextured cubes read as a giant
-        // white slab, David 7/08): rusticated stone, tiled to wall length.
-        var stoneTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Environment/PiazzaSignoria/Textures/signoria-wall-rusticated.png");
-        void Wall(Vector3 center, Vector3 size)
+        // Garden FENCE, not fortress wall (David 7/08): low stone plinth +
+        // wooden post-and-rail. At ~1.1m, eye-height-3 characters see OVER it
+        // into the garden while it still blocks movement.
+        var walls = new GameObject("[Fence]");
+        var stoneMat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.62f, 0.60f, 0.55f) };
+        var woodMat = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.45f, 0.32f, 0.20f) };
+        void Box(string n, Vector3 c, Vector3 s, Material m)
         {
-            var w = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            w.name = "GardenWall";
-            w.transform.SetParent(walls.transform, false);
-            w.transform.position = center;
-            w.transform.localScale = size;
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            var m = new Material(shader);
-            if (stoneTex != null)
-            {
-                m.mainTexture = stoneTex;
-                float len = Mathf.Max(size.x, size.z);
-                m.mainTextureScale = new Vector2(len / 2.4f, size.y / 2.4f);
-                m.color = new Color(0.82f, 0.78f, 0.72f);   // warm Tuscan stone
-            }
-            else m.color = new Color(0.62f, 0.58f, 0.52f);
-            w.GetComponent<Renderer>().sharedMaterial = m;
+            var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            g.name = n;
+            g.transform.SetParent(walls.transform, false);
+            g.transform.position = c; g.transform.localScale = s;
+            g.GetComponent<Renderer>().sharedMaterial = m;
         }
-        float wy = GroundY + 1.1f;
-        // gates: gaps at x 14..18 on N (z=32) and S (z=0) walls
-        Wall(new Vector3(7f, wy, 0f), new Vector3(14f, 2.2f, 0.8f));
-        Wall(new Vector3(25f, wy, 0f), new Vector3(14f, 2.2f, 0.8f));
-        Wall(new Vector3(7f, wy, 32f), new Vector3(14f, 2.2f, 0.8f));
-        Wall(new Vector3(25f, wy, 32f), new Vector3(14f, 2.2f, 0.8f));
-        Wall(new Vector3(0f, wy, 16f), new Vector3(0.8f, 2.2f, 32.8f));
-        Wall(new Vector3(32f, wy, 16f), new Vector3(0.8f, 2.2f, 32.8f));
+        void FenceRun(Vector3 from, Vector3 to)
+        {
+            Vector3 dir = (to - from).normalized;
+            float len = Vector3.Distance(from, to);
+            bool alongX = Mathf.Abs(dir.x) > 0.5f;
+            // continuous stone plinth
+            Box("FencePlinth", (from + to) * 0.5f + Vector3.up * (GroundY + 0.14f),
+                alongX ? new Vector3(len, 0.28f, 0.45f) : new Vector3(0.45f, 0.28f, len), stoneMat);
+            // posts every 2m + two rails per bay
+            int bays = Mathf.Max(1, Mathf.RoundToInt(len / 2f));
+            for (int i = 0; i <= bays; i++)
+            {
+                Vector3 p = from + dir * (len * i / bays);
+                Box("FencePost", p + Vector3.up * (GroundY + 0.72f), new Vector3(0.18f, 0.9f, 0.18f), woodMat);
+            }
+            foreach (float railY in new[] { 0.55f, 0.95f })
+                Box("FenceRail", (from + to) * 0.5f + Vector3.up * (GroundY + railY),
+                    alongX ? new Vector3(len, 0.09f, 0.07f) : new Vector3(0.07f, 0.09f, len), woodMat);
+        }
+        // gates: gaps at x 14..18 on N (z=32) and S (z=0)
+        FenceRun(new Vector3(0f, 0f, 0f), new Vector3(14f, 0f, 0f));
+        FenceRun(new Vector3(18f, 0f, 0f), new Vector3(32f, 0f, 0f));
+        FenceRun(new Vector3(0f, 0f, 32f), new Vector3(14f, 0f, 32f));
+        FenceRun(new Vector3(18f, 0f, 32f), new Vector3(32f, 0f, 32f));
+        FenceRun(new Vector3(0f, 0f, 0f), new Vector3(0f, 0f, 32f));
+        FenceRun(new Vector3(32f, 0f, 0f), new Vector3(32f, 0f, 32f));
 
         // tree border band just inside the wall (cells 1-2), gaps at gates
         var trees = new GameObject("[Trees]");
@@ -392,9 +401,10 @@ public static class GiardinoWalledGardenBuilder
         for (int i = 0; i < GRID; i++)
         {
             bool gate = i >= 14 && i <= 17;
-            if (!gate) { Ob(i, 0, "wall", true, 4); Ob(i, GRID - 1, "wall", true, 4); }
-            Ob(0, i, "wall", true, 4);
-            Ob(GRID - 1, i, "wall", true, 4);
+            // fence: blocks movement, but only elev 2 — tall eyes see over it
+            if (!gate) { Ob(i, 0, "fence", true, 2); Ob(i, GRID - 1, "fence", true, 2); }
+            Ob(0, i, "fence", true, 2);
+            Ob(GRID - 1, i, "fence", true, 2);
         }
         // Trees are CLIMBABLE (FFT rule: everything standable with enough
         // Jump — climb skill = jump boost). Walkable at elevation 4: normal
