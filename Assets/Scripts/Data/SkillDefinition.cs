@@ -75,7 +75,7 @@ public class SkillDefinition : ScriptableObject
     public int bonusStatPerLevel = 1;
 
     [Header("Corruption — the insanity price (CoC-style storytelling layer)")]
-    [Tooltip("PERCENTAGE points of insanity (0-100 scale) carried by EQUIPPING this skill unrefined (the in-fiction 'corruption'). Stronger skills cost more mind. Church refinement burns it to zero. Never shown to the player — the world just... changes.")]
-    [Range(0, 100)]
-    public int insanityCost = 5;
+    [Tooltip("BASE percentage points of insanity per orb LEVEL (total = base x level, 0-100 scale) carried by EQUIPPING this skill unrefined. David's bands: common single-target 1, strong single 2, AoE/status 2-3, passives 1, signature/boss 4-5. Church refinement burns it to zero. Never shown to the player — the world just... changes.")]
+    [Range(0, 20)]
+    public int insanityCost = 1;
 }

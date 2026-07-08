@@ -76,10 +76,13 @@ public class AbsorbedSkillInstance
 
     // The insanity price of wearing this orb — the corruption the Church
     // rite burns away. Refined = purified = free to carry.
+    // Scales with LEVEL (David's tuning 7/08): base% x level, so the greed
+    // that buys +5 damage/+5 STR buys 5x the madness with it. Bases: common
+    // single-target 1, strong single 2, AoE/status 2-3, passives 1, boss 4-5.
     public int GetInsanityCost()
     {
         if (definition == null || isRefined) return 0;
-        return definition.insanityCost;
+        return definition.insanityCost * level;
     }
 
     public string DisplayName()
