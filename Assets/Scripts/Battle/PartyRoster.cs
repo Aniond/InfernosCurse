@@ -14,6 +14,10 @@ public class PartyRoster : MonoBehaviour
     public JobDefinition beniditoJob;                  // Job_Baker
     public SkillDefinition[] beniditoPreUnlocked;      // AshwoodPeel, ErgotBloom
 
+    [Header("Portraits (shown in the CT turn-order display)")]
+    public Sprite beniditoPortrait;
+    public Sprite pieroPortrait;
+
     void Awake() => EnsureInitialized();
 
     public static void EnsureInitialized()
@@ -22,7 +26,7 @@ public class PartyRoster : MonoBehaviour
 
         var inst = FindAnyObjectByType<PartyRoster>();
         RestSystem.PartyMembers.Add(MakeBenidito(inst));
-        RestSystem.PartyMembers.Add(MakePiero());
+        RestSystem.PartyMembers.Add(MakePiero(inst));
         Debug.Log("[PartyRoster] Roster initialized: Benidito + Piero.");
     }
 
@@ -45,16 +49,19 @@ public class PartyRoster : MonoBehaviour
         }
         else Debug.LogWarning("[PartyRoster] Benidito's job refs not wired — run Battle Integration setup.");
 
+        if (inst != null) c.portrait = inst.beniditoPortrait;
         return c;
     }
 
     // Piero — a hired guard. PartyMember role (cloned in battle; the encounter
     // exit copies his progression back). No job yet: EnsureBattleSkills hands
     // him Basic Attack.
-    static CombatantData MakePiero()
+    static CombatantData MakePiero(PartyRoster inst)
     {
-        return MakeCombatant("Piero", CombatantRole.PartyMember,
+        var c = MakeCombatant("Piero", CombatantRole.PartyMember,
             str: 13, dex: 9, con: 13, cre: 6, faith: 8, per: 9, spd: 9, hp: 125, sp: 30);
+        if (inst != null) c.portrait = inst.pieroPortrait;
+        return c;
     }
 
     // Same construction shape as BattleTestStarter.MakeCombatant.
