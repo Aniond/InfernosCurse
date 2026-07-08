@@ -64,8 +64,10 @@ public static class GiardinoWalledGardenBuilder
 
     static float GroundAt(float x, float z)
     {
-        // South terrace: x 12..20, z 2..7 raised, ramped stairs band z 7..9.
-        bool inTerraceX = x >= 12f && x <= 20f;
+        // SE terrace: EAST of the gate lane (x 19..27) so the south entrance
+        // stays walkable (v1 had it straddling the path — blocked spawn,
+        // David 7/08). Stairs ramp down on its north edge z 7..9.
+        bool inTerraceX = x >= 19f && x <= 27f;
         if (inTerraceX && z >= 2f && z <= 7f) return TerraceY;
         if (inTerraceX && z > 7f && z < 9f)
             return Mathf.Lerp(TerraceY, GroundY, (z - 7f) / 2f);
@@ -301,12 +303,13 @@ public static class GiardinoWalledGardenBuilder
         M("gardeners-cottage", 3.2f, new Vector3(26f, GroundY, 8f), -90f);
         M("florist-market-stall", 2.0f, new Vector3(23f, GroundY, 27.5f), 180f);
         M("stone-wellhead", 1.4f, new Vector3(26.5f, GroundY, 24f));
-        // terrace overlook (H) — worn marble + bench
-        M("ancient-marble-figure", 1.8f, new Vector3(18.5f, TerraceY, 3.5f), 20f);
-        M("garden-stone-bench", 0.9f, new Vector3(14f, TerraceY, 4f), 0f);
-        // pergola over the south gate approach
-        M("garden-wooden-pergola", 2.6f, new Vector3(16f, GroundY, 2.2f));
-        M("rose-climbing-wine", 2.2f, new Vector3(17.4f, GroundY, 2.4f));
+        // terrace overlook (H) — worn marble + bench, east of the lane
+        M("ancient-marble-figure", 1.8f, new Vector3(24.5f, TerraceY, 3.5f), 20f);
+        M("garden-stone-bench", 0.9f, new Vector3(21f, TerraceY, 4f), 0f);
+        // pergola FLANKS the gate approach (walk-under isn't possible with
+        // prop capsule colliders — keep the lane clear, David 7/08)
+        M("garden-wooden-pergola", 2.6f, new Vector3(12.3f, GroundY, 2.4f), 90f);
+        M("rose-climbing-wine", 2.2f, new Vector3(11.5f, GroundY, 2.8f));
     }
 
     static void BuildFountainWater()
@@ -330,8 +333,8 @@ public static class GiardinoWalledGardenBuilder
         auth.applyOnAwake = false;   // zone explore mode by default; encounter flow applies it
         auth.plateaus = new List<BattleMapAuthoring.Plateau>
         {
-            // south terrace = high ground (elevation 2 = one story, ranged bonus)
-            new BattleMapAuthoring.Plateau { cells = new RectInt(12, 2, 8, 5), elevation = 2 },
+            // SE terrace = high ground (elevation 2), east of the gate lane
+            new BattleMapAuthoring.Plateau { cells = new RectInt(19, 2, 8, 5), elevation = 2 },
         };
 
         var heights = root.AddComponent<BattleTerrainHeights>();
@@ -485,7 +488,9 @@ public static class GiardinoWalledGardenBuilder
             var copy = Object.Instantiate(source);
             copy.name = source.name;
             SceneManager.MoveGameObjectToScene(copy, target);
-            copy.transform.position = new Vector3(16f, GroundY + source.transform.position.y, 3f);
+            // Spawn ABOVE the sampled terrain and let gravity settle — copying
+            // the PV height offset sank him to the waist here (David 7/08).
+            copy.transform.position = new Vector3(16f, SampleY(16f, 3f) + 1.0f, 3f);
             var cam = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None)
                 .FirstOrDefault(c => c.CompareTag("MainCamera"));
         }
