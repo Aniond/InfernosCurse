@@ -6,28 +6,46 @@ public class AbsorbedSkillInstance
 {
     public SkillDefinition definition;
 
-    [Tooltip("Number of duplicate drops received. Drives level.")]
+    [Tooltip("Orbs OWNED for this skill (1 per absorb, duplicates included).")]
     public int duplicateCount = 1;
 
-    [Tooltip("Current level, capped at definition.maxLevel.")]
+    [Tooltip("Orbs SLOTTED = current level (David's skill tab: 5 slots per skill; each slotted orb is +1 level of power AND madness; remove orbs to manage insanity).")]
     public int level = 1;
 
     [Tooltip("True if this skill has been refined into its Holy version at the Church.")]
     public bool isRefined = false;
 
-    // David's hierarchy (7/08): every duplicate drop levels the skill by 1,
-    // capped at definition.maxLevel. (The old triangular curve — 15 dupes to
-    // max — is parked until the balance pass.)
-    public void AddDuplicate()
+    // David's management model (7/08): drops BANK orbs; the skill tab slots
+    // them. Slotted orbs = level = power = madness, and orbs can be pulled
+    // back out ("if you don't want to up the skill, remove an orb"). Until
+    // the skill-tab UI ships, new orbs auto-slot so drops still feel alive —
+    // the UI will expose SlotOrb/UnslotOrb directly.
+    public int MaxLevel => Mathf.Max(1, definition != null ? definition.maxLevel : 5);
+    public int OwnedOrbs => duplicateCount;
+    public int SlottableMax => Mathf.Min(duplicateCount, MaxLevel);
+
+    public void AddDuplicate(bool autoSlot = true)
     {
         duplicateCount++;
-        RefreshLevel();
+        if (autoSlot) level = SlottableMax;
+        else          level = Mathf.Clamp(level, 1, SlottableMax);
     }
 
-    void RefreshLevel()
+    // Slot a banked orb: +1 level (needs an owned orb free and a slot open).
+    public bool SlotOrb()
     {
-        int maxLvl = Mathf.Max(1, definition != null ? definition.maxLevel : 5);
-        level = Mathf.Clamp(duplicateCount, 1, maxLvl);
+        if (level >= SlottableMax) return false;
+        level++;
+        return true;
+    }
+
+    // Pull an orb back out: -1 level, floor 1 (the skill itself is known —
+    // unequip the orb entirely to carry none of its madness).
+    public bool UnslotOrb()
+    {
+        if (level <= 1) return false;
+        level--;
+        return true;
     }
 
     public bool CanRefine()
