@@ -10,13 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04b84be221a09f4499ab68a2411a57f2, type: 3}
-  m_Name: Enemy_RoseBeast
+  m_Name: Enemy_Rosekin
   m_EditorClassIdentifier: Assembly-CSharp::CombatantData
-  displayName: Rose Beast
-  backstory: "A rose bush of the Giardino, bloated by the curse \u2014 its bloom
-    splits like a mouth, its vines remember being pruned."
+  displayName: Rosekin
+  backstory: Something in the Giardino's soil remembers the curse. The gardeners
+    swear the eastern beds rustle when no wind blows; they have stopped pruning there.
+    It watches from among the roses it resembles, and it does not like to be seen.
   portrait: {fileID: 21300000, guid: eaa1a31405be34b45aa1d46f670f0352, type: 3}
   battleSprite: {fileID: 21300000, guid: 2f3a690744ebcc046abe485df6d4ab39, type: 3}
+  battleTint: {r: 1, g: 1, b: 1, a: 1}
   role: 2
   baseStats:
     characterName: Dante

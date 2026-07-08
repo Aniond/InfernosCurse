@@ -128,7 +128,7 @@ public class BattleManager : MonoBehaviour
         EnsureBattleSkills(unit);
 
         // per-unit battlefield sprite + tint from the SHEET (survives cloning —
-        // the Rose Beast must look like a rose beast, not a fourth Benidito)
+        // the Rosekin must look like a rose monster, not a fourth Benidito)
         if (unit.Data != null)
         {
             var sr = unit.GetComponentInChildren<SpriteRenderer>();

@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 
 // The zones=battlemaps encounter trigger: staged enemies (BattleUnits placed
-// in the zone, like the Rose Beast in the flowerbed) AMBUSH the player the
+// in the zone, like the Rosekin in the flowerbed) AMBUSH the player the
 // moment they can SEE them — sheet sight range x weather, true LoS at eye
 // height. On trigger: spawn the BattleKit prefab, stamp the zone's authored
 // grid, freeze the explore player, and StartBattle right where you stand.
