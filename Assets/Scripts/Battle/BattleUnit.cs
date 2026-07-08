@@ -60,6 +60,15 @@ public class BattleUnit : MonoBehaviour
     {
         if (!IsAlive) return;
         Data.currentHP = Mathf.Max(0, Data.currentHP - amount);
+
+        // Striking from the fog gives the attacker's position away — the fog
+        // parts over it briefly (fog-honesty: you saw where the hit came from).
+        if (source != null && source != this)
+        {
+            var fow = UnityEngine.Object.FindFirstObjectByType<ZoneFogOfWar>();
+            if (fow != null) fow.RevealCell(source.gridPosition, 5f);
+        }
+
         OnDamaged?.Invoke(amount, type, isCrit);
         if (Data.currentHP <= 0) Die();
     }

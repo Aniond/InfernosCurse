@@ -127,6 +127,15 @@ public class BattleManager : MonoBehaviour
         unit.Initialize(data, isPlayer);
         EnsureBattleSkills(unit);
 
+        // every spawned enemy needs a BRAIN — the battle loop's EnemyTurn does
+        // GetComponent<EnemyAI>() and silently EndUnitTurn()s without one. The
+        // Rosekin passed every turn of the garden pilot this way (David 7/08).
+        // Base EnemyAI = the Sun Tzu utility scorer, intelligence-gated by the
+        // sheet; specialized brains (CarrierAI/AnchorAI/InterpreterAI) can be
+        // pre-attached to authored prefabs and are respected here.
+        if (!isPlayer && go.GetComponent<EnemyAI>() == null)
+            go.AddComponent<EnemyAI>();
+
         // per-unit battlefield sprite + tint from the SHEET (survives cloning —
         // the Rosekin must look like a rose monster, not a fourth Benidito)
         if (unit.Data != null)

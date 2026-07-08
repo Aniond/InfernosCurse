@@ -111,6 +111,14 @@ public class ZoneEncounterTrigger : MonoBehaviour
         bm.OnDefeat += EndEncounter;
         bm.StartBattle(party, enemySheets, playerSpawns, enemySpawns);
 
+        // The ambusher struck ON SIGHT — it opens the battle knowing where you
+        // stand. Without this seed the AI's belief map starts empty, and a
+        // HuntOrHold creature just holds its flowerbed: an invisible no-show
+        // for the whole fight (David 7/08).
+        if (EnemyAI.WorldState != null)
+            foreach (var pu in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
+                if (pu.IsPlayer) EnemyAI.WorldState.playerBelief.Update(pu);
+
         // The fog parts over each attacker: an ambush you can't see reads as
         // "the monster didn't load" (David 7/08). Sprites come from the SHEET
         // (CombatantData.battleSprite) — SpawnUnit applies them, clones included.
