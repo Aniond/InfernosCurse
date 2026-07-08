@@ -385,6 +385,7 @@ public static class GiardinoWalledGardenBuilder
         root.AddComponent<BattleTerrainCurse>();
         root.AddComponent<BattleTerrainFog>();
         root.AddComponent<ZoneFogOfWar>();   // LoS fog of war from the player
+        root.AddComponent<BattleWeatherDirector>();   // Gemini/classic mid-combat weather
 
         // obstacle cells from the layout (invisible; visuals are the props)
         void Ob(int x, int z, string tag, bool unwalkable, int elev)
