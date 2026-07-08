@@ -369,7 +369,10 @@ public static class GiardinoWalledGardenBuilder
             Ob(0, i, "wall", true, 4);
             Ob(GRID - 1, i, "wall", true, 4);
         }
-        foreach (var c in _treeCells.Distinct()) Ob(c.x, c.y, "tree", true, 4);
+        // Trees are CLIMBABLE (FFT rule: everything standable with enough
+        // Jump — climb skill = jump boost). Walkable at elevation 4: normal
+        // jump 2 can't get up; a climber can, and owns the sight lines.
+        foreach (var c in _treeCells.Distinct()) Ob(c.x, c.y, "tree", false, 4);
         foreach (var b in Beds)
             for (int z = b.yMin; z < b.yMax; z++)
                 for (int x = b.xMin; x < b.xMax; x++)

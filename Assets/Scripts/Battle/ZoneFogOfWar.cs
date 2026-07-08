@@ -22,7 +22,10 @@ public class ZoneFogOfWar : MonoBehaviour
     // (no range, no LoS); TrueSight sees THROUGH objects (LoS ignored,
     // range still applies). Cast via CastVision — the skill system applies
     // these as timed statuses (David 7/08: makes the spell really valuable).
-    public enum VisionSpell { None, Clairvoyance, TrueSight }
+    // Shrink: your eyes drop and your horizon shortens — but your PROFILE
+    // shrinks too: once enemy vision runs on this system, low cover that
+    // wouldn't hide a standing unit hides a shrunken one (tactical stealth).
+    public enum VisionSpell { None, Clairvoyance, TrueSight, Enlarge, Shrink }
 
     VisionSpell _activeSpell = VisionSpell.None;
     float _spellRemaining;
@@ -45,6 +48,10 @@ public class ZoneFogOfWar : MonoBehaviour
     void TestClairvoyance() => CastVision(VisionSpell.Clairvoyance, 10f);
     [ContextMenu("Test: True Sight 10s")]
     void TestTrueSight() => CastVision(VisionSpell.TrueSight, 10f);
+    [ContextMenu("Test: Enlarge 10s")]
+    void TestEnlarge() => CastVision(VisionSpell.Enlarge, 10f);
+    [ContextMenu("Test: Shrink 10s")]
+    void TestShrink() => CastVision(VisionSpell.Shrink, 10f);
 
     void Start()
     {
@@ -84,7 +91,21 @@ public class ZoneFogOfWar : MonoBehaviour
         if (!force && pc == _lastCell) return;
         _lastCell = pc;
 
-        float r2 = sightRange * sightRange;
+        // Enlarge: a bigger body means higher eyes and a longer horizon —
+        // low cover (hedges, boulders) stops hiding things from you.
+        int eye = _activeSpell switch
+        {
+            VisionSpell.Enlarge => eyeHeight + 2,
+            VisionSpell.Shrink => Mathf.Max(1, eyeHeight - 2),
+            _ => eyeHeight,
+        };
+        float range = _activeSpell switch
+        {
+            VisionSpell.Enlarge => sightRange * 1.35f,
+            VisionSpell.Shrink => sightRange * 0.75f,
+            _ => sightRange,
+        };
+        float r2 = range * range;
         var visible = new bool[_grid.width, _grid.height];
         for (int z = 0; z < _grid.height; z++)
             for (int x = 0; x < _grid.width; x++)
@@ -96,7 +117,7 @@ public class ZoneFogOfWar : MonoBehaviour
                 {
                     VisionSpell.Clairvoyance => true,                       // whole field
                     VisionSpell.TrueSight => inRange,                       // through objects
-                    _ => inRange && _grid.HasLineOfSight(pc, c, eyeHeight), // honest eyes
+                    _ => inRange && _grid.HasLineOfSight(pc, c, eye),       // honest eyes
                 };
                 visible[x, z] = vis;
                 _fog.SetVisible(x, z, vis);
