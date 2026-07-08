@@ -82,9 +82,10 @@ public static class BattleIntegrationSetup
         {
             var roster = root.GetComponent<PartyRoster>();
             if (roster == null) roster = root.AddComponent<PartyRoster>();
-            roster.beniditoJob = AssetDatabase.LoadAssetAtPath<JobDefinition>("Assets/Data/Jobs/Baker/Job_Baker.asset");
-            // No pre-unlocked skills: Ben starts with basic Attack only and
-            // EARNS Baker skills through job AP (David 7/08).
+            // Hero: Ben's own line, ZERO job skills — he takes his skills from
+            // the monsters he absorbs, not from a trade tree (David 7/08).
+            // The job exists so his kills still bank level/stat growth.
+            roster.beniditoJob = AssetDatabase.LoadAssetAtPath<JobDefinition>("Assets/Data/Jobs/Hero/Job_Hero.asset");
 
             // The prefab's serialized blockedScenes predates BattleArena — a
             // code-default change never reaches existing serialized data.

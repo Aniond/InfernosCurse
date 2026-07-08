@@ -11,7 +11,7 @@ using UnityEngine;
 public class PartyRoster : MonoBehaviour
 {
     [Header("Benidito (protagonist — Benidito role, absorbs skills)")]
-    public JobDefinition beniditoJob;                  // Job_Baker
+    public JobDefinition beniditoJob;                  // Job_Hero (no skills — absorption is his tree)
 
     [Header("Portraits (shown in the CT turn-order display)")]
     public Sprite beniditoPortrait;
@@ -45,10 +45,8 @@ public class PartyRoster : MonoBehaviour
 
         if (inst != null && inst.beniditoJob != null)
         {
-            // Job equipped, NOTHING pre-unlocked: Ben opens with basic Attack
-            // only (David 7/08 — skills are EARNED through job AP, not handed
-            // out by test scaffolding; the old head-start showed Ashwood Peel
-            // and Ergot Bloom in his first-ever battle menu).
+            // Hero job: level/stat growth ONLY. It has no skill tree — Ben's
+            // skills come from the monsters he kills and absorbs (David 7/08).
             c.EquipJob(inst.beniditoJob);
         }
         else Debug.LogWarning("[PartyRoster] Benidito's job refs not wired — run Battle Integration setup.");

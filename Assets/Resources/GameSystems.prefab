@@ -793,12 +793,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13e1f29ec110a6c4b80f71cd58c3baf3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PartyRoster
-  beniditoJob: {fileID: 11400000, guid: e244652f53734a54bbbdbc6dc0e8b188, type: 2}
-  beniditoPreUnlocked:
-  - {fileID: 11400000, guid: d7bf72395eb1483daf0f0ea3b646ca8b, type: 2}
-  - {fileID: 11400000, guid: 7eabe3686e2340d68618e3bf750797ff, type: 2}
+  beniditoJob: {fileID: 11400000, guid: 64a15f4213e76cd4390afb63047ff9f8, type: 2}
   beniditoPortrait: {fileID: 21300000, guid: 1be84c113ab81224e9a6c69f6d56674b, type: 3}
-  pieroPortrait: {fileID: 0}
   beniditoWeapon: {fileID: 11400000, guid: 7717d47d073d61342bdb5c792fae14d4, type: 2}
   beniditoArmor: {fileID: 11400000, guid: b6f668c558f4e6e45915e3e85ad5c135, type: 2}
   beniditoAccessory: {fileID: 11400000, guid: d2b314c8a80bb5a439f45fabb2ab4afa, type: 2}

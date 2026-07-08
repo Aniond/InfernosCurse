@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c80eead04abd1245b7131cc360fa4ff, type: 3}
+  m_Name: Job_Hero
+  m_EditorClassIdentifier: Assembly-CSharp::JobDefinition
+  jobName: Hero
+  description: "Benidito's road has no guild and no master. What he becomes, he tears
+    from the curse itself \u2014 every skill he wields was absorbed from something
+    that tried to kill him. The Hero line carries only what the road builds: nerve,
+    sinew, and the will to keep walking."
+  jobIcon: {fileID: 0}
+  lineageRoot: {fileID: 0}
+  advancedJobs: []
+  advancedJobUnlockLevel: 5
+  xpPerLevel: 64000000c80000005e01000026020000200300004c040000dc050000d0070000280a0000e40c0000
+  statGainPerLevel:
+    strength: 1
+    dexterity: 1
+    constitution: 1
+    creativity: 0
+    faith: 0
+    perception: 1
+    speed: 0
+    hpMax: 6
+    spMax: 3
+  baseStatBonus:
+    strength: 1
+    dexterity: 1
+    constitution: 1
+    creativity: 1
+    faith: 1
+    perception: 1
+    speed: 0
+    hpMax: 8
+    spMax: 4
+  skills: []
