@@ -18,6 +18,14 @@ public class BattleMapStyle3D : ScriptableObject
     public Color rockTint = new Color(0.62f, 0.61f, 0.58f);
     [Tooltip("Texture tiles per world meter")]
     public float tiling = 0.35f;
+    [Header("Path layer (painted via BattleMapAuthoring.pathCells)")]
+    public Texture2D pathTex;
+    public Color pathTint = new Color(0.82f, 0.76f, 0.66f);
+
+    [Header("Water (optional — Arno/river maps)")]
+    [Tooltip("World Y of the water plane; -100 = no water")]
+    public float waterLevel = -100f;
+    public Material waterMaterial;
 
     [Header("Terrain shape")]
     [Tooltip("World Y per elevation unit (FFT-chunky = 0.5)")]

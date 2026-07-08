@@ -20,6 +20,12 @@ Shader "InfernosCurse/BattleTerrainSplat"
         _CurseRect ("Curse Rect (xy origin, zw size)", Vector) = (0, 0, 14, 12)
         _CurseColor ("Curse Color", Color) = (0.22, 0.06, 0.28, 1)
         _CurseGlow ("Curse Glow", Color) = (0.45, 0.10, 0.55, 1)
+        // 4th layer (paths/cobbles) — weight rides vertex alpha; slope shade
+        // moved to UV2.x. Shoreline wetness darkens below _WaterLevel+band.
+        _PathTex ("Path", 2D) = "white" {}
+        _PathTint ("Path Tint", Color) = (1, 1, 1, 1)
+        _WaterLevel ("Water Level (world Y, -100 = off)", Float) = -100
+        _WetColor ("Wet Tint", Color) = (0.45, 0.42, 0.34, 1)
     }
     SubShader
     {
@@ -42,23 +48,28 @@ Shader "InfernosCurse/BattleTerrainSplat"
             TEXTURE2D(_DirtTex);  SAMPLER(sampler_DirtTex);
             TEXTURE2D(_RockTex);  SAMPLER(sampler_RockTex);
             TEXTURE2D(_CurseMask); SAMPLER(sampler_CurseMask);
+            TEXTURE2D(_PathTex); SAMPLER(sampler_PathTex);
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _GrassTint;
                 half4 _DirtTint;
                 half4 _RockTint;
+                half4 _PathTint;
                 half4 _CurseColor;
                 half4 _CurseGlow;
+                half4 _WetColor;
                 float4 _CurseRect;
                 float _Tiling;
                 float _AmbientBoost;
+                float _WaterLevel;
             CBUFFER_END
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS   : NORMAL;
-                float4 color      : COLOR;
+                float4 color      : COLOR;      // rgb = grass/dirt/rock, a = path
+                float2 uv2        : TEXCOORD1;  // x = slope shade
             };
 
             struct Varyings
@@ -67,6 +78,7 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 float3 positionWS : TEXCOORD0;
                 float3 normalWS   : TEXCOORD1;
                 float4 color      : COLOR;
+                float shade       : TEXCOORD2;
             };
 
             Varyings vert (Attributes v)
@@ -76,6 +88,7 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 o.positionCS = TransformWorldToHClip(o.positionWS);
                 o.normalWS   = TransformObjectToWorldNormal(v.normalOS);
                 o.color      = v.color;
+                o.shade      = v.uv2.x <= 0.001 ? 1.0 : v.uv2.x;  // old meshes: no uv2
                 return o;
             }
 
@@ -100,10 +113,16 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 half3 rockZ = SAMPLE_TEXTURE2D(_RockTex, sampler_RockTex, i.positionWS.xy * _Tiling).rgb;
                 half3 rock  = (rockY * an.y + rockX * an.x + rockZ * an.z) / max(an.x + an.y + an.z, 1e-4) * _RockTint.rgb;
 
-                half3 w = i.color.rgb;
-                w /= max(w.r + w.g + w.b, 1e-4);
-                half3 albedo = grass * w.r + dirt * w.g + rock * w.b;
-                albedo *= i.color.a;   // diorama-base darkening
+                half3 path = SAMPLE_TEXTURE2D(_PathTex, sampler_PathTex, uvTop).rgb * _PathTint.rgb;
+                half pw = i.color.a;
+                half3 w = i.color.rgb * (1.0h - pw);
+                half sum = w.r + w.g + w.b + pw;
+                half3 albedo = (grass * w.r + dirt * w.g + rock * w.b + path * pw) / max(sum, 1e-4);
+                albedo *= i.shade;     // slope/diorama darkening (from UV2)
+
+                // shoreline wetness: darken + tint just above the waterline
+                half wet = saturate((_WaterLevel + 0.35 - i.positionWS.y) / 0.35);
+                albedo = lerp(albedo, albedo * _WetColor.rgb * 1.6, wet * 0.8);
 
                 // Curse creep: mask texel per cell, softened by bilinear +
                 // veined by the dirt texture's own noise, breathing slowly.

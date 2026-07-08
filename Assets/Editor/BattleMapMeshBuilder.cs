@@ -121,7 +121,23 @@ public static class BattleMapMeshBuilder
         var verts = new List<Vector3>();
         var norms = new List<Vector3>();
         var cols = new List<Color>();
+        var uv2s = new List<Vector2>();     // x = slope shade (freed alpha for path)
         var tris = new List<int>();
+
+        float PathWeight(float gx, float gz)
+        {
+            if (srcAuth.pathCells == null || srcAuth.pathCells.Count == 0) return 0f;
+            float best = 0f;
+            foreach (var pc in srcAuth.pathCells)
+            {
+                float dx = gx - (pc.x + 0.5f), dz = gz - (pc.y + 0.5f);
+                float d = Mathf.Sqrt(dx * dx + dz * dz);
+                best = Mathf.Max(best, Mathf.Clamp01(1f - (d - 0.38f) / 0.35f));
+            }
+            // ragged organic edge
+            best *= 0.75f + 0.25f * Mathf.PerlinNoise(gx * 2.3f + 5.1f, gz * 2.3f + 8.8f);
+            return Mathf.Clamp01(best);
+        }
 
         int nx = gw * RES + 1, nz = gh * RES + 1;
         float x0w = -SKIRT, z0w = -SKIRT;
@@ -147,7 +163,8 @@ public static class BattleMapMeshBuilder
                 dirtW = Mathf.Max(dirtW, Mathf.SmoothStep(0.78f, 0.9f, patch) * 0.3f * (1f - rockW));
                 float grassW = Mathf.Max(0f, 1f - rockW - dirtW);
                 float shade = 1f - Mathf.Clamp01(slope * 1.5f) * 0.32f;
-                cols.Add(new Color(grassW, dirtW, rockW, shade));
+                cols.Add(new Color(grassW, dirtW, rockW, PathWeight(gx, gz)));
+                uv2s.Add(new Vector2(shade, 0f));
             }
         for (int iz = 0; iz < nz - 1; iz++)
             for (int ix = 0; ix < nx - 1; ix++)
@@ -164,7 +181,7 @@ public static class BattleMapMeshBuilder
             verts.Add(top0); verts.Add(top1);
             verts.Add(new Vector3(top0.x, BASE_Y, top0.z));
             verts.Add(new Vector3(top1.x, BASE_Y, top1.z));
-            for (int k = 0; k < 4; k++) { norms.Add(outward); cols.Add(new Color(0f, 0.2f, 0.8f, 0.30f)); }
+            for (int k = 0; k < 4; k++) { norms.Add(outward); cols.Add(new Color(0f, 0.2f, 0.8f, 0f)); uv2s.Add(new Vector2(0.30f, 0f)); }
             tris.Add(s); tris.Add(s + 2); tris.Add(s + 1);
             tris.Add(s + 1); tris.Add(s + 2); tris.Add(s + 3);
         }
@@ -185,7 +202,7 @@ public static class BattleMapMeshBuilder
             int s = verts.Count;
             verts.Add(new Vector3(xMin, BASE_Y, zMin)); verts.Add(new Vector3(xMax, BASE_Y, zMin));
             verts.Add(new Vector3(xMin, BASE_Y, zMax)); verts.Add(new Vector3(xMax, BASE_Y, zMax));
-            for (int k = 0; k < 4; k++) { norms.Add(Vector3.down); cols.Add(new Color(0f, 0.2f, 0.8f, 0.3f)); }
+            for (int k = 0; k < 4; k++) { norms.Add(Vector3.down); cols.Add(new Color(0f, 0.2f, 0.8f, 0f)); uv2s.Add(new Vector2(0.30f, 0f)); }
             tris.Add(s); tris.Add(s + 1); tris.Add(s + 2);
             tris.Add(s + 1); tris.Add(s + 3); tris.Add(s + 2);
         }
@@ -203,6 +220,7 @@ public static class BattleMapMeshBuilder
         mesh.SetVertices(verts);
         mesh.SetNormals(norms);
         mesh.SetColors(cols);
+        mesh.SetUVs(1, uv2s);
         mesh.SetTriangles(tris, 0);
         mesh.RecalculateBounds();
         if (newMesh) AssetDatabase.CreateAsset(mesh, meshPath);
@@ -223,6 +241,9 @@ public static class BattleMapMeshBuilder
         mat.SetColor("_DirtTint", style.dirtTint);
         mat.SetColor("_RockTint", style.rockTint);
         mat.SetFloat("_Tiling", style.tiling);
+        if (style.pathTex != null) mat.SetTexture("_PathTex", style.pathTex);
+        mat.SetColor("_PathTint", style.pathTint);
+        mat.SetFloat("_WaterLevel", style.waterLevel);
         EditorUtility.SetDirty(mat);
 
         // ── prefab: terrain + copied authoring + baked heights + curse ───
@@ -255,6 +276,19 @@ public static class BattleMapMeshBuilder
             for (int ix = 0; ix <= W * RES; ix++)
                 heights.surfY[ix + iz * (W * RES + 1)] = Sample(ix / (float)RES, iz / (float)RES);
         root.AddComponent<BattleTerrainCurse>();
+
+        // Optional water plane (Arno/river maps): style sets level + material.
+        if (style.waterLevel > -99f && style.waterMaterial != null)
+        {
+            var water = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            water.name = "Water";
+            Object.DestroyImmediate(water.GetComponent<Collider>());
+            water.transform.SetParent(root.transform, false);
+            water.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            water.transform.position = new Vector3(W * 0.5f, style.waterLevel, H * 0.5f);
+            water.transform.localScale = new Vector3(gw + 6f, gh + 6f, 1f);
+            water.GetComponent<MeshRenderer>().sharedMaterial = style.waterMaterial;
+        }
 
         // Obstacles: copy cells (gameplay); visuals come later with props.
         foreach (var ob in srcPrefab.GetComponentsInChildren<BattleObstacle>(true))
@@ -325,8 +359,18 @@ public static class BattleMapMeshBuilder
         cam.fieldOfView = 22f;
         cam.nearClipPlane = 0.5f;
         cam.farClipPlane = 300f;
-        cam.transform.position = center + new Vector3(0.55f, 0.6f, -1f).normalized * 24f;
+        cam.transform.position = center + new Vector3(0.55f, 0.6f, -1f).normalized * 22f;
         cam.transform.LookAt(center);
+        var camData = cam.GetComponent<UniversalAdditionalCameraData>();
+        if (camData == null) camData = cam.gameObject.AddComponent<UniversalAdditionalCameraData>();
+        camData.renderPostProcessing = true;
+
+        // Diorama post: tilt-shift DoF focused on the battlefield + gentle
+        // bloom/vignette/grading. One shared profile asset, style-agnostic.
+        var volGo = GameObject.Find("BattleVolume") ?? new GameObject("BattleVolume");
+        var vol = volGo.GetComponent<UnityEngine.Rendering.Volume>() ?? volGo.AddComponent<UnityEngine.Rendering.Volume>();
+        vol.isGlobal = true;
+        vol.sharedProfile = EnsureBattleVolumeProfile();
 
         var sun = Object.FindObjectsByType<Light>(FindObjectsSortMode.None)
             .FirstOrDefault(l => l.type == LightType.Directional);
@@ -367,6 +411,36 @@ public static class BattleMapMeshBuilder
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         Debug.Log($"[BattleMapMeshBuilder] BattleArena wired to {mapPrefab.name}. Menu 7 restores the sprite map.");
+    }
+
+    static UnityEngine.Rendering.VolumeProfile EnsureBattleVolumeProfile()
+    {
+        string path = $"{MapsFolder}/BattleDiorama_Post.asset";
+        var profile = AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.VolumeProfile>(path);
+        if (profile != null) return profile;
+        profile = ScriptableObject.CreateInstance<UnityEngine.Rendering.VolumeProfile>();
+        AssetDatabase.CreateAsset(profile, path);
+
+        var dof = profile.Add<DepthOfField>(true);
+        dof.mode.Override(DepthOfFieldMode.Bokeh);
+        dof.focusDistance.Override(22f);
+        dof.focalLength.Override(42f);
+        dof.aperture.Override(5.6f);
+
+        var bloom = profile.Add<Bloom>(true);
+        bloom.threshold.Override(1.05f);
+        bloom.intensity.Override(0.35f);
+
+        var vig = profile.Add<Vignette>(true);
+        vig.intensity.Override(0.22f);
+        vig.smoothness.Override(0.5f);
+
+        var ca = profile.Add<ColorAdjustments>(true);
+        ca.saturation.Override(10f);
+        ca.contrast.Override(6f);
+
+        AssetDatabase.SaveAssets();
+        return profile;
     }
 
     static GameObject EnsureUnit3DPrefab()

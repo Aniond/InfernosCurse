@@ -25,6 +25,9 @@ public class BattleMapAuthoring : MonoBehaviour
     [Header("Terrain")]
     public List<Plateau> plateaus = new();
 
+    [Tooltip("Cells painted with the path/cobble splat layer on 3D maps (visual only).")]
+    public List<Vector2Int> pathCells = new();
+
     // Suggested spawns for future encounter tables — callers still pass
     // their own lists to StartBattle.
     [Header("Suggested spawns")]
