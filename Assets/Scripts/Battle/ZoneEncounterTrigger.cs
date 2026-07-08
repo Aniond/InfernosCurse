@@ -63,6 +63,12 @@ public class ZoneEncounterTrigger : MonoBehaviour
         _battleRunning = true;
         Debug.Log("[ZoneEncounter] AMBUSH — battle begins in place.");
 
+        // battle UI needs an EventSystem — zones don't always carry one
+        if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            new GameObject("EventSystem",
+                typeof(UnityEngine.EventSystems.EventSystem),
+                typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+
         _kitInstance = Instantiate(battleKitPrefab);
         var bm = _kitInstance.GetComponentInChildren<BattleManager>();
         var grid = _kitInstance.GetComponentInChildren<BattleGrid>();
