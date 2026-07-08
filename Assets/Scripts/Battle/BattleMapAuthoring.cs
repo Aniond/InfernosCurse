@@ -73,8 +73,15 @@ public class BattleMapAuthoring : MonoBehaviour
     }
 
     // Same math as BattleGrid.GridToWorld — usable at edit time (no grid).
+    // A sibling BattleTerrainHeights component (3D diorama maps) flips this
+    // to XZ-grid space, mirroring BattleGrid's mode switch.
     public Vector3 CellToWorld(Vector2Int cell, int elevation = 0)
     {
+        var t = GetComponent<BattleTerrainHeights>();
+        if (t != null)
+            return new Vector3((cell.x + 0.5f) * tileWidth,
+                               t.HeightAt(cell),
+                               (cell.y + 0.5f) * tileWidth);
         float wx = (cell.x - cell.y) * tileWidth * 0.5f;
         float wy = (cell.x + cell.y) * tileHeight * 0.5f + elevation * tileHeight * 0.5f;
         return new Vector3(wx, wy, 0f);

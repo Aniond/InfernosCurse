@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 // 3D diorama battle map (FFT-remaster look, David's reference 7/07):
@@ -236,9 +238,152 @@ public static class BattleMapMeshBuilder
         terrain.AddComponent<MeshFilter>().sharedMesh = mesh;
         terrain.AddComponent<MeshRenderer>().sharedMaterial = mat;
 
+        // Baked cell-center heights — this component is also the flag that
+        // switches BattleGrid.GridToWorld into 3D-XZ mode for this map.
+        var heights = root.AddComponent<BattleTerrainHeights>();
+        heights.width = W;
+        heights.height = H;
+        heights.cellY = new float[W * H];
+        for (int x = 0; x < W; x++)
+            for (int z = 0; z < H; z++)
+                heights.cellY[x + z * W] = Sample(x + 0.5f, z + 0.5f);
+
         PrefabUtility.SaveAsPrefabAsset(root, $"{MapsFolder}/BattleMap_Plains3D.prefab");
         Object.DestroyImmediate(root);
         AssetDatabase.SaveAssets();
         Debug.Log($"[BattleMapMeshBuilder] BattleMap_Plains3D saved: {verts.Count} verts, {tris.Count / 3} tris. Logic grid untouched ({W}x{H}).");
+    }
+
+    // ── Arena wiring: swap BattleArena to the 3D diorama ─────────────────────
+
+    [MenuItem("InfernosCurse/Templates/9. Use 3D Plains In Arena")]
+    public static void WireArena3D()
+    {
+        var mapPrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{MapsFolder}/BattleMap_Plains3D.prefab");
+        if (mapPrefab == null) { Debug.LogError("[BattleMapMeshBuilder] Run menu 8 first."); return; }
+
+        var unitPrefab = EnsureUnit3DPrefab();
+        var tilePrefab = EnsureFlatHighlight("Highlight_Tile", "Highlight_Tile3D");
+        var hoverPrefab = EnsureFlatHighlight("Highlight_Hover", "Highlight_Hover3D");
+        if (unitPrefab == null || tilePrefab == null) return;
+
+        var scene = EditorSceneManager.OpenScene("Assets/Scenes/BattleArena.unity", OpenSceneMode.Single);
+
+        var oldVis = GameObject.Find("[GridVisuals]");
+        if (oldVis != null) Object.DestroyImmediate(oldVis);
+        var oldMap = Object.FindFirstObjectByType<BattleMapAuthoring>();
+        if (oldMap != null) Object.DestroyImmediate(oldMap.gameObject);
+
+        PrefabUtility.InstantiatePrefab(mapPrefab);
+
+        // Camera: perspective FFT rig (narrow FOV at distance ≈ near-ortho read)
+        var cam = Camera.main;
+        Vector3 center = new Vector3(7f, 0.5f, 6f);
+        cam.orthographic = false;
+        cam.fieldOfView = 22f;
+        cam.nearClipPlane = 0.5f;
+        cam.farClipPlane = 300f;
+        cam.transform.position = center + new Vector3(0.55f, 0.6f, -1f).normalized * 24f;
+        cam.transform.LookAt(center);
+
+        // Authored sun (edit-mode only — COZY stays blocked in the arena)
+        var sun = Object.FindObjectsByType<Light>(FindObjectsSortMode.None)
+            .FirstOrDefault(l => l.type == LightType.Directional);
+        if (sun == null) sun = new GameObject("Sun_Battle (authored)").AddComponent<Light>();
+        sun.type = LightType.Directional;
+        sun.color = new Color(1f, 0.98f, 0.92f);
+        sun.intensity = 1.35f;
+        sun.shadows = LightShadows.Soft;
+        sun.shadowStrength = 0.75f;
+        sun.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = new Color(0.42f, 0.50f, 0.62f);
+        RenderSettings.ambientEquatorColor = new Color(0.34f, 0.35f, 0.33f);
+        RenderSettings.ambientGroundColor = new Color(0.16f, 0.15f, 0.12f);
+
+        // Rewire spawner + cursor prefabs
+        var bm = Object.FindFirstObjectByType<BattleManager>(FindObjectsInactive.Include);
+        if (bm != null)
+        {
+            var so = new SerializedObject(bm);
+            var prop = so.FindProperty("battleUnitPrefab");
+            if (prop != null) { prop.objectReferenceValue = unitPrefab; so.ApplyModifiedPropertiesWithoutUndo(); }
+        }
+        var cursor = Object.FindFirstObjectByType<BattleCursor>(FindObjectsInactive.Include);
+        if (cursor != null)
+        {
+            var so = new SerializedObject(cursor);
+            so.FindProperty("moveTilePrefab").objectReferenceValue = tilePrefab;
+            so.FindProperty("attackTilePrefab").objectReferenceValue = tilePrefab;
+            so.FindProperty("hoverTilePrefab").objectReferenceValue = hoverPrefab != null ? hoverPrefab : tilePrefab;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            if (cursor.cursorObject != null)
+            {
+                cursor.cursorObject.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                var cs = cursor.cursorObject.transform.localScale;
+                cursor.cursorObject.transform.localScale = new Vector3(cs.x, cs.x, 1f) * 2f;
+                EditorUtility.SetDirty(cursor.cursorObject);
+            }
+        }
+
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+        Debug.Log("[BattleMapMeshBuilder] BattleArena now uses the 3D Plains diorama. " +
+                  "Menu 7 restores the sprite map.");
+    }
+
+    static GameObject EnsureUnit3DPrefab()
+    {
+        string path = "Assets/Prefabs/Battle/BattleUnit3D.prefab";
+        var sprite = AssetDatabase.LoadAllAssetsAtPath("Assets/Characters/Benidito/Sprites/rotations/south.png")
+            .OfType<Sprite>().FirstOrDefault();
+        var shader = Shader.Find("InfernosCurse/BillboardUnit");
+        if (sprite == null || shader == null)
+        {
+            Debug.LogError("[BattleMapMeshBuilder] Missing Benidito sprite or BillboardUnit shader.");
+            return null;
+        }
+        string matPath = $"{MapsFolder}/Materials/BillboardUnit.mat";
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (mat == null) { mat = new Material(shader); AssetDatabase.CreateAsset(mat, matPath); }
+        mat.shader = shader;
+        EditorUtility.SetDirty(mat);
+
+        var root = new GameObject("BattleUnit3D");
+        root.AddComponent<BattleUnit>();
+        var vis = new GameObject("Visual");
+        vis.transform.SetParent(root.transform, false);
+        var sr = vis.AddComponent<SpriteRenderer>();
+        sr.sprite = sprite;
+        sr.sharedMaterial = mat;
+        float s = 1.15f / sprite.bounds.size.y;
+        vis.transform.localScale = new Vector3(s, s, 1f);
+        vis.transform.localPosition = new Vector3(0f, sprite.bounds.extents.y * s + 0.02f, 0f);
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        return prefab;
+    }
+
+    // Flat ground-quad variant of an iso diamond highlight prefab: original
+    // becomes a child laid flat (X+90), squash-corrected, lifted off the
+    // surface. Cursor code positions the ROOT and tints via
+    // GetComponentInChildren<SpriteRenderer> — both keep working.
+    static GameObject EnsureFlatHighlight(string srcName, string dstName)
+    {
+        var src = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Prefabs/Battle/{srcName}.prefab");
+        if (src == null) { Debug.LogError($"[BattleMapMeshBuilder] {srcName}.prefab missing."); return null; }
+        var root = new GameObject(dstName);
+        var child = Object.Instantiate(src);
+        child.name = "Quad";
+        child.transform.SetParent(root.transform, false);
+        child.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        var srcScale = src.transform.localScale;
+        // undo the 2:1 iso squash and grow to the 1-unit 3D cell
+        float w = srcScale.x * 2f * 1.02f;
+        child.transform.localScale = new Vector3(w, w, 1f);
+        child.transform.localPosition = new Vector3(0f, 0.06f, 0f);
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, $"Assets/Prefabs/Battle/{dstName}.prefab");
+        Object.DestroyImmediate(root);
+        return prefab;
     }
 }

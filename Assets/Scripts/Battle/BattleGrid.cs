@@ -49,8 +49,39 @@ public class BattleGrid : MonoBehaviour
 
     // ── World ↔ Grid conversion ───────────────────────────────────────────────
 
+    // 3D diorama maps carry a BattleTerrainHeights component (baked surface
+    // heights) — its presence flips the mapping from legacy 2D-iso screen
+    // space to 3D XZ-grid space. Combat logic is cell-based and never reads
+    // world positions back, so the two modes coexist per-map.
+    private BattleTerrainHeights _terrain;
+    private bool _terrainChecked;
+
+    public BattleTerrainHeights TerrainHeights
+    {
+        get
+        {
+            if (!_terrainChecked)
+            {
+                _terrain = Object.FindFirstObjectByType<BattleTerrainHeights>();
+                _terrainChecked = true;
+            }
+            return _terrain;
+        }
+    }
+
+    public bool Is3D => TerrainHeights != null;
+
     public Vector3 GridToWorld(Vector2Int gridPos, int elevation = 0)
     {
+        var t = TerrainHeights;
+        if (t != null)
+        {
+            // XZ grid, cell centers at +0.5; Y from the baked mesh surface
+            // (already includes plateau elevation and micro-relief).
+            return new Vector3((gridPos.x + 0.5f) * tileWidth,
+                               t.HeightAt(gridPos),
+                               (gridPos.y + 0.5f) * tileWidth);
+        }
         float wx = (gridPos.x - gridPos.y) * tileWidth  * 0.5f;
         float wy = (gridPos.x + gridPos.y) * tileHeight * 0.5f + elevation * tileHeight * 0.5f;
         return new Vector3(wx, wy, 0f);

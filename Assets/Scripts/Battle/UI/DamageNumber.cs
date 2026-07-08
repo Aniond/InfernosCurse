@@ -59,6 +59,9 @@ public class DamageNumber : MonoBehaviour
     void Play(string label, Color color, Vector3 worldPos, float startScale)
     {
         transform.position = worldPos + Vector3.up * 0.3f;
+        // Face the battle camera — identity on the legacy 2D arena (camera
+        // is unrotated there), correct billboard on tilted 3D diorama maps.
+        if (Camera.main != null) transform.rotation = Camera.main.transform.rotation;
         _text.text         = label;
         _text.color        = color;
         gameObject.SetActive(true);
