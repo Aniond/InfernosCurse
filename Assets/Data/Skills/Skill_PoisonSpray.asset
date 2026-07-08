@@ -23,6 +23,7 @@ MonoBehaviour:
   primaryStat: 2
   scalingMultiplier: 0.7
   basePower: 8
+  baseHit: 0.85
   minRange: 1
   range: 2
   areaOfEffect: 1
@@ -38,3 +39,5 @@ MonoBehaviour:
   maxLevel: 5
   refinable: 1
   holyVersion: {fileID: 0}
+  bonusStat: 2
+  bonusStatPerLevel: 1

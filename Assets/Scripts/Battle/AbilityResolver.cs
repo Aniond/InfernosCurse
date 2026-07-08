@@ -12,15 +12,16 @@ public static class AbilityResolver
     {
         if (skill == null) return;
 
-        // Spend SP
-        if (skill.spCost > 0)
+        // Spend SP — absorbed orbs cost more as they level (+1 SP per level-up)
+        int spCost = absorbedInstance != null ? absorbedInstance.GetEffectiveSPCost() : skill.spCost;
+        if (spCost > 0)
         {
-            if (!user.HasSP(skill.spCost))
+            if (!user.HasSP(spCost))
             {
                 Debug.Log($"{user.Data.displayName} doesn't have enough SP for {skill.skillName}.");
                 return;
             }
-            user.SpendSP(skill.spCost);
+            user.SpendSP(spCost);
         }
 
         float powerOverride = absorbedInstance != null ? absorbedInstance.GetEffectivePower() : -1f;

@@ -23,8 +23,9 @@ MonoBehaviour:
   primaryStat: 0
   scalingMultiplier: 1.1
   basePower: 14
+  baseHit: 0.9
   minRange: 1
-  range: 2
+  range: 1
   areaOfEffect: 0
   requiresLineOfSight: 1
   chargeTicks: 0
@@ -38,3 +39,5 @@ MonoBehaviour:
   maxLevel: 5
   refinable: 1
   holyVersion: {fileID: 0}
+  bonusStat: 0
+  bonusStatPerLevel: 1

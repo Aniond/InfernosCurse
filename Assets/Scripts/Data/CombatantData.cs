@@ -126,6 +126,15 @@ public class CombatantData : ScriptableObject
         }
         foreach (var item in AllEquipment())
             Add(ref total, item.bonuses);
+
+        // Equipped absorbed orbs grant their stat bonus per level (David's
+        // hierarchy: Vine Slash +1 STR/level to +5 — the orb IS the gear).
+        foreach (var orb in equippedSkills.absorbed)
+        {
+            if (orb == null || orb.definition == null) continue;
+            AddScaledStat(ref total, orb.definition.bonusStat, orb.GetStatBonus());
+        }
+
         // Passive skill bonuses would be applied here later
         return total;
     }
@@ -238,6 +247,21 @@ public class CombatantData : ScriptableObject
         perception     = s.perception,
         speed          = s.speed,
     };
+
+    static void AddScaledStat(ref CharacterStats s, StatScaling stat, int amount)
+    {
+        if (amount == 0) return;
+        switch (stat)
+        {
+            case StatScaling.Strength:     s.strength     += amount; break;
+            case StatScaling.Dexterity:    s.dexterity    += amount; break;
+            case StatScaling.Constitution: s.constitution += amount; break;
+            case StatScaling.Creativity:   s.creativity   += amount; break;
+            case StatScaling.Faith:        s.faith        += amount; break;
+            case StatScaling.Perception:   s.perception   += amount; break;
+            case StatScaling.Speed:        s.speed        += amount; break;
+        }
+    }
 
     static void Add(ref CharacterStats a, CharacterStats b)
     {

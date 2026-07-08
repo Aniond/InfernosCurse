@@ -15,9 +15,9 @@ public class AbsorbedSkillInstance
     [Tooltip("True if this skill has been refined into its Holy version at the Church.")]
     public bool isRefined = false;
 
-    // Duplicates needed per level: 1, 3, 6, 10, 15 (triangular)
-    static readonly int[] DuplicatesForLevel = { 0, 1, 3, 6, 10, 15 };
-
+    // David's hierarchy (7/08): every duplicate drop levels the skill by 1,
+    // capped at definition.maxLevel. (The old triangular curve — 15 dupes to
+    // max — is parked until the balance pass.)
     public void AddDuplicate()
     {
         duplicateCount++;
@@ -26,18 +26,8 @@ public class AbsorbedSkillInstance
 
     void RefreshLevel()
     {
-        int maxLvl = definition != null ? definition.maxLevel : 5;
-        // Clamp into [1, table max] — a maxLevel of 0 would otherwise lock level at 1 forever.
-        maxLvl = Mathf.Clamp(maxLvl, 1, DuplicatesForLevel.Length - 1);
-        for (int i = maxLvl; i >= 1; i--)
-        {
-            if (duplicateCount >= DuplicatesForLevel[i])
-            {
-                level = i;
-                return;
-            }
-        }
-        level = 1;
+        int maxLvl = Mathf.Max(1, definition != null ? definition.maxLevel : 5);
+        level = Mathf.Clamp(duplicateCount, 1, maxLvl);
     }
 
     public bool CanRefine()
@@ -60,13 +50,28 @@ public class AbsorbedSkillInstance
             ? definition.holyVersion
             : definition;
 
-    // Power at current level: basePower * (1 + 0.2 * (level-1)) * multiplier from holy if refined
+    // David's growth model (7/08), all flat and balance-testable:
+    //   damage: basePower + level      ("starts off +1 damage ... to a maximum of +5")
+    //   SP:     spCost + (level - 1)   ("skill points increase with each level up")
+    //   stat:   bonusStatPerLevel * level while EQUIPPED (applied in GetTotalStats)
     public float GetEffectivePower()
     {
         if (definition == null) return 0f;
-        float lvlMult  = 1f + 0.2f * (level - 1);
         float holyMult = isRefined ? 1.5f : 1f;
-        return definition.basePower * lvlMult * holyMult;
+        return (definition.basePower + level) * holyMult;
+    }
+
+    public int GetEffectiveSPCost()
+    {
+        if (definition == null) return 0;
+        return definition.spCost + (level - 1);
+    }
+
+    // Equipped-orb stat bonus at current level (0 if the skill grants none).
+    public int GetStatBonus()
+    {
+        if (definition == null || definition.bonusStat == StatScaling.None) return 0;
+        return definition.bonusStatPerLevel * level;
     }
 
     public string DisplayName()

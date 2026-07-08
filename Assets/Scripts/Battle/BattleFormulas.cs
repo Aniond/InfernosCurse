@@ -75,7 +75,7 @@ public static class BattleFormulas
         var atkStats = attacker.Data.GetTotalStats();
         var defStats = defender.Data.GetTotalStats();
 
-        float baseHit   = 0.85f;
+        float baseHit   = skill.baseHit;   // per-skill accuracy (David's hierarchy)
         float percBonus = (atkStats.perception - defStats.perception) * 0.02f;
         float dexBonus  = (atkStats.dexterity  - defStats.speed)      * 0.015f;
 

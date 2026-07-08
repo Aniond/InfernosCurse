@@ -28,6 +28,10 @@ public class SkillDefinition : ScriptableObject
     [Range(0f, 5f)] public float scalingMultiplier = 1.0f;
     public int basePower = 10;
 
+    [Header("Base Hit")]
+    [Tooltip("Base chance to land (0-1) before Perception/Dexterity/Speed modifiers. Utility skills (damageType None) always hit.")]
+    [Range(0.05f, 1f)] public float baseHit = 0.85f;
+
     [Header("Range & Area")]
     [Tooltip("Minimum target distance. 0 = can target self / own tile.")]
     public int minRange = 1;
@@ -63,4 +67,10 @@ public class SkillDefinition : ScriptableObject
     [Tooltip("Can be refined into a Holy version at the Church.")]
     public bool refinable = true;
     public SkillDefinition holyVersion;
+
+    [Header("Absorbed Growth (David's hierarchy: each duplicate drop = +1 level)")]
+    [Tooltip("Stat granted while the orb is EQUIPPED, per level — Vine Slash gives Strength (+1/level to +5 at max). None = no stat bonus.")]
+    public StatScaling bonusStat = StatScaling.None;
+    [Tooltip("Stat points per level. Level x this = the equipped bonus (cap = maxLevel x this).")]
+    public int bonusStatPerLevel = 1;
 }
