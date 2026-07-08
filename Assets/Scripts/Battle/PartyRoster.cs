@@ -12,7 +12,6 @@ public class PartyRoster : MonoBehaviour
 {
     [Header("Benidito (protagonist — Benidito role, absorbs skills)")]
     public JobDefinition beniditoJob;                  // Job_Baker
-    public SkillDefinition[] beniditoPreUnlocked;      // AshwoodPeel, ErgotBloom
 
     [Header("Portraits (shown in the CT turn-order display)")]
     public Sprite beniditoPortrait;
@@ -46,12 +45,11 @@ public class PartyRoster : MonoBehaviour
 
         if (inst != null && inst.beniditoJob != null)
         {
+            // Job equipped, NOTHING pre-unlocked: Ben opens with basic Attack
+            // only (David 7/08 — skills are EARNED through job AP, not handed
+            // out by test scaffolding; the old head-start showed Ashwood Peel
+            // and Ergot Bloom in his first-ever battle menu).
             c.EquipJob(inst.beniditoJob);
-            if (inst.beniditoPreUnlocked != null && c.activeJob != null)
-                foreach (var learned in c.activeJob.learnedSkills)
-                    if (learned.skill != null &&
-                        System.Array.IndexOf(inst.beniditoPreUnlocked, learned.skill) >= 0)
-                        learned.unlocked = true;
         }
         else Debug.LogWarning("[PartyRoster] Benidito's job refs not wired — run Battle Integration setup.");
 

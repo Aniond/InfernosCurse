@@ -83,11 +83,8 @@ public static class BattleIntegrationSetup
             var roster = root.GetComponent<PartyRoster>();
             if (roster == null) roster = root.AddComponent<PartyRoster>();
             roster.beniditoJob = AssetDatabase.LoadAssetAtPath<JobDefinition>("Assets/Data/Jobs/Baker/Job_Baker.asset");
-            roster.beniditoPreUnlocked = new[]
-            {
-                AssetDatabase.LoadAssetAtPath<SkillDefinition>("Assets/Data/Jobs/Baker/Skills/Skill_AshwoodPeel.asset"),
-                AssetDatabase.LoadAssetAtPath<SkillDefinition>("Assets/Data/Jobs/Baker/Skills/Skill_ErgotBloom.asset"),
-            };
+            // No pre-unlocked skills: Ben starts with basic Attack only and
+            // EARNS Baker skills through job AP (David 7/08).
 
             // The prefab's serialized blockedScenes predates BattleArena — a
             // code-default change never reaches existing serialized data.
