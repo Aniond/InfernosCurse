@@ -128,7 +128,7 @@ public static class GiardinoWalledGardenBuilder
                 float wx = -4f + (GRID + 8f) * ix / (ares - 1f);
                 float wz = -4f + (GRID + 8f) * iz / (ares - 1f);
                 float path = PathMask(wx, wz);
-                float bed = (layers.Count > 2 && InAnyBed(wx, wz)) ? 0.55f : 0f;
+                float bed = (layers.Count > 2 && InAnyBed(wx, wz)) ? 0.3f : 0f;   // grassy with worn soil, not bare dirt
                 float g = Mathf.Max(0f, 1f - path - bed);
                 maps[iz, ix, 0] = g;
                 maps[iz, ix, 1] = path;
@@ -171,7 +171,9 @@ public static class GiardinoWalledGardenBuilder
     static void BuildWallsAndTrees()
     {
         var walls = new GameObject("[Walls]");
-        var stone = new Color(0.62f, 0.58f, 0.52f);
+        // Real masonry, not flat tint (v1's untextured cubes read as a giant
+        // white slab, David 7/08): rusticated stone, tiled to wall length.
+        var stoneTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Environment/PiazzaSignoria/Textures/signoria-wall-rusticated.png");
         void Wall(Vector3 center, Vector3 size)
         {
             var w = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -179,7 +181,17 @@ public static class GiardinoWalledGardenBuilder
             w.transform.SetParent(walls.transform, false);
             w.transform.position = center;
             w.transform.localScale = size;
-            Tint(w, stone);
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var m = new Material(shader);
+            if (stoneTex != null)
+            {
+                m.mainTexture = stoneTex;
+                float len = Mathf.Max(size.x, size.z);
+                m.mainTextureScale = new Vector2(len / 2.4f, size.y / 2.4f);
+                m.color = new Color(0.82f, 0.78f, 0.72f);   // warm Tuscan stone
+            }
+            else m.color = new Color(0.62f, 0.58f, 0.52f);
+            w.GetComponent<Renderer>().sharedMaterial = m;
         }
         float wy = GroundY + 1.1f;
         // gates: gaps at x 14..18 on N (z=32) and S (z=0) walls
@@ -222,15 +234,27 @@ public static class GiardinoWalledGardenBuilder
         // low bed border (walkability blocker) + rose markers in rows
         var group = new GameObject("[RoseBeds]");
         string[] variety = { "rose-bush-ivory", "rose-bush-crimson", "rose-bush-gold", "rose-climbing-wine" };
+        // Low stone EDGING around each bed — not a slab (v1's full cube read
+        // as a floating tan platform hiding the grass, David 7/08). The
+        // planted ground inside is the terrain itself.
+        var stone = new Color(0.58f, 0.55f, 0.5f);
         for (int b = 0; b < Beds.Length; b++)
         {
             var bed = Beds[b];
-            var border = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            border.name = $"BedBorder_{b}";
-            border.transform.SetParent(group.transform, false);
-            border.transform.position = new Vector3(bed.center.x, GroundY + 0.12f, bed.center.y);
-            border.transform.localScale = new Vector3(bed.width, 0.24f, bed.height);
-            Tint(border, new Color(0.5f, 0.42f, 0.34f));
+            void Edge(Vector3 center, Vector3 size)
+            {
+                var e = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                e.name = $"BedEdge_{b}";
+                e.transform.SetParent(group.transform, false);
+                e.transform.position = center;
+                e.transform.localScale = size;
+                Tint(e, stone);
+            }
+            float y = GroundY + 0.07f;
+            Edge(new Vector3(bed.center.x, y, bed.yMin), new Vector3(bed.width + 0.2f, 0.14f, 0.2f));
+            Edge(new Vector3(bed.center.x, y, bed.yMax), new Vector3(bed.width + 0.2f, 0.14f, 0.2f));
+            Edge(new Vector3(bed.xMin, y, bed.center.y), new Vector3(0.2f, 0.14f, bed.height + 0.2f));
+            Edge(new Vector3(bed.xMax, y, bed.center.y), new Vector3(0.2f, 0.14f, bed.height + 0.2f));
         }
     }
 
