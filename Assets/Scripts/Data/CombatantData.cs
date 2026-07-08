@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-public enum CombatantRole { Dante, PartyMember, Enemy, NPC }
+public enum CombatantRole { Benidito, PartyMember, Enemy, NPC }
 
 [Serializable]
 public class SkillSlots
@@ -11,7 +11,7 @@ public class SkillSlots
     public SkillDefinition[] actives  = new SkillDefinition[4];
     [Tooltip("3 passive skill slots.")]
     public SkillDefinition[] passives = new SkillDefinition[3];
-    [Tooltip("3 absorbed-skill slots (Dante only). Separate from actives so " +
+    [Tooltip("3 absorbed-skill slots (Benidito only). Separate from actives so " +
              "absorption never competes with job-learned skills for a slot.")]
     public AbsorbedSkillInstance[] absorbed = new AbsorbedSkillInstance[3];
 
@@ -66,8 +66,8 @@ public class CombatantData : ScriptableObject
     [NonSerialized] public int currentHP;
     [NonSerialized] public int currentSP;
 
-    // ── Dante-only ────────────────────────────────────────────────────────────
-    [Header("Absorbed Skills (Dante only)")]
+    // ── Benidito-only ────────────────────────────────────────────────────────────
+    [Header("Absorbed Skills (Benidito only)")]
     public List<AbsorbedSkillInstance> absorbedSkills = new List<AbsorbedSkillInstance>();
 
     // ── Party members ─────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ public class CombatantData : ScriptableObject
 
     // ── Learnable skills (enemies / NPCs) ────────────────────────────────────
     [Header("Learnable Skills (Enemies / NPCs)")]
-    [Tooltip("Skills this combatant can drop for Dante to absorb on defeat.")]
+    [Tooltip("Skills this combatant can drop for Benidito to absorb on defeat.")]
     public SkillDefinition[] learnableSkills;
     [Range(0f, 1f)]
     [Tooltip("Base chance per kill that a skill drops.")]
@@ -108,7 +108,7 @@ public class CombatantData : ScriptableObject
         currentSP  = stats.spMax;
     }
 
-    // ── Absorb (Dante) ────────────────────────────────────────────────────────
+    // ── Absorb (Benidito) ────────────────────────────────────────────────────────
 
     public AbsorbedSkillInstance Absorb(SkillDefinition skill)
     {

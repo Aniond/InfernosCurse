@@ -215,11 +215,11 @@ public class BattleUnit : MonoBehaviour
             Debug.Log($"{Data.displayName} job leveled up! {Data.activeJob.job.jobName} Lv {Data.activeJob.jobLevel}");
     }
 
-    // ── Absorb skill (Dante only) ─────────────────────────────────────────────
+    // ── Absorb skill (Benidito only) ─────────────────────────────────────────────
 
     public AbsorbedSkillInstance TryAbsorb(BattleUnit defeated)
     {
-        if (Data.role != CombatantRole.Dante) return null;
+        if (Data.role != CombatantRole.Benidito) return null;
         if (defeated.Data.learnableSkills == null || defeated.Data.learnableSkills.Length == 0)
             return null;
 
@@ -227,7 +227,7 @@ public class BattleUnit : MonoBehaviour
 
         var skill    = defeated.Data.learnableSkills[UnityEngine.Random.Range(0, defeated.Data.learnableSkills.Length)];
         var instance = Data.Absorb(skill);
-        Debug.Log($"[Absorb] Dante absorbed {instance.DisplayName()}");
+        Debug.Log($"[Absorb] Benidito absorbed {instance.DisplayName()}");
         return instance;
     }
 
@@ -248,9 +248,9 @@ public class BattleUnit : MonoBehaviour
     {
         // Clone the asset so runtime HP/SP/state is per-unit, not shared across
         // every BattleUnit that references the same CombatantData asset.
-        // Dante is the exception — his absorbed skills/jobs must persist on the
+        // Benidito is the exception — his absorbed skills/jobs must persist on the
         // original asset between battles, so he keeps his reference.
-        Data     = (data != null && data.role != CombatantRole.Dante)
+        Data     = (data != null && data.role != CombatantRole.Benidito)
                    ? Instantiate(data)
                    : data;
         IsPlayer = isPlayer;

@@ -10,7 +10,7 @@ using UnityEngine;
 // across battles and scene loads. (Not yet in SaveData — known limitation.)
 public class PartyRoster : MonoBehaviour
 {
-    [Header("Benidito (protagonist — Dante role, absorbs skills)")]
+    [Header("Benidito (protagonist — Benidito role, absorbs skills)")]
     public JobDefinition beniditoJob;                  // Job_Baker
     public SkillDefinition[] beniditoPreUnlocked;      // AshwoodPeel, ErgotBloom
 
@@ -30,12 +30,12 @@ public class PartyRoster : MonoBehaviour
         Debug.Log("[PartyRoster] Roster initialized: Benidito + Piero.");
     }
 
-    // Benidito IS the game's Dante-role combatant: BattleUnit keeps the ORIGINAL
-    // reference for Dante-role units, so his absorbed skills, job progression,
+    // Benidito IS the game's Benidito-role combatant: BattleUnit keeps the ORIGINAL
+    // reference for Benidito-role units, so his absorbed skills, job progression,
     // and wounds land directly on this roster object.
     static CombatantData MakeBenidito(PartyRoster inst)
     {
-        var c = MakeCombatant("Benidito", CombatantRole.Dante,
+        var c = MakeCombatant("Benidito", CombatantRole.Benidito,
             str: 14, dex: 12, con: 12, cre: 8, faith: 12, per: 11, spd: 11, hp: 140, sp: 50);
 
         if (inst != null && inst.beniditoJob != null)

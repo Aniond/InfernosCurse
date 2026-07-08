@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public static class AbilityResolver
 {
     // Main entry point — resolves a skill use from user onto a target position.
-    // absorbedInstance is set only when the cast came from Dante's absorbed
+    // absorbedInstance is set only when the cast came from Benidito's absorbed
     // slots; it supplies the level/refine-scaled power in place of
     // skill.basePower (skill here is already EffectiveDefinition — holy swap
     // if refined — see BattleManager.PlayerSelectAbsorbedSkill).
@@ -121,7 +121,7 @@ public static class AbilityResolver
         // Status effect carried by the skill itself (e.g. ergot poison, oven burn)
         ApplySkillStatus(user, target, skill);
 
-        // Post-kill absorb (Dante only)
+        // Post-kill absorb (Benidito only)
         if (!target.IsAlive)
         {
             var absorbed = user.TryAbsorb(target);

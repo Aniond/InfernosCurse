@@ -13,7 +13,7 @@ public class ActionMenu : MonoBehaviour
     [Header("Skill Buttons (4 slots)")]
     public SkillButton[] skillButtons = new SkillButton[4];
 
-    [Header("Absorbed Skill Buttons (3 slots, Dante only)")]
+    [Header("Absorbed Skill Buttons (3 slots, Benidito only)")]
     public SkillButton[] absorbedSkillButtons = new SkillButton[3];
 
     [Header("Wait / Back Buttons")]

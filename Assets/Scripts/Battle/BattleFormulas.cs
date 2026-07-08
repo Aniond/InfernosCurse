@@ -93,7 +93,7 @@ public static class BattleFormulas
         float power = powerOverride >= 0f ? powerOverride : skill.basePower;
         float heal  = power + faith * skill.scalingMultiplier + cre * 0.25f;
 
-        // Holy refinement bonus — if Dante is using a refined skill
+        // Holy refinement bonus — if Benidito is using a refined skill
         if (skill.damageType == DamageType.Holy) heal *= 1.2f;
 
         heal *= Random.Range(0.95f, 1.05f);

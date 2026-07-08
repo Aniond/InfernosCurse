@@ -56,7 +56,7 @@ public class SkillDefinition : ScriptableObject
     [Tooltip("Chance (0-1) the status procs on a successful hit.")]
     [Range(0f, 1f)] public float statusChance = 1f;
 
-    [Header("Absorbable — Dante Only")]
+    [Header("Absorbable — Benidito Only")]
     public bool isAbsorbable = true;
     [Tooltip("Max times this skill can be leveled via duplicate drops.")]
     public int maxLevel = 5;

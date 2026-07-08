@@ -17,7 +17,7 @@ public class BattleTestStarter : MonoBehaviour
     public SkillDefinition[] enemySkills;
 
     [Header("Absorption test enemy")]
-    [Tooltip("Skill this enemy drops for Dante to absorb on defeat. Leave empty to skip spawning this enemy.")]
+    [Tooltip("Skill this enemy drops for Benidito to absorb on defeat. Leave empty to skip spawning this enemy.")]
     public SkillDefinition absorbTestSkill;
     [Range(0f, 1f)]
     [Tooltip("1.0 = guaranteed drop, for repeatable manual testing.")]
@@ -33,7 +33,7 @@ public class BattleTestStarter : MonoBehaviour
 
         var players = new List<CombatantData>
         {
-            MakeCombatant("Dante", CombatantRole.Dante,
+            MakeCombatant("Benidito", CombatantRole.Benidito,
                           str: 14, dex: 12, con: 12, cre: 8, faith: 12, per: 11, spd: 11, hp: 140, sp: 50),
             MakeCombatant("Benidito", CombatantRole.PartyMember,
                           str: 11, dex: 10, con: 10, cre: 14, faith: 9, per: 10, spd: 10, hp: 110, sp: 60),

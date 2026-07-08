@@ -313,7 +313,7 @@ public static class SaveSystem
                 }
             }
 
-            // Absorbed skills (Benidito's Dante-role progression).
+            // Absorbed skills (Benidito's Benidito-role progression).
             string absorbedList = data.partyAbsorbed != null && i < data.partyAbsorbed.Length
                 ? data.partyAbsorbed[i] : "";
             if (absorbedList != null)

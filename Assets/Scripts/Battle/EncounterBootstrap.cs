@@ -68,7 +68,7 @@ public class EncounterBootstrap : MonoBehaviour
         var playerSpawns = new List<Vector2Int> { new Vector2Int(3, 3), new Vector2Int(4, 2) };
         var enemySpawns  = new List<Vector2Int> { new Vector2Int(10, 8), new Vector2Int(9, 9), new Vector2Int(11, 8) };
 
-        // SpawnUnit clones every non-Dante combatant — passing the raw assets
+        // SpawnUnit clones every non-Benidito combatant — passing the raw assets
         // is safe (they're never mutated at runtime).
         _bm.StartBattle(_roster, enemies, playerSpawns, enemySpawns);
 
@@ -243,9 +243,9 @@ public class EncounterBootstrap : MonoBehaviour
 
     // ── Copy-back (the clone trap) ─────────────────────────────────────────────
 
-    // Non-Dante units fight as CLONES: their wounds and job progression land on
+    // Non-Benidito units fight as CLONES: their wounds and job progression land on
     // throwaway copies. Copy the numbers back onto the roster objects. Benidito
-    // (Dante role) keeps his original reference — skipped by the == check.
+    // (Benidito role) keeps his original reference — skipped by the == check.
     void CopyBack()
     {
         for (int i = 0; i < _bm.Players.Count && i < _roster.Count; i++)

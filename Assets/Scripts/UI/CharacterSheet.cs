@@ -5,7 +5,7 @@ using TMPro;
 [System.Serializable]
 public class CharacterStats
 {
-    public string characterName = "Dante";
+    public string characterName = "Benidito";
     public string characterClass = "Warrior";
     public int level = 1;
     public int hp = 100, hpMax = 100;
@@ -60,7 +60,7 @@ public class CharacterSheet : MonoBehaviour
     private bool _isOpen;
     private MenuManager _menuManager;
 
-    // ── Skills tab (absorbed skills — Dante/Benidito only) ───────────────────
+    // ── Skills tab (absorbed skills — Benidito only) ───────────────────
     private Transform _absorbedListParent;
 
     static readonly Color TabActive   = new Color(0.35f, 0.22f, 0.10f, 1f);
@@ -76,7 +76,7 @@ public class CharacterSheet : MonoBehaviour
         tabSkills?.onClick.AddListener(() => ShowTab(1));
         tabEquipment?.onClick.AddListener(() => ShowTab(2));
 
-        // Default stats for Dante
+        // Default stats for Benidito
         _stats = new CharacterStats();
         sheetPanel?.SetActive(false);
     }
@@ -173,7 +173,7 @@ public class CharacterSheet : MonoBehaviour
         btn.GetComponent<Image>().color = active ? TabActive : TabInactive;
     }
 
-    // ── Skills tab — absorbed skills (Dante/Benidito only) ───────────────────
+    // ── Skills tab — absorbed skills (Benidito only) ───────────────────
     //
     // Lists every AbsorbedSkillInstance the member holds (name, level, dupes,
     // corrupted/holy) with an Equip button per open absorbed slot. Self-built
@@ -210,9 +210,9 @@ public class CharacterSheet : MonoBehaviour
         foreach (Transform child in _absorbedListParent)
             Destroy(child.gameObject);
 
-        if (_combatant == null || _combatant.role != CombatantRole.Dante)
+        if (_combatant == null || _combatant.role != CombatantRole.Benidito)
         {
-            AddSkillsText("Only Dante's absorbed skills can be viewed here.", FontStyles.Italic,
+            AddSkillsText("Only Benidito's absorbed skills can be viewed here.", FontStyles.Italic,
                 new Color(0.6f, 0.58f, 0.62f));
             return;
         }
