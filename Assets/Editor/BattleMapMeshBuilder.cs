@@ -276,6 +276,8 @@ public static class BattleMapMeshBuilder
             for (int ix = 0; ix <= W * RES; ix++)
                 heights.surfY[ix + iz * (W * RES + 1)] = Sample(ix / (float)RES, iz / (float)RES);
         root.AddComponent<BattleTerrainCurse>();
+        root.AddComponent<BattleTerrainFog>();
+        root.AddComponent<ZoneFogOfWar>();   // battle fog: party-sheet vision + CT ambush
 
         // Optional water plane (Arno/river maps): style sets level + material.
         if (style.waterLevel > -99f && style.waterMaterial != null)

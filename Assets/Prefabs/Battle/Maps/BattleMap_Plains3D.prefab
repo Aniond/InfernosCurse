@@ -388,6 +388,8 @@ GameObject:
   - component: {fileID: 8633861161533686094}
   - component: {fileID: 6791802329733397493}
   - component: {fileID: 802086435015823754}
+  - component: {fileID: 1222825074803884811}
+  - component: {fileID: 1793295017083211416}
   m_Layer: 0
   m_Name: BattleMap_Plains3D
   m_TagString: Untagged
@@ -3457,6 +3459,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc6ac18077d65a4abae1e61ba6cb277, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BattleTerrainCurse
+--- !u!114 &1222825074803884811
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6353086331918970656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60f8ae6978efb1e46b345e0b24cfe449, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleTerrainFog
+--- !u!114 &1793295017083211416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6353086331918970656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd629df4ecf2e824da3682ea6a68f1ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZoneFogOfWar
+  sightRange: 13
+  eyeHeight: 3
+  updateInterval: 0.25
+  fogMaterial: {fileID: 0}
 --- !u!1 &7577874209341951501
 GameObject:
   m_ObjectHideFlags: 0

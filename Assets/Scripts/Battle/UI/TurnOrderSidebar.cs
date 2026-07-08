@@ -67,6 +67,13 @@ public class TurnOrderSidebar : MonoBehaviour
 
         var order = bm.GetTurnOrder(lookahead);
 
+        // CT AMBUSH RULE (David 7/08): units the party cannot SEE do not
+        // appear in the turn order — the hidden archer isn't on the schedule
+        // you're reading. Revealed the moment any party unit gains LoS.
+        var fow = FindFirstObjectByType<ZoneFogOfWar>();
+        if (fow != null)
+            order = order.FindAll(u => u.IsPlayer || fow.IsCellVisible(u.gridPosition));
+
         // Grow pool if needed
         while (_entries.Count < order.Count)
         {

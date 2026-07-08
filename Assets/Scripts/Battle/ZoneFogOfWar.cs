@@ -55,9 +55,16 @@ public class ZoneFogOfWar : MonoBehaviour
 
     void Start()
     {
-        var auth = GetComponent<BattleMapAuthoring>();
-        _grid = gameObject.AddComponent<BattleGrid>();   // hidden logic grid for LoS
-        auth.Apply(_grid);
+        // Prefer the scene's real BattleGrid (arena — already stamped by
+        // authoring on Awake, includes obstacles); otherwise build a hidden
+        // one from our own authoring (explore zones, applyOnAwake=false).
+        _grid = FindFirstObjectByType<BattleGrid>();
+        if (_grid == null)
+        {
+            var auth = GetComponent<BattleMapAuthoring>();
+            _grid = gameObject.AddComponent<BattleGrid>();
+            auth.Apply(_grid);
+        }
         _fog = GetComponent<BattleTerrainFog>();
         _heights = GetComponent<BattleTerrainHeights>();
         var playerGo = GameObject.FindWithTag("Player");
@@ -83,9 +90,29 @@ public class ZoneFogOfWar : MonoBehaviour
         Recompute(force: false);
     }
 
+    bool[,] _lastVisible;
+
+    // CT sidebar + spotting queries read this (last computed visibility).
+    public bool IsCellVisible(Vector2Int cell)
+    {
+        if (_lastVisible == null) return true;   // fog not computed yet — fail open
+        if (cell.x < 0 || cell.x >= _grid.width || cell.y < 0 || cell.y >= _grid.height) return false;
+        return _lastVisible[cell.x, cell.y];
+    }
+
     void Recompute(bool force)
     {
-        if (_player == null || _grid == null) return;
+        if (_grid == null) return;
+
+        // BATTLE MODE: when player-side BattleUnits exist, vision is the
+        // UNION of the party's eyes — each unit sees with its own SHEET
+        // stats (CombatantData.sightRange/eyeHeight). Explore mode falls
+        // back to the player transform below.
+        var units = Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None);
+        var party = System.Array.FindAll(units, u => u.IsPlayer && u.state != UnitState.Dead);
+        if (party.Length > 0) { RecomputeFromParty(party); return; }
+
+        if (_player == null) return;
         var pc = new Vector2Int(Mathf.FloorToInt(_player.position.x),
                                 Mathf.FloorToInt(_player.position.z));
         if (!force && pc == _lastCell) return;
@@ -122,12 +149,42 @@ public class ZoneFogOfWar : MonoBehaviour
                 visible[x, z] = vis;
                 _fog.SetVisible(x, z, vis);
             }
+        _lastVisible = visible;
 
         // The rule (David 7/08): you can't use the camera to scout what your
         // character couldn't see — NPCs and enemy units in fogged cells hide
         // entirely; step out from cover to reveal them.
         foreach (var unit in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
             SetFogHidden(unit.gameObject, visible);
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+            if (t.parent == null && t.name.StartsWith("NPC_"))
+                SetFogHidden(t.gameObject, visible);
+    }
+
+    void RecomputeFromParty(BattleUnit[] party)
+    {
+        var visible = new bool[_grid.width, _grid.height];
+        for (int z = 0; z < _grid.height; z++)
+            for (int x = 0; x < _grid.width; x++)
+            {
+                var c = new Vector2Int(x, z);
+                bool vis = _activeSpell == VisionSpell.Clairvoyance;
+                if (!vis)
+                    foreach (var u in party)
+                    {
+                        float dx = x - u.gridPosition.x, dz = z - u.gridPosition.y;
+                        float r = _activeSpell == VisionSpell.TrueSight ? u.SightRange : u.SightRange;
+                        if (dx * dx + dz * dz > r * r) continue;
+                        if (_activeSpell == VisionSpell.TrueSight ||
+                            _grid.HasLineOfSight(u.gridPosition, c, u.EyeHeight)) { vis = true; break; }
+                    }
+                visible[x, z] = vis;
+                _fog.SetVisible(x, z, vis);
+            }
+        _lastVisible = visible;
+
+        foreach (var unit in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
+            if (!unit.IsPlayer) SetFogHidden(unit.gameObject, visible);
         foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             if (t.parent == null && t.name.StartsWith("NPC_"))
                 SetFogHidden(t.gameObject, visible);
