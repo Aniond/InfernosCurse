@@ -14,6 +14,8 @@ public class ZoneEncounterTrigger : MonoBehaviour
     public GameObject battleKitPrefab;
     [Tooltip("Extra ambush radius even without LoS (creature senses you brushing past).")]
     public float proximityTrigger = 2.5f;
+    [Tooltip("Seconds the fog parts over each ambusher at battle start — being jumped IS seeing the attacker. 0 = no reveal (pure fog honesty).")]
+    public float ambushRevealSeconds = 8f;
 
     BattleMapAuthoring _auth;
     BattleTerrainHeights _heights;
@@ -102,9 +104,6 @@ public class ZoneEncounterTrigger : MonoBehaviour
         while (enemySpawns.Count < enemySheets.Count)
             enemySpawns.Add(enemySpawns[0] + Vector2Int.right);
 
-        // staged visuals hand over to freshly spawned battle units
-        var stagedSheets = _staged.Where(u => u != null)
-            .ToDictionary(u => u.Data, u => u.GetComponentInChildren<SpriteRenderer>()?.sprite);
         foreach (var u in _staged.Where(u => u != null)) Destroy(u.gameObject);
         _staged.Clear();
 
@@ -112,15 +111,15 @@ public class ZoneEncounterTrigger : MonoBehaviour
         bm.OnDefeat += EndEncounter;
         bm.StartBattle(party, enemySheets, playerSpawns, enemySpawns);
 
-        // pilot cosmetics: give spawned enemies their staged sprite (per-unit
-        // battle sprites are the queued proper fix)
-        foreach (var unit in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
-            if (!unit.IsPlayer && unit.Data != null &&
-                stagedSheets.TryGetValue(unit.Data, out var spr) && spr != null)
-            {
-                var sr = unit.GetComponentInChildren<SpriteRenderer>();
-                if (sr != null) sr.sprite = spr;
-            }
+        // The fog parts over each attacker: an ambush you can't see reads as
+        // "the monster didn't load" (David 7/08). Sprites come from the SHEET
+        // (CombatantData.battleSprite) — SpawnUnit applies them, clones included.
+        var fow = GetComponent<ZoneFogOfWar>();
+        if (fow != null && ambushRevealSeconds > 0f)
+            foreach (var spawn in enemySpawns)
+                for (int dx = -1; dx <= 1; dx++)
+                    for (int dz = -1; dz <= 1; dz++)
+                        fow.RevealCell(spawn + new Vector2Int(dx, dz), ambushRevealSeconds);
     }
 
     List<Vector2Int> SpawnsAround(Vector2Int center, int count, BattleGrid grid)

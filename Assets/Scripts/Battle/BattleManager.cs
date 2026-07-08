@@ -127,12 +127,16 @@ public class BattleManager : MonoBehaviour
         unit.Initialize(data, isPlayer);
         EnsureBattleSkills(unit);
 
-        // per-unit battlefield sprite from the SHEET (survives cloning —
+        // per-unit battlefield sprite + tint from the SHEET (survives cloning —
         // the Rose Beast must look like a rose beast, not a fourth Benidito)
-        if (unit.Data != null && unit.Data.battleSprite != null)
+        if (unit.Data != null)
         {
             var sr = unit.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null) sr.sprite = unit.Data.battleSprite;
+            if (sr != null)
+            {
+                if (unit.Data.battleSprite != null) sr.sprite = unit.Data.battleSprite;
+                if (unit.Data.battleTint != Color.white) sr.color = unit.Data.battleTint;
+            }
         }
 
         Grid.PlaceUnit(unit, pos);

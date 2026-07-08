@@ -73,6 +73,9 @@ public class PartyRoster : MonoBehaviour
         var c = MakeCombatant("Piero", CombatantRole.PartyMember,
             str: 13, dex: 9, con: 13, cre: 6, faith: 8, per: 9, spd: 9, hp: 125, sp: 30);
         if (inst != null) c.portrait = inst.pieroPortrait;
+        // Stopgap until Piero gets his own Pixellab art: steel-blue palette
+        // swap so he isn't a second Benidito on the field (David 7/08).
+        c.battleTint = new Color(0.62f, 0.74f, 1f);
         return c;
     }
 

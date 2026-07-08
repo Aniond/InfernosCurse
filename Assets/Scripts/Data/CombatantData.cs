@@ -53,6 +53,8 @@ public class CombatantData : ScriptableObject
     public Sprite portrait;
     [Tooltip("Battlefield billboard sprite — the spawner applies it to the unit's SpriteRenderer (clones inherit it). Empty = prefab default.")]
     public Sprite battleSprite;
+    [Tooltip("Battlefield sprite tint — FFT-style palette swap for variants sharing a sprite (and a stopgap to tell Piero from Benidito until he gets his own art). White = untinted.")]
+    public Color battleTint = Color.white;
     public CombatantRole role;
 
     [Header("Base Stats (before job bonuses)")]

@@ -30,6 +30,21 @@ public class ZoneFogOfWar : MonoBehaviour
     VisionSpell _activeSpell = VisionSpell.None;
     float _spellRemaining;
 
+    // Ambush reveals: cells forced visible until an expiry time. When a staged
+    // enemy springs an encounter, the player gets to SEE what jumped them —
+    // being ambushed IS seeing the attacker — then the fog rolls back in and
+    // fog-honesty resumes. Keyed by cell so multiple attackers stack.
+    readonly System.Collections.Generic.Dictionary<Vector2Int, float> _revealed = new();
+    readonly System.Collections.Generic.List<Vector2Int> _expiredScratch = new();
+
+    public void RevealCell(Vector2Int cell, float seconds)
+    {
+        _revealed[cell] = Time.time + seconds;
+        _lastCell = new Vector2Int(-999, -999);   // force recompute
+    }
+
+    bool Revealed(Vector2Int c) => _revealed.TryGetValue(c, out float until) && Time.time < until;
+
     BattleGrid _grid;
     BattleTerrainFog _fog;
     BattleTerrainHeights _heights;
@@ -84,6 +99,19 @@ public class ZoneFogOfWar : MonoBehaviour
                 _lastCell = new Vector2Int(-999, -999);   // fog rolls back in
             }
         }
+        // expired ambush reveals — let the fog roll back in
+        if (_revealed.Count > 0)
+        {
+            _expiredScratch.Clear();
+            foreach (var kv in _revealed)
+                if (kv.Value <= Time.time) _expiredScratch.Add(kv.Key);
+            if (_expiredScratch.Count > 0)
+            {
+                foreach (var c in _expiredScratch) _revealed.Remove(c);
+                _lastCell = new Vector2Int(-999, -999);
+            }
+        }
+
         _timer += Time.deltaTime;
         if (_timer < updateInterval) return;
         _timer = 0f;
@@ -155,6 +183,7 @@ public class ZoneFogOfWar : MonoBehaviour
                     VisionSpell.TrueSight => inRange,                       // through objects
                     _ => inRange && _grid.HasLineOfSight(pc, c, eye),       // honest eyes
                 };
+                if (!vis && _revealed.Count > 0) vis = Revealed(c);
                 visible[x, z] = vis;
                 _fog.SetVisible(x, z, vis);
             }
@@ -187,6 +216,7 @@ public class ZoneFogOfWar : MonoBehaviour
                         if (_activeSpell == VisionSpell.TrueSight ||
                             _grid.HasLineOfSight(u.gridPosition, c, u.EyeHeight)) { vis = true; break; }
                     }
+                if (!vis && _revealed.Count > 0) vis = Revealed(c);
                 visible[x, z] = vis;
                 _fog.SetVisible(x, z, vis);
             }
