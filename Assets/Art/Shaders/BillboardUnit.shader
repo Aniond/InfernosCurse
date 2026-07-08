@@ -12,6 +12,7 @@ Shader "InfernosCurse/BillboardUnit"
         _Color ("Tint", Color) = (1,1,1,1)
         _Cutoff ("Alpha Cutoff", Range(0,1)) = 0.4
         _LightWrap ("Light Wrap", Range(0,1)) = 0.6
+        _XRayColor ("X-Ray Silhouette", Color) = (0.55, 0.75, 1.0, 0.35)
     }
     SubShader
     {
@@ -93,6 +94,61 @@ Shader "InfernosCurse/BillboardUnit"
                 half3 lighting = mainLight.color * (wrap * mainLight.shadowAttenuation)
                                + SampleSH(float3(0,1,0)) * 0.6 + 0.25;
                 return half4(tex.rgb * lighting, 1);
+            }
+            ENDHLSL
+        }
+
+        Pass
+        {
+            // FFT-style x-ray: where terrain/props occlude the unit, draw a
+            // flat team-tinted silhouette instead of losing the unit.
+            Name "XRay"
+            Tags { "LightMode"="SRPDefaultUnlit" }
+            ZTest Greater
+            ZWrite Off
+            Blend SrcAlpha OneMinusSrcAlpha
+            Cull Off
+
+            HLSLPROGRAM
+            #pragma vertex vertX
+            #pragma fragment fragX
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
+            CBUFFER_START(UnityPerMaterial)
+                half4 _Color;
+                half _Cutoff;
+                half _LightWrap;
+                half4 _XRayColor;
+            CBUFFER_END
+
+            struct A { float4 positionOS : POSITION; float2 uv : TEXCOORD0; float4 color : COLOR; };
+            struct V { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; float4 color : COLOR; };
+
+            V vertX (A v)
+            {
+                V o;
+                float3 pivotWS = float3(UNITY_MATRIX_M._m03, UNITY_MATRIX_M._m13, UNITY_MATRIX_M._m23);
+                float sx = length(float3(UNITY_MATRIX_M._m00, UNITY_MATRIX_M._m10, UNITY_MATRIX_M._m20));
+                float sy = length(float3(UNITY_MATRIX_M._m01, UNITY_MATRIX_M._m11, UNITY_MATRIX_M._m21));
+                float3 camRight = normalize(float3(UNITY_MATRIX_V._m00, UNITY_MATRIX_V._m01, UNITY_MATRIX_V._m02));
+                float3 worldPos = pivotWS
+                    + camRight * (v.positionOS.x * sx)
+                    + float3(0, 1, 0) * (v.positionOS.y * sy);
+                o.positionCS = TransformWorldToHClip(worldPos);
+                float4 pivotCS = TransformWorldToHClip(pivotWS + float3(0, 0.03, 0));
+                o.positionCS.z = pivotCS.z / pivotCS.w * o.positionCS.w;
+                o.uv = v.uv;
+                o.color = v.color;
+                return o;
+            }
+
+            half4 fragX (V i) : SV_Target
+            {
+                half a = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).a;
+                clip(a - _Cutoff);
+                // team tint (SpriteRenderer.color) keeps sides readable
+                return half4(saturate(_XRayColor.rgb * i.color.rgb + 0.12), _XRayColor.a);
             }
             ENDHLSL
         }

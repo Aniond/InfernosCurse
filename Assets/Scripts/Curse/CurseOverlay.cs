@@ -17,6 +17,7 @@ public class CurseOverlay : MonoBehaviour
     public int    sortingOrder   = 1;
 
     private Dictionary<Vector2Int, SpriteRenderer> _overlays = new();
+    private BattleTerrainCurse _terrainCurse;   // 3D diorama maps: curse lives IN the terrain shader
 
     void OnEnable()
     {
@@ -34,19 +35,23 @@ public class CurseOverlay : MonoBehaviour
     public void Initialise(InfernalWorldState world)
     {
         Clear();
+        _terrainCurse = FindFirstObjectByType<BattleTerrainCurse>();
         for (int x = 0; x < grid.width; x++)
         {
             for (int y = 0; y < grid.height; y++)
             {
                 var pos = new Vector2Int(x, y);
+                float density = world.GetCurseDensity(pos);
+                if (_terrainCurse != null) { _terrainCurse.SetDensity(pos, density); continue; }
                 CreateOverlay(pos);
-                SetOverlayColor(pos, world.GetCurseDensity(pos));
+                SetOverlayColor(pos, density);
             }
         }
     }
 
     void OnCellChanged(Vector2Int pos, float density)
     {
+        if (_terrainCurse != null) { _terrainCurse.SetDensity(pos, density); return; }
         if (!_overlays.ContainsKey(pos)) CreateOverlay(pos);
         SetOverlayColor(pos, density);
     }

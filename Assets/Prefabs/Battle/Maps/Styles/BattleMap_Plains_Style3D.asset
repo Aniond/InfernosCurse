@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 194ca4f0ab8dc624e9c91297263b999d, type: 3}
+  m_Name: BattleMap_Plains_Style3D
+  m_EditorClassIdentifier: Assembly-CSharp::BattleMapStyle3D
+  grassTex: {fileID: 2800000, guid: 5a622c0843344b54cade55d3ad1c26cc, type: 3}
+  dirtTex: {fileID: 2800000, guid: 6ad35ffb8aa5a9c4fa2eec0051469398, type: 3}
+  rockTex: {fileID: 2800000, guid: 3e2a3334592027f4ca71a6a1e11bbef2, type: 3}
+  grassTint: {r: 0.48, g: 0.84, b: 0.38, a: 1}
+  dirtTint: {r: 0.62, g: 0.5, b: 0.4, a: 1}
+  rockTint: {r: 0.62, g: 0.61, b: 0.58, a: 1}
+  tiling: 0.35
+  heightStep: 0.5
+  skirtCells: 4
+  baseY: -3.2
+  sunColor: {r: 1, g: 0.98, b: 0.92, a: 1}
+  sunIntensity: 1.35
+  sunEuler: {x: 48, y: -35, z: 0}
+  ambientSky: {r: 0.42, g: 0.5, b: 0.62, a: 1}
+  ambientEquator: {r: 0.34, g: 0.35, b: 0.33, a: 1}
+  ambientGround: {r: 0.16, g: 0.15, b: 0.12, a: 1}

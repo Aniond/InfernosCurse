@@ -14,6 +14,12 @@ Shader "InfernosCurse/BattleTerrainSplat"
         _RockTint ("Rock Tint", Color) = (1,1,1,1)
         _Tiling ("Tiling (texels per meter)", Float) = 0.35
         _AmbientBoost ("Ambient Boost", Range(0, 1)) = 0.3
+        // Curse mask is fed per-battle by BattleTerrainCurse via property
+        // block; black default = uncursed.
+        _CurseMask ("Curse Mask", 2D) = "black" {}
+        _CurseRect ("Curse Rect (xy origin, zw size)", Vector) = (0, 0, 14, 12)
+        _CurseColor ("Curse Color", Color) = (0.22, 0.06, 0.28, 1)
+        _CurseGlow ("Curse Glow", Color) = (0.45, 0.10, 0.55, 1)
     }
     SubShader
     {
@@ -35,11 +41,15 @@ Shader "InfernosCurse/BattleTerrainSplat"
             TEXTURE2D(_GrassTex); SAMPLER(sampler_GrassTex);
             TEXTURE2D(_DirtTex);  SAMPLER(sampler_DirtTex);
             TEXTURE2D(_RockTex);  SAMPLER(sampler_RockTex);
+            TEXTURE2D(_CurseMask); SAMPLER(sampler_CurseMask);
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _GrassTint;
                 half4 _DirtTint;
                 half4 _RockTint;
+                half4 _CurseColor;
+                half4 _CurseGlow;
+                float4 _CurseRect;
                 float _Tiling;
                 float _AmbientBoost;
             CBUFFER_END
@@ -95,12 +105,28 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 half3 albedo = grass * w.r + dirt * w.g + rock * w.b;
                 albedo *= i.color.a;   // diorama-base darkening
 
+                // Curse creep: mask texel per cell, softened by bilinear +
+                // veined by the dirt texture's own noise, breathing slowly.
+                float2 cuv = (i.positionWS.xz - _CurseRect.xy) / _CurseRect.zw;
+                half curse = SAMPLE_TEXTURE2D(_CurseMask, sampler_CurseMask, cuv).r;
+                float2 edge = abs(cuv - 0.5) * 2.0;
+                curse *= saturate((1.0 - max(edge.x, edge.y)) * 8.0);   // don't smear past the field
+                if (curse > 0.001)
+                {
+                    half vein = smoothstep(0.35, 0.8, dirtY.g + dirtY.r * 0.5);
+                    half pulse = 0.75 + 0.25 * sin(_Time.y * 1.6 + i.positionWS.x + i.positionWS.z);
+                    half3 cursed = lerp(_CurseColor.rgb, _CurseGlow.rgb, vein * pulse);
+                    albedo = lerp(albedo, cursed, saturate(curse * (0.75 + 0.25 * vein)));
+                }
+
                 float4 shadowCoord = TransformWorldToShadowCoord(i.positionWS);
                 Light mainLight = GetMainLight(shadowCoord);
                 half ndl = saturate(dot(n, mainLight.direction));
                 half3 direct  = mainLight.color * (ndl * mainLight.shadowAttenuation);
                 half3 ambient = SampleSH(n) + _AmbientBoost;
-                return half4(albedo * (direct + ambient), 1);
+                half3 lit = albedo * (direct + ambient);
+                lit += _CurseGlow.rgb * (curse * curse * 0.12);          // faint unlit ember
+                return half4(lit, 1);
             }
             ENDHLSL
         }

@@ -239,8 +239,21 @@ public class BattleCursor : MonoBehaviour
         // Tint the sprite renderer if present
         var sr = go.GetComponentInChildren<SpriteRenderer>();
         if (sr) sr.color = color;
+        TintDecal(go, color);
 
         list.Add(go);
+    }
+
+    // 3D diorama maps use terrain-conforming mesh highlights; tint their
+    // _BaseColor via property block (sprite highlights ignore this path).
+    static void TintDecal(GameObject go, Color color)
+    {
+        var mr = go.GetComponentInChildren<MeshRenderer>();
+        if (mr == null || mr.sharedMaterial == null || !mr.sharedMaterial.HasProperty("_BaseColor")) return;
+        var mpb = new MaterialPropertyBlock();
+        mr.GetPropertyBlock(mpb);
+        mpb.SetColor("_BaseColor", color);
+        mr.SetPropertyBlock(mpb);
     }
 
     void ClearHighlights(List<GameObject> list)
@@ -264,13 +277,11 @@ public class BattleCursor : MonoBehaviour
         _hoverHighlight.transform.position = _grid.GridToWorld(_cursorPos, cell.elevation);
 
         // Color the hover based on what's under it
+        Color hc = _moveRange.Contains(_cursorPos) ? hoverMove
+                 : _attackRange.Contains(_cursorPos) ? hoverAttack : hoverNeutral;
         var sr = _hoverHighlight.GetComponentInChildren<SpriteRenderer>();
-        if (sr)
-        {
-            if (_moveRange.Contains(_cursorPos))        sr.color = hoverMove;
-            else if (_attackRange.Contains(_cursorPos)) sr.color = hoverAttack;
-            else                                        sr.color = hoverNeutral;
-        }
+        if (sr) sr.color = hc;
+        TintDecal(_hoverHighlight, hc);
     }
 
     // ── AOE splash preview ────────────────────────────────────────────────────
