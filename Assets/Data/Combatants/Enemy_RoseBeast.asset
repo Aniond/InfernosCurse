@@ -52,8 +52,8 @@ MonoBehaviour:
     learnedSkills: []
   equippedSkills:
     actives:
-    - {fileID: 0}
-    - {fileID: 0}
+    - {fileID: 11400000, guid: ea827b80e96a88340b1bd8e58b7bafe1, type: 2}
+    - {fileID: 11400000, guid: 0b4834ca823ad4b4fbea17cb6edb48af, type: 2}
     - {fileID: 0}
     - {fileID: 0}
     passives:
@@ -73,5 +73,7 @@ MonoBehaviour:
       duplicateCount: 1
       level: 1
       isRefined: 0
-  learnableSkills: []
-  skillDropChance: 0.3
+  learnableSkills:
+  - {fileID: 11400000, guid: ea827b80e96a88340b1bd8e58b7bafe1, type: 2}
+  - {fileID: 11400000, guid: 0b4834ca823ad4b4fbea17cb6edb48af, type: 2}
+  skillDropChance: 1
