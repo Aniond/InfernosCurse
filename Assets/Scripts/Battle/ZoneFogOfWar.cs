@@ -18,12 +18,33 @@ public class ZoneFogOfWar : MonoBehaviour
     public float updateInterval = 0.25f;
     public Material fogMaterial;
 
+    // Vision spells (append-only): Clairvoyance reveals the WHOLE field
+    // (no range, no LoS); TrueSight sees THROUGH objects (LoS ignored,
+    // range still applies). Cast via CastVision — the skill system applies
+    // these as timed statuses (David 7/08: makes the spell really valuable).
+    public enum VisionSpell { None, Clairvoyance, TrueSight }
+
+    VisionSpell _activeSpell = VisionSpell.None;
+    float _spellRemaining;
+
     BattleGrid _grid;
     BattleTerrainFog _fog;
     BattleTerrainHeights _heights;
     Transform _player;
     float _timer;
     Vector2Int _lastCell = new Vector2Int(-999, -999);
+
+    public void CastVision(VisionSpell spell, float durationSeconds)
+    {
+        _activeSpell = spell;
+        _spellRemaining = durationSeconds;
+        _lastCell = new Vector2Int(-999, -999);   // force recompute
+    }
+
+    [ContextMenu("Test: Clairvoyance 10s")]
+    void TestClairvoyance() => CastVision(VisionSpell.Clairvoyance, 10f);
+    [ContextMenu("Test: True Sight 10s")]
+    void TestTrueSight() => CastVision(VisionSpell.TrueSight, 10f);
 
     void Start()
     {
@@ -40,6 +61,15 @@ public class ZoneFogOfWar : MonoBehaviour
 
     void Update()
     {
+        if (_activeSpell != VisionSpell.None)
+        {
+            _spellRemaining -= Time.deltaTime;
+            if (_spellRemaining <= 0f)
+            {
+                _activeSpell = VisionSpell.None;
+                _lastCell = new Vector2Int(-999, -999);   // fog rolls back in
+            }
+        }
         _timer += Time.deltaTime;
         if (_timer < updateInterval) return;
         _timer = 0f;
@@ -61,7 +91,13 @@ public class ZoneFogOfWar : MonoBehaviour
             {
                 var c = new Vector2Int(x, z);
                 float dx = x - pc.x, dz = z - pc.y;
-                bool vis = dx * dx + dz * dz <= r2 && _grid.HasLineOfSight(pc, c, eyeHeight);
+                bool inRange = dx * dx + dz * dz <= r2;
+                bool vis = _activeSpell switch
+                {
+                    VisionSpell.Clairvoyance => true,                       // whole field
+                    VisionSpell.TrueSight => inRange,                       // through objects
+                    _ => inRange && _grid.HasLineOfSight(pc, c, eyeHeight), // honest eyes
+                };
                 visible[x, z] = vis;
                 _fog.SetVisible(x, z, vis);
             }
