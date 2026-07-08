@@ -11,6 +11,8 @@ public class BattleUnit : MonoBehaviour
     public CombatantData Data;
 
     [Header("Runtime State")]
+    [Tooltip("Eye height in elevation half-units — terrain/objects taller than this above the unit's ground block its sight (2 = classic rule).")]
+    public int         eyeHeight = 2;
     public Vector2Int  gridPosition;
     public FacingDir   facing = FacingDir.South;
     public float       ct     = 0f;      // current charge time (0-100)

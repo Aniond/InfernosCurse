@@ -178,13 +178,16 @@ public class BattleGrid : MonoBehaviour
     // ── Line of sight ─────────────────────────────────────────────────────────
 
     // Bresenham walk between the two cells. Blocked by unwalkable cells (walls)
-    // and by intermediate terrain rising 2+ above BOTH endpoints (you can shoot
-    // over low cover and down from ledges, not through a ridge).
-    public bool HasLineOfSight(Vector2Int from, Vector2Int to)
+    // and by intermediate terrain rising eyeHeight+ above BOTH endpoints (you
+    // can shoot/see over low cover and down from ledges, not through a ridge).
+    // eyeHeight is in elevation half-units — default 2 preserves the original
+    // combat rule; taller/shorter characters see over more/less (David 7/08).
+    public bool HasLineOfSight(Vector2Int from, Vector2Int to, int eyeHeight = 2)
     {
         int fromElev = GetCell(from)?.elevation ?? 0;
         int toElev   = GetCell(to)?.elevation ?? 0;
         int maxElev  = Mathf.Max(fromElev, toElev);
+        eyeHeight = Mathf.Max(1, eyeHeight);
 
         int x0 = from.x, y0 = from.y, x1 = to.x, y1 = to.y;
         int dx = Mathf.Abs(x1 - x0), dy = -Mathf.Abs(y1 - y0);
@@ -204,7 +207,7 @@ public class BattleGrid : MonoBehaviour
             var cell = GetCell(x0, y0);
             if (cell == null) return false;
             if (!cell.walkable) return false;                  // solid wall
-            if (cell.elevation >= maxElev + 2) return false;   // ridge in the way
+            if (cell.elevation >= maxElev + eyeHeight) return false;   // ridge above the eye line
         }
     }
 

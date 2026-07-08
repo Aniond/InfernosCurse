@@ -12,6 +12,8 @@ public class ZoneFogOfWar : MonoBehaviour
 {
     [Tooltip("Vision radius in cells (grid = meters).")]
     public float sightRange = 13f;
+    [Tooltip("Character eye height in elevation half-units (2 ≈ 1m over own ground). Objects taller than this block sight.")]
+    public int eyeHeight = 3;
     [Tooltip("Seconds between visibility recomputes.")]
     public float updateInterval = 0.25f;
     public Material fogMaterial;
@@ -59,7 +61,7 @@ public class ZoneFogOfWar : MonoBehaviour
             {
                 var c = new Vector2Int(x, z);
                 float dx = x - pc.x, dz = z - pc.y;
-                bool vis = dx * dx + dz * dz <= r2 && _grid.HasLineOfSight(pc, c);
+                bool vis = dx * dx + dz * dz <= r2 && _grid.HasLineOfSight(pc, c, eyeHeight);
                 visible[x, z] = vis;
                 _fog.SetVisible(x, z, vis);
             }
