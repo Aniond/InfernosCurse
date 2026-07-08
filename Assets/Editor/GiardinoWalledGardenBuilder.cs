@@ -294,10 +294,13 @@ public static class GiardinoWalledGardenBuilder
                 }
         }
 
-        // NE corner: gardener's buildings inside the wall (reference rows 19-21)
-        M("gardeners-cottage", 3.2f, new Vector3(26.5f, GroundY, 26.5f), -135f);
+        // Gardener's buildings: cottage moved to the open SE stretch beside
+        // the terrace (NE corner was too cramped — it rode up the hedge ring,
+        // David 7/08); door faces west toward the garden. Stall + wellhead
+        // stay NE with the florist.
+        M("gardeners-cottage", 3.2f, new Vector3(26f, GroundY, 8f), -90f);
         M("florist-market-stall", 2.0f, new Vector3(23f, GroundY, 27.5f), 180f);
-        M("stone-wellhead", 1.4f, new Vector3(27.5f, GroundY, 22.5f));
+        M("stone-wellhead", 1.4f, new Vector3(26.5f, GroundY, 24f));
         // terrace overlook (H) — worn marble + bench
         M("ancient-marble-figure", 1.8f, new Vector3(18.5f, TerraceY, 3.5f), 20f);
         M("garden-stone-bench", 0.9f, new Vector3(14f, TerraceY, 4f), 0f);
