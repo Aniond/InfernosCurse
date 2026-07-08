@@ -159,6 +159,26 @@ The allocation-free counterexample to copy: `CameraOcclusionFader.cs` (static `R
 
 ---
 
+### 2.4 Progression & madness systems (built 7/08, commits 0340a45..c740d6f)
+
+```
+kill ─► TryAbsorb (killing blow must resolve through AbilityResolver; Benidito only)
+  └► AbsorbedSkillInstance: duplicateCount = orbs OWNED, level = orbs SLOTTED
+       SlotOrb()/UnslotOrb() — 5 sockets/skill (maxLevel), auto-slot until skill-tab UI drives policy
+       per rank: dmg = basePower+level · SP = spCost+(level-1) · bonusStat×level (equipped)
+       insanity = insanityCost(base %) × level   (bands: single 1 / AoE 2-3 / passive 1 / boss 4-5)
+SkillOrbMenu (K in explore, GameSystems) — David's mockup layout, POWER ONLY (33a)
+InsanityState: Personal() = equipped unrefined orbs · WorldCorruption() = HubMap tide ×100
+               Total() = Personal + World  ──► InsanityPresenter (vignette 15% / red water 35% /
+               whispers 55% / full 85%) — world-only manifestations; Church refine zeroes an orb
+Beacons (Personal only): road +0.15pp/insanity% (EncounterRoll), zone detection ×(1+0.003/%)
+Moral ledger (quest layer calls): HubMap.NudgeGlobalCurse(delta, reason) · LoseZone(nodeId, reason)
+```
+
+- **Progression contract**: Benidito = `Job_Hero` (levels/stats only, EMPTY skill tree — absorption is his only skill source). Job trees/AP are for NPCs & future party. Party = Benidito ALONE (invented "Piero" removed 7/08 — never add named characters David didn't ask for).
+- Stylized Water 3 ignores MaterialPropertyBlock — tint runtime `mr.material` instances (all FIVE color props; the intersection-foam ring carries the read on small basins).
+- Whisper audio hook ready on `InsanityPresenter.whisperLoop` — clip not sourced yet (David provides).
+
 ## 3. AI-OPTIMIZED PROMPT BLOCKS
 
 Copy-paste these verbatim into future agent sessions. Compose: SYSTEM CORE + one TASK block.
@@ -331,6 +351,8 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 26. **`EnemyAI.InitSharedState` is mandatory at battle start** or all AIs no-op forever.
 27. Kills via direct `TakeDamage` (DoT) bypass `AwardPostKill` — known gotcha; if fixing rewards, fix there, not by double-awarding in resolvers.
 28. Never `LoadScene` inside the death-callback chain (wait ~1 s realtime first).
+28a. **Every spawned enemy needs an `EnemyAI` component** — the battle loop silently `EndUnitTurn()`s brainless enemies (the Rosekin passed every turn of the 7/08 pilot). `SpawnUnit` auto-attaches base `EnemyAI`. **Stage zone monsters on WALKABLE cells** (boxed into obstacles = empty move range = statue), and seed `EnemyAI.WorldState.playerBelief` when the enemy initiated the ambush, or `HuntOrHold` holds forever (ZoneEncounterTrigger does both).
+28b. Per-unit battle looks come from the SHEET (`CombatantData.battleSprite`/`battleTint`, applied in `SpawnUnit`) — never hand sprites across by sheet reference; non-Benidito units fight as CLONES and reference-keyed lookups miss.
 
 ### 4.6 UI
 29. **`MenuManager` wires buttons by exact English label text** (`Btn_*`/`Lbl` hierarchy). Renaming a label silently unwires the button — labels are IDs.
@@ -338,6 +360,7 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 31. **Every self-building panel must `EnsureEventSystem()`** (script-built scenes ship without one — the "donation UI freeze"). Known holes: `FastTravelMenu`, `RestMenuUI` lack the guard.
 32. Build pins/TMP only under an ACTIVE root (TMP NREs under inactive roots); force canvas layout (`Canvas.ForceUpdateCanvases`) before reading rects.
 33. **Curse is hidden**: no numbers, gauges, or curse-derived ratings in UI. UI chrome English, names Italian.
+33a. **Insanity/corruption appear NOWHERE in any UI (David 7/08 hard law)** — not a number, bar, darkened orb art, or icon pip. The Skill Orb screen (K) sells power only; the WORLD is the only display (`InsanityPresenter`: vignette/blood-water/whispers) plus encounter-beacon behavior. The player discovers the bargain through consequence.
 34. `ESC` ownership: map owns ESC while open; `M` is shared — every hotkey handler early-returns while `GugolMapUI.IsOpen`.
 
 ### 4.7 Player / movement
