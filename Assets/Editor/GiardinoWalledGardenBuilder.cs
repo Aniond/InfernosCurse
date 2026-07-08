@@ -237,18 +237,28 @@ public static class GiardinoWalledGardenBuilder
         // bush rows (concealment) flanking the S path at z 4..6, benches on ring
         var group = new GameObject("[Hedges]");
         _bushCells.Clear();
-        void Bush(float x, float z)
+        void Bush(float x, float z, bool alongZ = false)
         {
             var seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
             seg.name = "MARKER_boxwood-hedge-segment@1.0";
             seg.transform.SetParent(group.transform, false);
             seg.transform.position = new Vector3(x, SampleY(x, z) + 0.45f, z);
             seg.transform.localScale = new Vector3(1.8f, 0.9f, 0.8f);
+            if (alongZ) seg.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
             Tint(seg, new Color(0.24f, 0.38f, 0.18f));
             _bushCells.Add(new Vector2Int(Mathf.FloorToInt(x), Mathf.FloorToInt(z)));
         }
         foreach (float x in new[] { 7f, 9f, 11f, 21f, 23f, 25f })
             Bush(x, 5f);
+
+        // Border hedge ring: clipped box hedges along the inside of the tree
+        // border (reference's B band), gaps at the gates and cross-path mouths.
+        bool GateGap(float v) => v > 13.2f && v < 18.8f;
+        for (float t = 4f; t <= 28f; t += 2f)
+        {
+            if (!GateGap(t)) { Bush(t, 3.2f); Bush(t, 28.8f); }               // S + N rows
+            if (!GateGap(t)) { Bush(3.2f, t, true); Bush(28.8f, t, true); }   // W + E rows
+        }
     }
 
     static readonly List<Vector2Int> _bushCells = new();
