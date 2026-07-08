@@ -129,3 +129,4 @@ Tools/asset-gen/output/
 # Unity crash-recovery scenes
 Assets/_Recovery/
 Assets/_Recovery.meta
+Assets/Scripts/Config/GeminiConfig.json.meta
