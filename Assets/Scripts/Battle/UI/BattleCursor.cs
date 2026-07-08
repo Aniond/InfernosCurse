@@ -87,8 +87,66 @@ public class BattleCursor : MonoBehaviour
         if (!_active) return;
 
         HandleMovementInput();
+        HandleMouseInput();
         HandleConfirmCancel();
         AnimateCursor();
+    }
+
+    // ── Mouse: point at a tile to move the cursor, click to confirm ──────────
+    // Ray → heightfield intersection via iterative refinement against the
+    // baked BattleTerrainHeights surface (no colliders needed). Keyboard
+    // still works — mouse and keys drive the same cursor.
+
+    static BattleTerrainHeights _mouseHeights;
+
+    void HandleMouseInput()
+    {
+        var mouse = UnityEngine.InputSystem.Mouse.current;
+        if (mouse == null || _grid == null) return;
+        var cam = Camera.main;
+        if (cam == null) return;
+
+        bool moved   = mouse.delta.ReadValue().sqrMagnitude > 0.01f;
+        bool clicked = mouse.leftButton.wasPressedThisFrame;
+        if (!moved && !clicked) return;
+
+        // don't fight the UI — clicks on menus/buttons stay theirs
+        if (UnityEngine.EventSystems.EventSystem.current != null &&
+            UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return;
+
+        if (_mouseHeights == null)
+            _mouseHeights = FindFirstObjectByType<BattleTerrainHeights>();
+
+        var ray = cam.ScreenPointToRay(mouse.position.ReadValue());
+        if (!TryRayToCell(ray, out var cell)) return;
+        if (!_grid.InBounds(cell)) return;
+
+        if (cell != _cursorPos)
+        {
+            _cursorPos = cell;
+            UpdateCursorWorldPosition();
+            UpdateHoverHighlight();
+        }
+        if (clicked) OnConfirm();
+    }
+
+    bool TryRayToCell(Ray ray, out Vector2Int cell)
+    {
+        cell = default;
+        if (Mathf.Abs(ray.direction.y) < 1e-4f) return false;
+        float y = 0.5f;
+        Vector3 p = Vector3.zero;
+        for (int i = 0; i < 4; i++)
+        {
+            float t = (y - ray.origin.y) / ray.direction.y;
+            if (t < 0f) return false;
+            p = ray.origin + ray.direction * t;
+            float ny = _mouseHeights != null ? _mouseHeights.SurfaceHeight(p.x, p.z) : 0f;
+            if (Mathf.Abs(ny - y) < 0.03f) break;
+            y = ny;
+        }
+        cell = new Vector2Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.z));
+        return true;
     }
 
     // ── Input ─────────────────────────────────────────────────────────────────
