@@ -87,8 +87,16 @@ public class ZoneFogOfWar : MonoBehaviour
         _timer += Time.deltaTime;
         if (_timer < updateInterval) return;
         _timer = 0f;
-        Recompute(force: false);
+
+        // weather shifts change sight range — force the veil to follow
+        float wm = WeatherVision.SightMultiplier();
+        bool weatherChanged = !Mathf.Approximately(wm, _lastWeatherMult);
+        _lastWeatherMult = wm;
+
+        Recompute(force: weatherChanged);
     }
+
+    float _lastWeatherMult = 1f;
 
     bool[,] _lastVisible;
 
@@ -132,6 +140,7 @@ public class ZoneFogOfWar : MonoBehaviour
             VisionSpell.Shrink => sightRange * 0.75f,
             _ => sightRange,
         };
+        range *= WeatherVision.SightMultiplier();   // COZY fog/storm closes the world in
         float r2 = range * range;
         var visible = new bool[_grid.width, _grid.height];
         for (int z = 0; z < _grid.height; z++)
@@ -173,7 +182,7 @@ public class ZoneFogOfWar : MonoBehaviour
                     foreach (var u in party)
                     {
                         float dx = x - u.gridPosition.x, dz = z - u.gridPosition.y;
-                        float r = _activeSpell == VisionSpell.TrueSight ? u.SightRange : u.SightRange;
+                        float r = u.SightRange * WeatherVision.SightMultiplier();
                         if (dx * dx + dz * dz > r * r) continue;
                         if (_activeSpell == VisionSpell.TrueSight ||
                             _grid.HasLineOfSight(u.gridPosition, c, u.EyeHeight)) { vis = true; break; }

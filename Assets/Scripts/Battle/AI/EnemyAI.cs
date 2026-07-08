@@ -111,7 +111,7 @@ public class EnemyAI : MonoBehaviour
     {
         float dx = unit.gridPosition.x - target.gridPosition.x;
         float dy = unit.gridPosition.y - target.gridPosition.y;
-        float r  = unit.SightRange;
+        float r  = unit.SightRange * WeatherVision.SightMultiplier();   // weather blinds both sides
         if (dx * dx + dy * dy > r * r) return false;
         return grid.HasLineOfSight(unit.gridPosition, target.gridPosition, unit.EyeHeight);
     }
