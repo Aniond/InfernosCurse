@@ -11,8 +11,13 @@ public class BattleUnit : MonoBehaviour
     public CombatantData Data;
 
     [Header("Runtime State")]
-    [Tooltip("Eye height in elevation half-units — terrain/objects taller than this above the unit's ground block its sight (2 = classic rule).")]
+    [Tooltip("Eye height override when no CombatantData sheet is assigned; the sheet's vision block wins otherwise.")]
     public int         eyeHeight = 2;
+
+    // Vision comes from the character SHEET (CombatantData — player, party,
+    // enemy and NPC alike); the field above is only a sheetless fallback.
+    public int   EyeHeight  => Data != null ? Data.eyeHeight : eyeHeight;
+    public float SightRange => Data != null ? Data.sightRange : 13f;
     public Vector2Int  gridPosition;
     public FacingDir   facing = FacingDir.South;
     public float       ct     = 0f;      // current charge time (0-100)

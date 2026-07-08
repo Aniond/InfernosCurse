@@ -56,6 +56,12 @@ public class CombatantData : ScriptableObject
     [Header("Base Stats (before job bonuses)")]
     public CharacterStats baseStats = new CharacterStats();
 
+    [Header("Vision (all sheets — player, party, enemies, NPCs)")]
+    [Tooltip("Sight radius in grid cells (1 cell = 1m). Drives fog of war and spotting.")]
+    public float sightRange = 13f;
+    [Tooltip("Eye height in elevation half-units — objects rising taller than this above own ground block sight. 2 = human standing; tall units see over low cover. Enlarge/Shrink modify it temporarily.")]
+    public int eyeHeight = 2;
+
     [Header("Current HP / SP (runtime)")]
     [NonSerialized] public int currentHP;
     [NonSerialized] public int currentSP;
