@@ -51,6 +51,8 @@ public class CombatantData : ScriptableObject
     [TextArea(2, 3)]
     public string backstory;
     public Sprite portrait;
+    [Tooltip("Battlefield billboard sprite — the spawner applies it to the unit's SpriteRenderer (clones inherit it). Empty = prefab default.")]
+    public Sprite battleSprite;
     public CombatantRole role;
 
     [Header("Base Stats (before job bonuses)")]

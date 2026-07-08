@@ -19,10 +19,17 @@ public class BattleCameraRig : MonoBehaviour
     public KeyCode rotateLeftAlt = KeyCode.LeftBracket;
     public KeyCode rotateRightAlt = KeyCode.RightBracket;
 
+    [Header("Zoom (mouse wheel)")]
+    public float zoomMin = 0.45f;
+    public float zoomMax = 1.5f;
+    public float zoomStep = 0.12f;
+    public float zoomSmooth = 9f;
+
     float _targetYaw;
     float _yaw;
     float _yawVel;
-    float _pitchDistSet;
+    float _zoom = 1f;
+    float _zoomTarget = 1f;
     Vector3 _localOffset;   // camera offset from pivot at yaw 0, in pivot space
 
     void Start()
@@ -40,12 +47,28 @@ public class BattleCameraRig : MonoBehaviour
         if (Input.GetKeyDown(rotateLeftKey) || Input.GetKeyDown(rotateLeftAlt)) _targetYaw -= step;
         if (Input.GetKeyDown(rotateRightKey) || Input.GetKeyDown(rotateRightAlt)) _targetYaw += step;
 
-        if (!Mathf.Approximately(_yaw, _targetYaw))
+        // mouse-wheel zoom (scales orbit distance, keeps pitch)
+        var mouse = UnityEngine.InputSystem.Mouse.current;
+        if (mouse != null)
+        {
+            float scroll = mouse.scroll.ReadValue().y;
+            if (Mathf.Abs(scroll) > 0.01f)
+                _zoomTarget = Mathf.Clamp(_zoomTarget - Mathf.Sign(scroll) * zoomStep, zoomMin, zoomMax);
+        }
+
+        bool zooming = !Mathf.Approximately(_zoom, _zoomTarget);
+        bool rotating = !Mathf.Approximately(_yaw, _targetYaw);
+        if (rotating)
         {
             _yaw = Mathf.SmoothDampAngle(_yaw, _targetYaw, ref _yawVel, smoothTime);
             if (Mathf.Abs(Mathf.DeltaAngle(_yaw, _targetYaw)) < 0.05f) _yaw = _targetYaw;
-            Apply(_yaw);
         }
+        if (zooming)
+        {
+            _zoom = Mathf.Lerp(_zoom, _zoomTarget, Time.deltaTime * zoomSmooth);
+            if (Mathf.Abs(_zoom - _zoomTarget) < 0.005f) _zoom = _zoomTarget;
+        }
+        if (rotating || zooming) Apply(_yaw);
     }
 
     public void RotateStep(int dir) => _targetYaw += step * Mathf.Sign(dir);
@@ -53,7 +76,7 @@ public class BattleCameraRig : MonoBehaviour
     void Apply(float yawDeg)
     {
         Quaternion yawRot = Quaternion.Euler(0f, yawDeg, 0f);
-        transform.position = pivot + yawRot * new Vector3(0f, _localOffset.y, _localOffset.z);
+        transform.position = pivot + yawRot * (new Vector3(0f, _localOffset.y, _localOffset.z) * _zoom);
         transform.LookAt(pivot);
     }
 }

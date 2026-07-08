@@ -16,6 +16,7 @@ MonoBehaviour:
   backstory: "A rose bush of the Giardino, bloated by the curse \u2014 its bloom
     splits like a mouth, its vines remember being pruned."
   portrait: {fileID: 21300000, guid: eaa1a31405be34b45aa1d46f670f0352, type: 3}
+  battleSprite: {fileID: 21300000, guid: 2f3a690744ebcc046abe485df6d4ab39, type: 3}
   role: 2
   baseStats:
     characterName: Dante
