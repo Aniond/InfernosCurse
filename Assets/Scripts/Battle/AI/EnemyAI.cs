@@ -70,50 +70,102 @@ public class EnemyAI : MonoBehaviour
         WorldState.RefreshRetreatSafety(grid);
         Influence.Rebuild(allies, players);
 
-        // 3. Score all intents
+        // 3. Fog-honest targeting: this unit may only act on players it can
+        // SEE (its sheet eyes). Nobody visible → hunt or hold by intellect.
+        var visible = VisiblePlayers(unit, players, grid);
+        if (visible.Count == 0)
+        {
+            HuntOrHold(unit, grid);
+            return;
+        }
+
+        // 4. Score all intents (gated by intelligence)
         AIIntent chosen = ScoreIntents(unit, allies);
 
-        // 4. Execute chosen intent
-        ExecuteIntent(unit, chosen, players, grid);
+        // 5. Execute chosen intent against what it can see
+        ExecuteIntent(unit, chosen, visible, grid);
     }
 
     // ── Perception ────────────────────────────────────────────────────────────
 
     void Perceive(BattleUnit unit)
     {
-        // Line-of-sight check to each player unit
+        // Fog-honest perception: the unit sees with its SHEET eyes — sight
+        // range + true line of sight at its eye height. Same rules as the
+        // player's fog of war; Shrink/cover genuinely hide party members.
         var players = BattleManager.Instance?.Players;
-        if (players == null) return;
+        var grid    = BattleManager.Instance?.Grid;
+        if (players == null || grid == null) return;
 
         foreach (var p in players)
         {
             if (!p.IsAlive) continue;
-            int dist = BattleGrid.ManhattanDistance(unit.gridPosition, p.gridPosition);
-            float visRange = unit.Data.GetTotalStats().perception / 2f;
-
-            if (dist <= visRange)
+            if (CanSee(unit, p, grid))
                 WorldState.playerBelief.Update(p);
         }
 
         WorldState.playerBelief.DecayConfidence(Time.deltaTime);
     }
 
+    protected bool CanSee(BattleUnit unit, BattleUnit target, BattleGrid grid)
+    {
+        float dx = unit.gridPosition.x - target.gridPosition.x;
+        float dy = unit.gridPosition.y - target.gridPosition.y;
+        float r  = unit.SightRange;
+        if (dx * dx + dy * dy > r * r) return false;
+        return grid.HasLineOfSight(unit.gridPosition, target.gridPosition, unit.EyeHeight);
+    }
+
+    protected List<BattleUnit> VisiblePlayers(BattleUnit unit, List<BattleUnit> players, BattleGrid grid)
+    {
+        var seen = new List<BattleUnit>();
+        foreach (var p in players)
+            if (p.IsAlive && CanSee(unit, p, grid)) seen.Add(p);
+        return seen;
+    }
+
     // ── Intent scoring (utility system) ───────────────────────────────────────
+
+    // INTELLIGENCE GATE (David 7/08): the sheet's 1-10 score decides which
+    // intents this creature can even CONCEIVE of. A bear (1-2) just rushes;
+    // a strategist (9-10) has the whole Sun Tzu playbook.
+    //   1-2  beast:      DirectAttack only
+    //   3-4  cunning:    + Ambush, RetreatAndLure (instinct: stalk, withdraw hurt)
+    //   5-6  soldier:    + SpreadCurse (doctrine, trained behaviors)
+    //   7-8  tactician:  + IsolatePlayer, SupportAnchor (reads the battlefield)
+    //   9-10 strategist: everything, sharper (less noise) — Gemini's tier in AI mode
+    protected static bool IntentAllowed(AIIntent intent, int iq) => intent switch
+    {
+        AIIntent.DirectAttack   => true,
+        AIIntent.Ambush         => iq >= 3,
+        AIIntent.RetreatAndLure => iq >= 3,
+        AIIntent.SpreadCurse    => iq >= 5,
+        AIIntent.IsolatePlayer  => iq >= 7,
+        AIIntent.SupportAnchor  => iq >= 7,
+        _                       => true,
+    };
 
     AIIntent ScoreIntents(BattleUnit unit, List<BattleUnit> allies)
     {
-        var scores = new Dictionary<AIIntent, float>
+        int iq = unit.Data != null ? unit.Data.intelligence : 3;
+        // strategists are decisive; beasts are erratic
+        float noiseScale = iq >= 9 ? 0.5f : (iq <= 2 ? 1.5f : 1f);
+
+        var all = new Dictionary<AIIntent, float>
         {
-            [AIIntent.Ambush]        = Influence.ScoreAmbushIntent(unit, WorldState)        * weightAmbush        + Noise(),
-            [AIIntent.SpreadCurse]   = Influence.ScoreSpreadCurseIntent(unit, WorldState)   * weightSpreadCurse   + Noise(),
-            [AIIntent.IsolatePlayer] = Influence.ScoreIsolatePlayerIntent(unit, WorldState, allies) * weightIsolate + Noise(),
-            [AIIntent.RetreatAndLure]= Influence.ScoreRetreatAndLureIntent(unit, WorldState)* weightRetreat       + Noise(),
-            [AIIntent.SupportAnchor] = Influence.ScoreSupportAnchorIntent(unit, WorldState) * weightSupportAnchor + Noise(),
-            [AIIntent.DirectAttack]  = Influence.ScoreDirectAttackIntent(unit, WorldState)  * weightDirectAttack  + Noise(),
+            [AIIntent.Ambush]        = Influence.ScoreAmbushIntent(unit, WorldState)        * weightAmbush        + Noise() * noiseScale,
+            [AIIntent.SpreadCurse]   = Influence.ScoreSpreadCurseIntent(unit, WorldState)   * weightSpreadCurse   + Noise() * noiseScale,
+            [AIIntent.IsolatePlayer] = Influence.ScoreIsolatePlayerIntent(unit, WorldState, allies) * weightIsolate + Noise() * noiseScale,
+            [AIIntent.RetreatAndLure]= Influence.ScoreRetreatAndLureIntent(unit, WorldState)* weightRetreat       + Noise() * noiseScale,
+            [AIIntent.SupportAnchor] = Influence.ScoreSupportAnchorIntent(unit, WorldState) * weightSupportAnchor + Noise() * noiseScale,
+            [AIIntent.DirectAttack]  = Influence.ScoreDirectAttackIntent(unit, WorldState)  * weightDirectAttack  + Noise() * noiseScale,
         };
+        var scores = new Dictionary<AIIntent, float>();
+        foreach (var kv in all)
+            if (IntentAllowed(kv.Key, iq)) scores[kv.Key] = kv.Value;
 
         // Log intent scores for designer explainability
-        LogIntentScores(unit, scores);
+        LogIntentScores(unit, scores, iq);
 
         return SoftArgmax(scores);
     }
@@ -400,10 +452,37 @@ public class EnemyAI : MonoBehaviour
 
     float Noise() => Random.Range(-styleVariety * 0.5f, styleVariety * 0.5f);
 
-    void LogIntentScores(BattleUnit unit, Dictionary<AIIntent, float> scores)
+    // No player in sight: smart units hunt the last-known position; dull ones
+    // hold ground (a beast doesn't search — it waits for movement).
+    void HuntOrHold(BattleUnit unit, BattleGrid grid)
+    {
+        int iq = unit.Data != null ? unit.Data.intelligence : 3;
+        Vector2Int? lastKnown = null;
+        float best = 0.25f;   // minimum confidence worth chasing
+        foreach (var kv in WorldState.playerBelief.positionConfidence)
+            if (kv.Value > best) { best = kv.Value; lastKnown = kv.Key; }
+
+        if (iq >= 4 && lastKnown.HasValue)
+        {
+            var stats = unit.Data.GetTotalStats();
+            var moveRange = grid.GetMoveRange(unit.gridPosition,
+                Mathf.Max(2, stats.speed / 3), Mathf.Max(1, stats.dexterity / 5), unit);
+            Vector2Int dest = ClosestReachableToTarget(moveRange, lastKnown.Value);
+            grid.MoveUnitAnimated(unit, dest);
+            unit.SetFacingToward(lastKnown.Value);
+            Debug.Log($"[EnemyAI] {unit.Data.displayName} (I{iq}) sees no one — hunts last-known position {lastKnown.Value}.");
+        }
+        else
+        {
+            Debug.Log($"[EnemyAI] {unit.Data.displayName} (I{iq}) sees no one — holds ground.");
+        }
+        BattleManager.Instance?.EndUnitTurn(unit);
+    }
+
+    void LogIntentScores(BattleUnit unit, Dictionary<AIIntent, float> scores, int iq)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append($"[EnemyAI] {unit.Data.displayName} intent scores: ");
+        sb.Append($"[EnemyAI] {unit.Data.displayName} (I{iq}) intent scores: ");
         foreach (var kv in scores)
             sb.Append($"{kv.Key}={kv.Value:F2} ");
         Debug.Log(sb.ToString());
