@@ -16,7 +16,6 @@ public class PartyRoster : MonoBehaviour
 
     [Header("Portraits (shown in the CT turn-order display)")]
     public Sprite beniditoPortrait;
-    public Sprite pieroPortrait;
 
     [Header("Benidito starter equipment")]
     public EquipmentDefinition beniditoWeapon;     // Item_AshStaff
@@ -31,8 +30,10 @@ public class PartyRoster : MonoBehaviour
 
         var inst = FindAnyObjectByType<PartyRoster>();
         RestSystem.PartyMembers.Add(MakeBenidito(inst));
-        RestSystem.PartyMembers.Add(MakePiero(inst));
-        Debug.Log("[PartyRoster] Roster initialized: Benidito + Piero.");
+        // Party is Benidito ALONE until David adds companions himself —
+        // a prior session invented a "Piero" test guard he never asked for
+        // (removed 7/08). Recruits come from story/jobs, not from code.
+        Debug.Log("[PartyRoster] Roster initialized: Benidito.");
     }
 
     // Benidito IS the game's Benidito-role combatant: BattleUnit keeps the ORIGINAL
@@ -62,20 +63,6 @@ public class PartyRoster : MonoBehaviour
             c.accessory = inst.beniditoAccessory;
             c.InitRuntime();   // re-init: equipment hp/sp bonuses land in current pools
         }
-        return c;
-    }
-
-    // Piero — a hired guard. PartyMember role (cloned in battle; the encounter
-    // exit copies his progression back). No job yet: EnsureBattleSkills hands
-    // him Basic Attack.
-    static CombatantData MakePiero(PartyRoster inst)
-    {
-        var c = MakeCombatant("Piero", CombatantRole.PartyMember,
-            str: 13, dex: 9, con: 13, cre: 6, faith: 8, per: 9, spd: 9, hp: 125, sp: 30);
-        if (inst != null) c.portrait = inst.pieroPortrait;
-        // Stopgap until Piero gets his own Pixellab art: steel-blue palette
-        // swap so he isn't a second Benidito on the field (David 7/08).
-        c.battleTint = new Color(0.62f, 0.74f, 1f);
         return c;
     }
 
