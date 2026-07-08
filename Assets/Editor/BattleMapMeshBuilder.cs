@@ -364,6 +364,9 @@ public static class BattleMapMeshBuilder
         var camData = cam.GetComponent<UniversalAdditionalCameraData>();
         if (camData == null) camData = cam.gameObject.AddComponent<UniversalAdditionalCameraData>();
         camData.renderPostProcessing = true;
+        var rig = cam.GetComponent<BattleCameraRig>();
+        if (rig == null) rig = cam.gameObject.AddComponent<BattleCameraRig>();
+        rig.pivot = center;   // Q/E or [ ] rotate the view in 90° steps
 
         // Diorama post: tilt-shift DoF focused on the battlefield + gentle
         // bloom/vignette/grading. One shared profile asset, style-agnostic.

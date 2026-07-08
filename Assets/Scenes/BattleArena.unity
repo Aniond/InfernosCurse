@@ -417,6 +417,7 @@ GameObject:
   - component: {fileID: 378044476}
   - component: {fileID: 378044475}
   - component: {fileID: 378044478}
+  - component: {fileID: 378044479}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -542,6 +543,25 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &378044479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 378044474}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee6fee1954bdcc846a00235f53ac2cad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleCameraRig
+  pivot: {x: 7, y: 0.5, z: 6}
+  step: 90
+  smoothTime: 0.35
+  rotateLeftKey: 113
+  rotateRightKey: 101
+  rotateLeftAlt: 91
+  rotateRightAlt: 93
 --- !u!1 &478304205
 GameObject:
   m_ObjectHideFlags: 0
