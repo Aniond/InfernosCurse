@@ -5,7 +5,9 @@
       "Bash(:)",
       "Bash(curl -s -m 300 -X POST http://localhost:3311/api/assets/gugol-card-frame/generate -H 'Content-Type: application/json' -d '{\"extraPrompt\":\"PLAIN border only: one thin dark sepia-brown ink line inset uniformly from the edge on all four sides. NO wax seal, NO ornaments, NO corner decorations, NO green tones. Perfectly uniform edges suitable for UI nine-slice scaling.\"}')",
       "Bash(curl -s -m 300 -X POST http://localhost:3311/api/assets/gugol-searchbar/generate -H 'Content-Type: application/json' -d '{\"extraPrompt\":\"Outline must be thin dark sepia BROWN ink, absolutely NO green anywhere. Plain aged parchment fill, no ornaments.\"}')",
-      "mcp__unity-mcp__Unity_ManageEditor"
+      "mcp__unity-mcp__Unity_ManageEditor",
+      "Bash(python calimala_shops.py)",
+      "Bash(python -)"
     ]
   }
 }
