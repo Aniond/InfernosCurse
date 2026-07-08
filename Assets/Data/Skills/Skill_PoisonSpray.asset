@@ -41,4 +41,4 @@ MonoBehaviour:
   holyVersion: {fileID: 0}
   bonusStat: 2
   bonusStatPerLevel: 1
-  insanityCost: 2
+  insanityCost: 15

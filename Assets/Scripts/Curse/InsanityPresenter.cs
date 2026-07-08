@@ -3,15 +3,22 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-// Where Benidito's insanity comes from (equipped unrefined orbs) — one place
-// both the storytelling layer and the encounter hooks read.
+// Benidito's madness, on the 0-100 percent scale (David 7/08):
+//   INSANITY   — personal, from equipped unrefined orbs.
+//   CORRUPTION — the WORLD value: Florence rots under Limbo the longer Ben
+//                takes to solve it (HubMap daily tide). It warps NPCs too —
+//                they forget things, lose their way (future NPC-AI layer).
+//   For Ben:  Insanity + Corruption = the TOTAL that drives what he sees.
+// Encounter beacons use Personal() only — the road/zone rolls already carry
+// their own curse terms, and double-counting corruption would stack the deck.
 public static class InsanityState
 {
     // Set >= 0 to preview manifestation tiers without farming orbs
     // (InsanityPresenter exposes it in the inspector). -1 = live value.
     public static int DebugOverride = -1;
 
-    public static int Current()
+    // Orb-carried insanity only (the beacon component).
+    public static int Personal()
     {
         if (DebugOverride >= 0) return DebugOverride;
         foreach (var m in RestSystem.PartyMembers)
@@ -19,6 +26,23 @@ public static class InsanityState
                 return m.CurrentInsanity();
         return 0;
     }
+
+    // World corruption as a percent — Florence's Limbo rot, averaged.
+    public static int WorldCorruption()
+    {
+        var hub = HubMap.Instance;
+        return hub != null ? Mathf.RoundToInt(hub.GlobalCurseLevel() * 100f) : 0;
+    }
+
+    // What Ben actually experiences: personal + world, clamped to 100.
+    public static int Total()
+    {
+        if (DebugOverride >= 0) return DebugOverride;
+        return Mathf.Clamp(Personal() + WorldCorruption(), 0, 100);
+    }
+
+    // Back-compat alias for the encounter hooks (personal only).
+    public static int Current() => Personal();
 }
 
 // The Call-of-Cthulhu layer (David 7/08): insanity is a STORYTELLING system,
@@ -33,15 +57,15 @@ public static class InsanityState
 // MaterialPropertyBlock (never touches shared material assets).
 public class InsanityPresenter : MonoBehaviour
 {
-    [Header("Tier thresholds (balance knobs)")]
-    [Tooltip("Insanity at which the vignette begins to creep in.")]
-    public int darkenAt = 3;
-    [Tooltip("Insanity at which water begins turning red.")]
-    public int redWaterAt = 6;
-    [Tooltip("Insanity at which the whispers start (needs whisperLoop assigned).")]
-    public int whispersAt = 9;
-    [Tooltip("Insanity at which each effect reaches full strength.")]
-    public int fullEffectAt = 15;
+    [Header("Tier thresholds — insanity is a PERCENTAGE 0-100 (balance knobs)")]
+    [Tooltip("Insanity % at which the vignette begins to creep in.")]
+    public int darkenAt = 15;
+    [Tooltip("Insanity % at which water begins turning red.")]
+    public int redWaterAt = 35;
+    [Tooltip("Insanity % at which the whispers start (needs whisperLoop assigned).")]
+    public int whispersAt = 55;
+    [Tooltip("Insanity % at which each effect reaches full strength.")]
+    public int fullEffectAt = 85;
 
     [Header("Feel")]
     [Range(0f, 1f)] public float maxVignette = 0.55f;
@@ -52,7 +76,8 @@ public class InsanityPresenter : MonoBehaviour
     [Range(0f, 1f)] public float maxWhisperVolume = 0.35f;
 
     [Header("Debug")]
-    [Tooltip("-1 = live insanity from equipped orbs. Set 0-15 to preview tiers.")]
+    [Tooltip("-1 = live insanity from equipped orbs. Set 0-100 (%) to preview tiers.")]
+    [Range(-1, 100)]
     public int debugInsanityOverride = -1;
 
     Image _vignette;
@@ -90,7 +115,8 @@ public class InsanityPresenter : MonoBehaviour
         if (_pulse < 0.5f) return;   // storytelling cadence, not a combat system
         _pulse = 0f;
 
-        int ins = InsanityState.Current();
+        // Insanity + Corruption = what Ben experiences (David 7/08)
+        int ins = InsanityState.Total();
 
         // 1. the light thins
         float dark = Ramp(ins, darkenAt, fullEffectAt) * maxVignette;

@@ -254,6 +254,35 @@ public class HubMap : MonoBehaviour
         OnNodeChanged?.Invoke(node);
     }
 
+    // The moral ledger (David 7/08): Limbo's corruption grows not just with
+    // the daily tide but with what Ben DOESN'T do — each refused plea, each
+    // ignored soul nudges every district. The future quest/dialogue layer
+    // calls this when the player walks away from someone in need.
+    public void NudgeGlobalCurse(float delta, string reason)
+    {
+        foreach (var n in _nodes)
+        {
+            if (n.kind == NodeKind.Waypoint) continue;
+            n.curseLevel = Mathf.Clamp01(n.curseLevel + delta);
+            OnNodeChanged?.Invoke(n);
+        }
+        Debug.Log($"[Curse] Florence remembers: {reason} (corruption {(delta >= 0 ? "+" : "")}{delta * 100f:0.#}%)");
+    }
+
+    // A plea ignored, a district abandoned (David 7/08: "player decides not
+    // to help the florist — the Garden is lost, and corruption goes up").
+    // The zone's node falls fully corrupted AND all Florence pays the tithe.
+    public void LoseZone(string nodeId, string reason)
+    {
+        var node = GetNode(nodeId);
+        if (node != null)
+        {
+            node.curseLevel = 1f;
+            OnNodeChanged?.Invoke(node);
+        }
+        NudgeGlobalCurse(0.05f, reason);
+    }
+
     // Returns average curse across all nodes (feeds globalCurseLevel).
     // Road waypoints are excluded — near-unpopulated dots on the region map
     // would dilute the city's corruption average.

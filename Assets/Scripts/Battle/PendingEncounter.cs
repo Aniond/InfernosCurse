@@ -75,10 +75,11 @@ public static class EncounterRoll
         }
     }
 
-    // Each point of carried corruption makes the road's predators a little
-    // more certain where you are (David 7/08: insanity raises random-battle
-    // chance while traveling). Balance knob.
-    const float InsanityPull = 0.02f;
+    // Carried corruption makes the road's predators more certain where you
+    // are (David 7/08: insanity raises random-battle chance while traveling).
+    // Insanity is a 0-100 PERCENT: at full madness this adds +15 percentage
+    // points of encounter chance. Balance knob.
+    const float InsanityPull = 0.0015f;
 
     public static bool ShouldTrigger(HubNode node, float baseChance, float curseScale, float maxChance)
     {

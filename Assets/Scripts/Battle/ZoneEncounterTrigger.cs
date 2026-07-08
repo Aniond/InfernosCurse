@@ -45,10 +45,10 @@ public class ZoneEncounterTrigger : MonoBehaviour
         var pc = new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
                                 Mathf.FloorToInt(player.transform.position.z));
 
-        // Carried corruption is a scent: each point of insanity widens how far
-        // staged creatures notice Ben (David 7/08 — insanity raises encounter
-        // chance in zones). Balance knob.
-        float insanityScent = 1f + InsanityState.Current() * 0.05f;
+        // Carried corruption is a scent: insanity (0-100%) widens how far
+        // staged creatures notice Ben — +30% detection radius at full madness
+        // (David 7/08 — insanity raises encounter chance in zones). Balance knob.
+        float insanityScent = 1f + InsanityState.Current() * 0.003f;
 
         foreach (var enemy in _staged)
         {

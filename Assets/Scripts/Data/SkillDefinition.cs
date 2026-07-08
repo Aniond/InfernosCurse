@@ -75,6 +75,7 @@ public class SkillDefinition : ScriptableObject
     public int bonusStatPerLevel = 1;
 
     [Header("Corruption — the insanity price (CoC-style storytelling layer)")]
-    [Tooltip("Insanity carried by EQUIPPING this skill unrefined (the in-fiction 'corruption'). Stronger skills cost more mind. Church refinement burns it to zero. Never shown to the player as a number — the world just... changes.")]
-    public int insanityCost = 1;
+    [Tooltip("PERCENTAGE points of insanity (0-100 scale) carried by EQUIPPING this skill unrefined (the in-fiction 'corruption'). Stronger skills cost more mind. Church refinement burns it to zero. Never shown to the player — the world just... changes.")]
+    [Range(0, 100)]
+    public int insanityCost = 5;
 }
