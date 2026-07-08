@@ -347,6 +347,8 @@ public static class GiardinoWalledGardenBuilder
             for (int ix = 0; ix <= GRID * 2; ix++)
                 heights.surfY[ix + iz * (GRID * 2 + 1)] = SampleY(ix / 2f, iz / 2f);
         root.AddComponent<BattleTerrainCurse>();
+        root.AddComponent<BattleTerrainFog>();
+        root.AddComponent<ZoneFogOfWar>();   // LoS fog of war from the player
 
         // obstacle cells from the layout (invisible; visuals are the props)
         void Ob(int x, int z, string tag, bool unwalkable, int elev)

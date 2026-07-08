@@ -1,0 +1,122 @@
+using UnityEngine;
+
+// Line-of-sight fog of war for grid-authored zones (zones=battlemaps pilot):
+// the player only sees cells the GRID says they can see — walls, the tree
+// border, hedges-as-cover and the terrace lip all block vision via
+// BattleGrid.HasLineOfSight (elevation 2+ blocks). Visibility is written to
+// BattleTerrainFog's mask; a ground-conforming overlay mesh renders the veil.
+// Runs from the player in explore mode; battles can later drive it from
+// party units instead.
+[RequireComponent(typeof(BattleMapAuthoring), typeof(BattleTerrainFog), typeof(BattleTerrainHeights))]
+public class ZoneFogOfWar : MonoBehaviour
+{
+    [Tooltip("Vision radius in cells (grid = meters).")]
+    public float sightRange = 13f;
+    [Tooltip("Seconds between visibility recomputes.")]
+    public float updateInterval = 0.25f;
+    public Material fogMaterial;
+
+    BattleGrid _grid;
+    BattleTerrainFog _fog;
+    BattleTerrainHeights _heights;
+    Transform _player;
+    float _timer;
+    Vector2Int _lastCell = new Vector2Int(-999, -999);
+
+    void Start()
+    {
+        var auth = GetComponent<BattleMapAuthoring>();
+        _grid = gameObject.AddComponent<BattleGrid>();   // hidden logic grid for LoS
+        auth.Apply(_grid);
+        _fog = GetComponent<BattleTerrainFog>();
+        _heights = GetComponent<BattleTerrainHeights>();
+        var playerGo = GameObject.FindWithTag("Player");
+        _player = playerGo != null ? playerGo.transform : null;
+        BuildOverlay();
+        Recompute(force: true);
+    }
+
+    void Update()
+    {
+        _timer += Time.deltaTime;
+        if (_timer < updateInterval) return;
+        _timer = 0f;
+        Recompute(force: false);
+    }
+
+    void Recompute(bool force)
+    {
+        if (_player == null || _grid == null) return;
+        var pc = new Vector2Int(Mathf.FloorToInt(_player.position.x),
+                                Mathf.FloorToInt(_player.position.z));
+        if (!force && pc == _lastCell) return;
+        _lastCell = pc;
+
+        float r2 = sightRange * sightRange;
+        var visible = new bool[_grid.width, _grid.height];
+        for (int z = 0; z < _grid.height; z++)
+            for (int x = 0; x < _grid.width; x++)
+            {
+                var c = new Vector2Int(x, z);
+                float dx = x - pc.x, dz = z - pc.y;
+                bool vis = dx * dx + dz * dz <= r2 && _grid.HasLineOfSight(pc, c);
+                visible[x, z] = vis;
+                _fog.SetVisible(x, z, vis);
+            }
+
+        // The rule (David 7/08): you can't use the camera to scout what your
+        // character couldn't see — NPCs and enemy units in fogged cells hide
+        // entirely; step out from cover to reveal them.
+        foreach (var unit in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
+            SetFogHidden(unit.gameObject, visible);
+        foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+            if (t.parent == null && t.name.StartsWith("NPC_"))
+                SetFogHidden(t.gameObject, visible);
+    }
+
+    void SetFogHidden(GameObject go, bool[,] visible)
+    {
+        int x = Mathf.FloorToInt(go.transform.position.x);
+        int z = Mathf.FloorToInt(go.transform.position.z);
+        bool vis = x >= 0 && x < _grid.width && z >= 0 && z < _grid.height && visible[x, z];
+        foreach (var r in go.GetComponentsInChildren<Renderer>())
+            r.enabled = vis;
+    }
+
+    // Ground-conforming veil mesh over the whole grid (2 verts per cell edge).
+    void BuildOverlay()
+    {
+        int W = _heights.width, H = _heights.height, res = Mathf.Max(1, _heights.res);
+        int nx = W * res + 1, nz = H * res + 1;
+        var verts = new Vector3[nx * nz];
+        for (int iz = 0; iz < nz; iz++)
+            for (int ix = 0; ix < nx; ix++)
+            {
+                float wx = ix / (float)res, wz = iz / (float)res;
+                verts[ix + iz * nx] = new Vector3(wx, _heights.SurfaceHeight(wx, wz) + 0.15f, wz);
+            }
+        var tris = new int[(nx - 1) * (nz - 1) * 6];
+        int t = 0;
+        for (int iz = 0; iz < nz - 1; iz++)
+            for (int ix = 0; ix < nx - 1; ix++)
+            {
+                int a = ix + iz * nx, b = a + 1, c = a + nx, d = c + 1;
+                tris[t++] = a; tris[t++] = c; tris[t++] = b;
+                tris[t++] = b; tris[t++] = c; tris[t++] = d;
+            }
+        var mesh = new Mesh { name = "FogVeil", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+        mesh.vertices = verts;
+        mesh.triangles = tris;
+        mesh.RecalculateBounds();
+
+        var go = new GameObject("FogVeil");
+        go.transform.SetParent(transform, false);
+        go.AddComponent<MeshFilter>().mesh = mesh;
+        var mr = go.AddComponent<MeshRenderer>();
+        var mat = fogMaterial != null ? new Material(fogMaterial) : new Material(Shader.Find("InfernosCurse/ZoneFog"));
+        mat.SetVector("_FogRect", new Vector4(0f, 0f, W, H));
+        mat.SetTexture("_FogMask", _fog.Mask);
+        mr.sharedMaterial = mat;
+        mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+}
