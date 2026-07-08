@@ -56,6 +56,11 @@ public class CombatantData : ScriptableObject
     [Header("Base Stats (before job bonuses)")]
     public CharacterStats baseStats = new CharacterStats();
 
+    [Header("Combat Intelligence (1-10 — how much strategy this creature CAN use)")]
+    [Range(1, 10)]
+    [Tooltip("1-2 beast: rushes, no cover. 3-4 cunning: flanks, retreats hurt. 5-6 soldier: cover, picks weak targets. 7-8 tactician: feints, patience, coordinates. 9-10 strategist: full condition-shaping; in AI mode, Gemini drives it. An Interpreter-type unit can lift nearby lower-I allies.")]
+    public int intelligence = 3;
+
     [Header("Vision (all sheets — player, party, enemies, NPCs)")]
     [Tooltip("Sight radius in grid cells (1 cell = 1m). Drives fog of war and spotting.")]
     public float sightRange = 13f;

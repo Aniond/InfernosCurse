@@ -34,6 +34,7 @@ MonoBehaviour:
     faith: 3
     perception: 8
     speed: 7
+  intelligence: 4
   sightRange: 9
   eyeHeight: 3
   absorbedSkills: []
@@ -73,6 +74,12 @@ MonoBehaviour:
       duplicateCount: 1
       level: 1
       isRefined: 0
+  weapon: {fileID: 0}
+  armor: {fileID: 0}
+  accessory: {fileID: 0}
+  helmet: {fileID: 0}
+  gloves: {fileID: 0}
+  boots: {fileID: 0}
   learnableSkills:
   - {fileID: 11400000, guid: ea827b80e96a88340b1bd8e58b7bafe1, type: 2}
   - {fileID: 11400000, guid: 0b4834ca823ad4b4fbea17cb6edb48af, type: 2}
