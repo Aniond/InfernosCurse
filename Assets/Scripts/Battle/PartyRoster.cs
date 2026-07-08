@@ -18,6 +18,11 @@ public class PartyRoster : MonoBehaviour
     public Sprite beniditoPortrait;
     public Sprite pieroPortrait;
 
+    [Header("Benidito starter equipment")]
+    public EquipmentDefinition beniditoWeapon;     // Item_AshStaff
+    public EquipmentDefinition beniditoArmor;      // Item_PenitentRobe
+    public EquipmentDefinition beniditoAccessory;  // Item_TarnishedRing
+
     void Awake() => EnsureInitialized();
 
     public static void EnsureInitialized()
@@ -49,7 +54,14 @@ public class PartyRoster : MonoBehaviour
         }
         else Debug.LogWarning("[PartyRoster] Benidito's job refs not wired — run Battle Integration setup.");
 
-        if (inst != null) c.portrait = inst.beniditoPortrait;
+        if (inst != null)
+        {
+            c.portrait  = inst.beniditoPortrait;
+            c.weapon    = inst.beniditoWeapon;
+            c.armor     = inst.beniditoArmor;
+            c.accessory = inst.beniditoAccessory;
+            c.InitRuntime();   // re-init: equipment hp/sp bonuses land in current pools
+        }
         return c;
     }
 

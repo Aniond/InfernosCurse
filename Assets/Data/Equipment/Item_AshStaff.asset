@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59cc00b94e1df734f91162304df16aae, type: 3}
+  m_Name: Item_AshStaff
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentDefinition
+  itemName: Ash Staff
+  description: A walking staff of Tuscan ash, worn smooth by pilgrim hands. Steadies
+    the spirit.
+  icon: {fileID: 0}
+  slot: 0
+  bonuses:
+    characterName: Benidito
+    characterClass: Warrior
+    level: 1
+    hp: 100
+    hpMax: 100
+    sp: 60
+    spMax: 60
+    xp: 0
+    xpNext: 100
+    strength: 12
+    dexterity: 10
+    constitution: 10
+    creativity: 1
+    faith: 2
+    perception: 10
+    speed: 10
+  damageType: 0
+  attackPowerBonus: 3
+  valueFlorins: 25

@@ -79,6 +79,24 @@ public class CombatantData : ScriptableObject
     [Header("Skill Slots (all combatants)")]
     public SkillSlots equippedSkills = new SkillSlots();
 
+    [Header("Equipment")]
+    public EquipmentDefinition weapon;
+    public EquipmentDefinition armor;      // body
+    public EquipmentDefinition accessory;  // ring / amulet / relic
+    public EquipmentDefinition helmet;
+    public EquipmentDefinition gloves;
+    public EquipmentDefinition boots;
+
+    public System.Collections.Generic.IEnumerable<EquipmentDefinition> AllEquipment()
+    {
+        if (weapon) yield return weapon;
+        if (armor) yield return armor;
+        if (accessory) yield return accessory;
+        if (helmet) yield return helmet;
+        if (gloves) yield return gloves;
+        if (boots) yield return boots;
+    }
+
     // ── Learnable skills (enemies / NPCs) ────────────────────────────────────
     [Header("Learnable Skills (Enemies / NPCs)")]
     [Tooltip("Skills this combatant can drop for Benidito to absorb on defeat.")]
@@ -97,6 +115,8 @@ public class CombatantData : ScriptableObject
             var jobBonus = activeJob.GetJobStatContribution();
             Add(ref total, jobBonus);
         }
+        foreach (var item in AllEquipment())
+            Add(ref total, item.bonuses);
         // Passive skill bonuses would be applied here later
         return total;
     }

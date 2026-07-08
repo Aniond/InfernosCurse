@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59cc00b94e1df734f91162304df16aae, type: 3}
+  m_Name: Item_TarnishedRing
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentDefinition
+  itemName: Tarnished Ring
+  description: A silver ring gone black at the band. It hums faintly near cursed
+    ground.
+  icon: {fileID: 0}
+  slot: 2
+  bonuses:
+    characterName: Benidito
+    characterClass: Warrior
+    level: 1
+    hp: 100
+    hpMax: 100
+    sp: 60
+    spMax: 8
+    xp: 0
+    xpNext: 100
+    strength: 12
+    dexterity: 10
+    constitution: 10
+    creativity: 8
+    faith: 8
+    perception: 1
+    speed: 10
+  damageType: 0
+  attackPowerBonus: 0
+  valueFlorins: 40
