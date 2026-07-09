@@ -1,6 +1,6 @@
 # Florentine Inn — Floor 1 Design
 
-**Status:** Approved layout direction (Option B)
+**Status:** Approved layout direction (Option B) with approved counter-interaction amendment
 **Reference:** `Refrences/maps/inn.png`
 **Level type:** Safe social hub
 **Engine:** Unity 6, existing HD-2D camera/player stack
@@ -77,7 +77,7 @@ FlorentineInnFloor1
 │   ├── StaffMarkers
 │   └── GuestMarkers
 ├── [Interactions]
-│   ├── InnRestZone
+│   ├── InnCounterInteraction
 │   ├── DialogueMarkers
 │   └── Floor2LockedLanding
 ├── [Travel]
@@ -88,7 +88,7 @@ FlorentineInnFloor1
 └── HD2D_CameraKit
 ```
 
-The builder will reuse the existing player copied from `PonteVecchio`, `HD2D_CameraKit.prefab`, `GameSystems.prefab`, `ZoneExit`, and `GuildInteractionZone`/`RestMenuUI` patterns.
+The builder will reuse the existing player copied from `PonteVecchio`, `HD2D_CameraKit.prefab`, `GameSystems.prefab`, `ZoneExit`, and `RestMenuUI` patterns.
 
 ## Geometry and Camera Rules
 
@@ -128,10 +128,24 @@ The first pass excludes:
 - Final bespoke dialogue, quests, or schedules.
 - New externally generated hero props.
 
+## Reception Counter Interaction
+
+The inn service is a deliberate interaction with the reception counter, not a walk-into trigger.
+
+- Add a reusable player world-interaction component rather than counter-specific input polling.
+- Add an `Interact` player action bound to keyboard **E** and the gamepad south button (**A/Cross**).
+- Keyboard and gamepad input activate the nearest eligible world interactable within 2.25m.
+- A left mouse click casts from the active camera through the cursor and activates the counter only when the counter is the first interactable hit and the player is within 2.25m.
+- The reception counter owns the inn interaction component and collider used by both input paths.
+- While the counter is eligible, show `E / Click — Speak to Innkeeper` as the interaction prompt.
+- Activating the counter opens the existing `RestMenuUI` for **Albergo Fiorentino**, price 10, with Albergatori guild modifiers enabled.
+- Remove the automatic lobby `InnRestZone`; merely entering or crossing the reception area must never open the rest menu.
+- The reusable interaction layer may support later shops, doors, and NPCs, but this pass wires only the inn counter.
+
 ## Data Flow
 
 - Entering the scene places the player at `StreetEntrance`.
-- Walking into the reception service zone opens `RestMenuUI` through `GuildInteractionZone`.
+- The player enters counter range, then presses E/gamepad A-Cross or clicks the unobstructed counter to open `RestMenuUI`.
 - Resting delegates to `RestSystem.RestAtInn`, preserving wallet, time, curse, and guild modifiers.
 - The street exit uses `ZoneExit` and returns through the existing world-map/scene travel flow.
 - The stair landing provides visual feedback only and performs no load until Floor 2 is implemented.
@@ -144,10 +158,13 @@ The Floor 1 pass is testable when all of the following are true:
 2. The player spawns at the street entrance and the camera follows correctly.
 3. Every named room is reachable without clipping or blocked doorways.
 4. The courtyard and both circulation loops are navigable.
-5. Reception opens the inn-rest UI and completing a rest uses the existing system.
-6. The street exit works without trapping or repeatedly retriggering the player.
-7. The staircase is climbable to its blocked landing and cannot load a missing Floor 2.
-8. Interior walls do not obstruct the intended isometric view.
+5. Walking into reception does not open the inn-rest UI.
+6. E and gamepad A/Cross open the inn-rest UI while the player is within 2.25m of the counter.
+7. Clicking the unobstructed counter opens the inn-rest UI while in range, but not from outside range or through another collider.
+8. Completing a rest uses the existing rest system.
+9. The street exit works without trapping or repeatedly retriggering the player.
+10. The staircase is climbable to its blocked landing and cannot load a missing Floor 2.
+11. Interior walls do not obstruct the intended isometric view.
 
 ## Future Floor 2 Contract
 
