@@ -116,6 +116,11 @@ public class BattleManager : MonoBehaviour
         // every EnemyAI hits its null-guard and passes the turn forever.
         EnemyAI.InitSharedState(_worldState, new InfluenceMap(Grid, _worldState));
 
+        // Unit info card (hover HP panel) — runtime-spawned so existing
+        // BattleKit prefabs don't need a rebuild.
+        if (FindFirstObjectByType<BattleUnitInfoUI>() == null)
+            new GameObject("BattleUnitInfo").AddComponent<BattleUnitInfoUI>();
+
         SetState(BattleState.BattleStart);
         StartCoroutine(BattleLoop());
     }
@@ -259,10 +264,12 @@ public class BattleManager : MonoBehaviour
 
         if (unit.IsPlayer)
         {
-            SetState(BattleState.PlayerSelectMove);
-            ShowMoveRange(unit);
+            // Menu-first (David 7/09): the turn opens on the action menu —
+            // Move / skills / End Turn — instead of dropping straight into
+            // move selection. Move and Act each spend once per turn.
+            SetState(BattleState.PlayerSelectAction);
 
-            // Wait for the player to finish their turn (Wait, or move+act).
+            // Wait for the player to finish their turn (End Turn, or move+act).
             while (!_turnComplete && !IsBattleOver())
                 yield return null;
         }
@@ -388,6 +395,37 @@ public class BattleManager : MonoBehaviour
         else           SetState(BattleState.PlayerSelectAction);
     }
 
+    // Menu-first flow: the menu's Move entry. Enters move selection if the
+    // move hasn't been spent; before acting it also allows re-positioning
+    // (undoes the earlier move first, FFT-style).
+    public void PlayerChooseMove()
+    {
+        if (State != BattleState.PlayerSelectAction) return;
+        if (_activeUnit == null) return;
+
+        if (_hasMoved)
+        {
+            if (_hasActed) return;   // both spent — nothing to re-do
+            if (_preMovePosition != _activeUnit.gridPosition)
+            {
+                Grid.MoveUnit(_activeUnit, _preMovePosition);
+                _activeUnit.SetFacingToward(_preMovePosition);
+            }
+            _hasMoved = false;
+        }
+
+        SetState(BattleState.PlayerSelectMove);
+        ShowMoveRange(_activeUnit);
+    }
+
+    // Back out of move selection to the menu WITHOUT spending the move.
+    public void PlayerCancelMove()
+    {
+        if (State != BattleState.PlayerSelectMove) return;
+        HideRangeHighlights();
+        SetState(BattleState.PlayerSelectAction);
+    }
+
     // Return from action menu to move selection — only valid before acting
     public void PlayerUndoMove()
     {
@@ -433,8 +471,9 @@ public class BattleManager : MonoBehaviour
             {
                 if (!_hasMoved && unit.IsAlive && !IsBattleOver())
                 {
-                    SetState(BattleState.PlayerSelectMove);
-                    ShowMoveRange(unit);
+                    // Menu-first: after acting, back to the menu (Move / End
+                    // Turn) rather than forcing move selection.
+                    SetState(BattleState.PlayerSelectAction);
                 }
                 else
                 {
@@ -480,12 +519,19 @@ public class BattleManager : MonoBehaviour
 
     // ── Range display ─────────────────────────────────────────────────────────
 
+    // Move forecast (UI): the active unit's budget and the cost to reach each
+    // in-range tile, captured when the range is computed.
+    readonly System.Collections.Generic.Dictionary<Vector2Int, int> _moveCosts = new();
+    public int MovePoints { get; private set; }
+    public int MoveCostTo(Vector2Int pos) => _moveCosts.TryGetValue(pos, out var c) ? c : -1;
+
     void ShowMoveRange(BattleUnit unit)
     {
         var stats  = unit.Data.GetTotalStats();
         int move   = Mathf.Max(2, stats.speed / 3);
         int jump   = Mathf.Max(1, stats.dexterity / 5);
-        _moveRange = Grid.GetMoveRange(unit.gridPosition, move, jump, unit);
+        MovePoints = move;
+        _moveRange = Grid.GetMoveRange(unit.gridPosition, move, jump, unit, _moveCosts);
 
         _validMoves.Clear();
         foreach (var c in _moveRange) _validMoves.Add(c.gridPos);
@@ -509,6 +555,11 @@ public class BattleManager : MonoBehaviour
         OnMoveRangeReady?.Invoke(new List<GridCell>());
         OnAttackRangeReady?.Invoke(new List<GridCell>());
     }
+
+    // True while aiming and the cell is inside the skill's legal range —
+    // the forecast panel only speaks about shots you could actually take.
+    public bool IsValidActionTarget(Vector2Int pos) =>
+        State == BattleState.PlayerSelectTarget && _validTargets.Contains(pos);
 
     // Skill the player is currently aiming (null outside PlayerSelectTarget).
     // Used by the cursor's AOE preview and the forecast panel.

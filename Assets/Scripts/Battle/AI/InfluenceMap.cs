@@ -71,13 +71,18 @@ public class InfluenceMap
 
     public Vector2Int BestFlankPosition(List<GridCell> reachable, BattleUnit target)
     {
-        // Prefer cells that are to the side or behind the target
+        // Flanking means getting AROUND the target, not away from it. Closing
+        // distance dominates the score; the facing bonus then picks the side/
+        // back cell among the close ones. Without the distance term the
+        // low-threat (= far) cells win and the unit visibly runs away
+        // (Rosekin, David 7/09).
         var scored = new Dictionary<Vector2Int, float>();
         foreach (var cell in reachable)
         {
             float baseScore = flankScore.TryGetValue(cell.gridPos, out float s) ? s : 0f;
             float facing    = FacingBonus(cell.gridPos, target);
-            scored[cell.gridPos] = baseScore + facing * 0.4f;
+            float dist      = BattleGrid.ManhattanDistance(cell.gridPos, target.gridPosition);
+            scored[cell.gridPos] = baseScore * 0.3f + facing * 0.5f - dist * 0.25f;
         }
         return BestFrom(reachable, scored);
     }
@@ -147,8 +152,11 @@ public class InfluenceMap
     {
         float hpRatio    = unit.Data.currentHP / (float)unit.Data.GetTotalStats().hpMax;
         float localCurse = world.GetCurseDensity(unit.gridPosition);
-        // Direct attack is favorable when healthy and on cursed ground
-        return hpRatio * 0.5f + localCurse * 0.3f + (world.playerBelief.IsConfident ? 0.2f : 0f);
+        // Direct attack is the default aggression of anything with claws — it
+        // gets a flat base so it doesn't depend on cursed ground (uncursed
+        // zones like the garden zeroed this out and the creature never
+        // engaged, David 7/09). Healthy + knows where you are = attacks.
+        return 0.3f + hpRatio * 0.4f + localCurse * 0.1f + (world.playerBelief.IsConfident ? 0.2f : 0f);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

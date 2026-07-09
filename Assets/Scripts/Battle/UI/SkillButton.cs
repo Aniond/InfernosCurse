@@ -101,6 +101,18 @@ public class SkillButton : MonoBehaviour
         if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
     }
 
+    // Grey a real skill without wiping its label — used when the turn's
+    // action is already spent (menu-first flow shows the menu again for Move
+    // / End Turn after acting).
+    public void SetUsable(bool usable)
+    {
+        if (!HasSkill) return;
+        _btn.interactable = usable;
+        bool canAfford = usable && _unit != null && _unit.HasSP(Skill.spCost);
+        SetBackground(canAfford ? NormalColor : DisabledColor);
+        if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+    }
+
     void SetEmpty()
     {
         _btn.interactable = false;

@@ -18,22 +18,22 @@ MonoBehaviour:
   icon: {fileID: 0}
   slot: 0
   bonuses:
-    characterName: Benidito
-    characterClass: Warrior
-    level: 1
-    hp: 100
-    hpMax: 100
-    sp: 60
-    spMax: 60
+    characterName:
+    characterClass:
+    level: 0
+    hp: 0
+    hpMax: 0
+    sp: 0
+    spMax: 5
     xp: 0
-    xpNext: 100
-    strength: 12
-    dexterity: 10
-    constitution: 10
+    xpNext: 0
+    strength: 0
+    dexterity: 0
+    constitution: 0
     creativity: 1
     faith: 2
-    perception: 10
-    speed: 10
+    perception: 0
+    speed: 0
   damageType: 0
   attackPowerBonus: 3
   valueFlorins: 25

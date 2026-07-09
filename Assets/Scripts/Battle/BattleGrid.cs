@@ -98,7 +98,8 @@ public class BattleGrid : MonoBehaviour
 
     // mover: the unit doing the moving (optional). Used to decide which occupied
     // cells are hostile (block traversal) vs allied (pass through, can't stop).
-    public List<GridCell> GetMoveRange(Vector2Int origin, int movePoints, int jumpHeight, BattleUnit mover = null)
+    public List<GridCell> GetMoveRange(Vector2Int origin, int movePoints, int jumpHeight, BattleUnit mover = null,
+                                       Dictionary<Vector2Int, int> costsOut = null)
     {
         var reachable = new List<GridCell>();
         var visited   = new Dictionary<Vector2Int, int>(); // pos → move points remaining
@@ -152,6 +153,14 @@ public class BattleGrid : MonoBehaviour
 
                 queue.Enqueue((next, left));
             }
+        }
+
+        // Tile costs for the UI (move forecast): cost = points spent to reach.
+        if (costsOut != null)
+        {
+            costsOut.Clear();
+            foreach (var kv in visited)
+                costsOut[kv.Key] = movePoints - kv.Value;
         }
 
         return reachable;

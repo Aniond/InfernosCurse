@@ -119,6 +119,20 @@ public class BattleCursor : MonoBehaviour
 
         var ray = cam.ScreenPointToRay(mouse.position.ReadValue());
         if (!TryRayToCell(ray, out var cell)) return;
+
+        // Clicking a unit's BILLBOARD hits the ground BEHIND the sprite (the
+        // ray passes over its head), so pointing at the monster never selected
+        // its cell (David 7/09). If the pointer is close to a unit on screen,
+        // snap to that unit's cell instead of the ground intersection.
+        var pointer = mouse.position.ReadValue();
+        float bestPx = 48f; // max pixel distance that counts as "on the unit"
+        var bmgr = BattleManager.Instance;
+        if (bmgr != null)
+        {
+            SnapToNearestUnit(cam, pointer, bmgr.Enemies, ref bestPx, ref cell);
+            SnapToNearestUnit(cam, pointer, bmgr.Players, ref bestPx, ref cell);
+        }
+
         if (!_grid.InBounds(cell)) return;
 
         if (cell != _cursorPos)
@@ -128,6 +142,20 @@ public class BattleCursor : MonoBehaviour
             UpdateHoverHighlight();
         }
         if (clicked) OnConfirm();
+    }
+
+    static void SnapToNearestUnit(Camera cam, Vector2 pointer, List<BattleUnit> units,
+                                  ref float bestPx, ref Vector2Int cell)
+    {
+        for (int i = 0; i < units.Count; i++)
+        {
+            var u = units[i];
+            if (u == null || !u.IsAlive) continue;
+            var sp = cam.WorldToScreenPoint(u.transform.position + Vector3.up * 0.6f);
+            if (sp.z <= 0f) continue;
+            float d = Vector2.Distance(pointer, new Vector2(sp.x, sp.y));
+            if (d < bestPx) { bestPx = d; cell = u.gridPosition; }
+        }
     }
 
     bool TryRayToCell(Ray ray, out Vector2Int cell)
@@ -248,9 +276,9 @@ public class BattleCursor : MonoBehaviour
                 break;
 
             case BattleState.PlayerSelectMove:
-                // Cancel out of move selection = skip the move (opens the action
-                // menu pre-act, ends the turn post-act). Never forfeits a turn.
-                bm.PlayerSkipMove();
+                // Menu-first flow: cancel backs out to the action menu WITHOUT
+                // spending the move (confirm on your own tile still = stay put).
+                bm.PlayerCancelMove();
                 break;
         }
     }
