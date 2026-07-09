@@ -32,6 +32,22 @@ public class ZoneEncounterTrigger : MonoBehaviour
         _heights = GetComponent<BattleTerrainHeights>();
         _staged = Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None)
             .Where(u => !u.IsPlayer).ToList();
+
+        // Staged ambushers stay INVISIBLE in explore — being jumped is the
+        // first time you see the creature (David 7/09). They're destroyed and
+        // re-spawned as battle units when the encounter fires, so there's
+        // nothing to un-hide.
+        foreach (var u in _staged)
+        {
+            u.stagedAmbusher = true;   // ZoneFogOfWar must not fog-reveal it
+            // Deactivate the visual GameObjects rather than toggling
+            // Renderer.enabled — fog, occlusion faders, and level faders all
+            // flip renderer flags and were re-revealing the ambusher (David
+            // 7/09); none of them touch inactive children.
+            foreach (var r in u.GetComponentsInChildren<Renderer>())
+                if (r.gameObject != u.gameObject) r.gameObject.SetActive(false);
+                else r.enabled = false;
+        }
     }
 
     void Update()

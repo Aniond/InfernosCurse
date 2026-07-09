@@ -223,7 +223,8 @@ public class ZoneFogOfWar : MonoBehaviour
         _lastVisible = visible;
 
         foreach (var unit in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
-            if (!unit.IsPlayer) SetFogHidden(unit.gameObject, visible);
+            if (!unit.IsPlayer && !unit.stagedAmbusher)   // staged ambushers stay hidden until the jump
+                SetFogHidden(unit.gameObject, visible);
         foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             if (t.parent == null && t.name.StartsWith("NPC_"))
                 SetFogHidden(t.gameObject, visible);

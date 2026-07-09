@@ -360,6 +360,19 @@ public class BattleManager : MonoBehaviour
         if (!_validTargets.Contains(targetPos)) return;   // authoritative range check
 
         var target = Grid.GetCell(targetPos)?.occupant;
+
+        // Bare grid isn't a target: single-target skills need a legal occupant
+        // (enemy for offense, ally for healing) or the confirm is a no-op —
+        // clicking empty ground used to fire the attack at nothing (David 7/09).
+        // AoE stays free-aim: its splash is the point.
+        if (_selectedSkill.areaOfEffect <= 0)
+        {
+            bool legal = target != null && target.IsAlive &&
+                         (_selectedSkill.isHealing ? target.IsPlayer == _activeUnit.IsPlayer
+                                                   : target.IsPlayer != _activeUnit.IsPlayer);
+            if (!legal) return;
+        }
+
         _activeUnit.QueueAction(_selectedSkill, target, targetPos, _selectedAbsorbedInstance);
         SetState(BattleState.ResolvingAction);
         HideRangeHighlights();

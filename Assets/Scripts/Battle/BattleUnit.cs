@@ -19,6 +19,10 @@ public class BattleUnit : MonoBehaviour
     public int   EyeHeight  => Data != null ? Data.eyeHeight : eyeHeight;
     public float SightRange => Data != null ? Data.sightRange : 13f;
     public Vector2Int  gridPosition;
+    // Pre-battle ambusher staged in an explore zone: never rendered and never
+    // fog-revealed — being jumped is the first time the player sees it.
+    // ZoneEncounterTrigger flags it; ZoneFogOfWar skips it.
+    [System.NonSerialized] public bool stagedAmbusher;
     public FacingDir   facing = FacingDir.South;
     public float       ct     = 0f;      // current charge time (0-100)
     public UnitState   state  = UnitState.Idle;

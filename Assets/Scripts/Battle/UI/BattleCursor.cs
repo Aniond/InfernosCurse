@@ -247,6 +247,14 @@ public class BattleCursor : MonoBehaviour
         Vector2Int next = _cursorPos + dir;
         if (!_grid.InBounds(next)) return;
 
+        // Keys stay on the ACTIVE selection: blue tiles while moving (plus
+        // your own tile), red tiles while aiming — the cursor can't wander
+        // onto bare grid (David 7/09). Both ranges are connected regions.
+        var bm = BattleManager.Instance;
+        if (Mode == CursorMode.Attack && _attackRange.Count > 0 && !_attackRange.Contains(next)) return;
+        if (Mode == CursorMode.Move && _moveRange.Count > 0 && !_moveRange.Contains(next) &&
+            next != (bm != null && bm.ActiveUnit != null ? bm.ActiveUnit.gridPosition : next)) return;
+
         _prevCursorPos = _cursorPos;
         _cursorPos     = next;
         UpdateCursorWorldPosition();
