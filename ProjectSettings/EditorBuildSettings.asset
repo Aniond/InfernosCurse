@@ -32,6 +32,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ViaCalimala.unity
     guid: ac6f77fca6391264f94f38b2d81991da
+  - enabled: 1
+    path: Assets/Scenes/FlorentineInnFloor1.unity
+    guid: a658fce99a4e5cf49b4c0291fb5f8855
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

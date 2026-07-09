@@ -332,7 +332,7 @@ public class EnemyAI : MonoBehaviour
     void TryAttack(BattleUnit unit, List<BattleUnit> players, BattleGrid grid)
     {
         // Pick best skill from equipped actives
-        var skill = PickBestSkill(unit);
+        var skill = SelectBestUsableSkill(unit);
         if (skill == null) { BattleManager.Instance?.EndUnitTurn(unit); return; }
 
         // Find target in range — honor the skill's own min range and LoS
@@ -343,6 +343,7 @@ public class EnemyAI : MonoBehaviour
             if (cell.occupant == null || cell.occupant.IsPlayer == false) continue;
             if (!cell.occupant.IsAlive) continue;
 
+            Debug.Log($"[EnemyAI] {unit.Data.displayName} chooses {skill.skillName} against {cell.occupant.Data.displayName}.");
             unit.QueueAction(skill, cell.occupant, cell.gridPos);
 
             // Charged skills charge for enemies too — resolve only instant ones.
@@ -372,22 +373,56 @@ public class EnemyAI : MonoBehaviour
         TryAttack(unit, players, grid);
     }
 
-    SkillDefinition PickBestSkill(BattleUnit unit)
+    SkillDefinition PickBestSkill(BattleUnit unit, bool requireTargetInRange = false)
     {
         // Pick highest base power OFFENSIVE skill the unit has SP for.
         // Healing skills are excluded — casting one at a player would heal them.
-        SkillDefinition best    = null;
-        int             bestPow = -1;
+        SkillDefinition best = null;
+        float bestScore = float.NegativeInfinity;
+        var bm = BattleManager.Instance;
         foreach (var skill in unit.Data.equippedSkills.actives)
         {
             if (skill == null) continue;
             if (skill.skillType != SkillType.Active) continue;
             if (skill.isHealing) continue;
             if (!unit.HasSP(skill.spCost)) continue;
-            if (skill.basePower > bestPow) { bestPow = skill.basePower; best = skill; }
+
+            int hittableTargets = 0;
+            int bestAffectedTargets = 0;
+            if (requireTargetInRange)
+            {
+                if (bm?.Grid == null || bm.Players == null) continue;
+                var attackRange = bm.Grid.GetAttackRange(unit.gridPosition, skill.minRange, skill.range,
+                                                         skill.requiresLineOfSight, unit.Elevation);
+                foreach (var cell in attackRange)
+                {
+                    if (cell.occupant == null || !cell.occupant.IsPlayer || !cell.occupant.IsAlive) continue;
+                    hittableTargets++;
+
+                    int affected = 1;
+                    if (skill.areaOfEffect > 0)
+                    {
+                        affected = 0;
+                        foreach (var player in bm.Players)
+                            if (player.IsAlive && BattleGrid.ManhattanDistance(cell.gridPos, player.gridPosition) <= skill.areaOfEffect)
+                                affected++;
+                    }
+                    bestAffectedTargets = Mathf.Max(bestAffectedTargets, affected);
+                }
+                if (hittableTargets == 0) continue;
+            }
+
+            float score = skill.basePower;
+            if (skill.appliesStatus) score += 4f * skill.statusChance;
+            score += Mathf.Max(0, bestAffectedTargets - 1) * 5f;
+            if (score > bestScore) { bestScore = score; best = skill; }
         }
         return best;
     }
+
+    // Public read-only decision hook for battle diagnostics and designer tools.
+    public SkillDefinition SelectBestUsableSkill(BattleUnit unit) =>
+        PickBestSkill(unit, requireTargetInRange: true);
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 

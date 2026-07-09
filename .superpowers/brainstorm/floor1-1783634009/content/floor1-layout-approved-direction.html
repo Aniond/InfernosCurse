@@ -1,0 +1,51 @@
+<style>
+  .layout-wrap { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(230px,.7fr); gap:18px; align-items:start; }
+  .floor-detail { display:grid; grid-template-columns:repeat(12,1fr); grid-template-rows:repeat(12,30px); gap:3px; padding:10px; background:var(--bg-tertiary); border:1px solid var(--border); }
+  .space { display:flex; align-items:center; justify-content:center; text-align:center; padding:4px; background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border); font-size:11px; }
+  .court { background:var(--selected-bg); border-color:var(--selected-border); }
+  .public { border-bottom:3px solid var(--accent); }
+  .service { border-top:3px solid var(--warning); }
+  .future { border:2px dashed var(--accent); }
+  .flow { margin:0; padding-left:20px; }
+  .flow li { margin:0 0 10px; }
+  @media (max-width:760px){ .layout-wrap{grid-template-columns:1fr;} }
+</style>
+
+<h2>Floor 1 · Proposed blockout</h2>
+<p class="subtitle">Approx. 22m × 22m playable footprint, adapted from the 1:100 reference for HD-2D navigation.</p>
+
+<div class="layout-wrap">
+  <div class="floor-detail" aria-label="Detailed proposed inn ground floor plan">
+    <div class="space service" style="grid-area:1/1/7/5">Dining Room<br>7.0 × 10.0m</div>
+    <div class="space service" style="grid-area:1/5/5/10">Kitchen<br>8.5 × 6.5m</div>
+    <div class="space service" style="grid-area:1/10/3/13">Pantry<br>4.5 × 3.0m</div>
+    <div class="space service" style="grid-area:3/10/6/13">Staff Service<br>4.5 × 4.5m</div>
+    <div class="space" style="grid-area:6/10/9/13">Storage<br>4.5 × 4.5m</div>
+    <div class="space court" style="grid-area:5/5/9/10">Open Courtyard<br>8.0 × 7.0m</div>
+    <div class="space future" style="grid-area:7/1/9/5">Stairs + WC<br>Floor 2 reserved</div>
+    <div class="space public" style="grid-area:9/1/13/5">Sitting Room / Salon<br>7.0 × 6.5m</div>
+    <div class="space public" style="grid-area:9/5/13/10">Reception / Lobby<br>8.0 × 6.5m</div>
+    <div class="space public" style="grid-area:9/10/13/13">Office<br>4.5 × 6.5m</div>
+  </div>
+
+  <div>
+    <h3>Player flow</h3>
+    <ol class="flow">
+      <li><strong>Street entry → Reception</strong><br>Immediate check-in/rest service and innkeeper.</li>
+      <li><strong>Reception → Courtyard</strong><br>Main visual landmark; all wings remain legible.</li>
+      <li><strong>West loop</strong><br>Salon, stairs, dining room.</li>
+      <li><strong>East loop</strong><br>Office, storage, staff service, kitchen.</li>
+      <li><strong>Future hook</strong><br>Built stairs terminate at a locked Floor 2 landing.</li>
+    </ol>
+    <p class="subtitle">Doorways: 1.6–2.0m · main circulation: 2.0m minimum · walls: camera-cutaway ready.</p>
+  </div>
+</div>
+
+<div class="options" style="margin-top:18px">
+  <div class="option" data-choice="approve-layout" onclick="toggleSelect(this)">
+    <div class="letter">✓</div><div class="content"><h3>Approve this layout</h3><p>Continue to functionality, NPCs, and visual treatment.</p></div>
+  </div>
+  <div class="option" data-choice="revise-layout" onclick="toggleSelect(this)">
+    <div class="letter">↺</div><div class="content"><h3>Revise the layout</h3><p>Tell me which room or proportion should change.</p></div>
+  </div>
+</div>

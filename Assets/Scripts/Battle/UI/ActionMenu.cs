@@ -59,7 +59,7 @@ public class ActionMenu : MonoBehaviour
     void Start()
     {
         if (moveButton == null && waitButton != null) moveButton = CloneCommand(waitButton, "MoveBtn", "Move");
-        if (actButton  == null && waitButton != null) actButton  = CloneCommand(waitButton, "ActBtn", "Act");
+        if (actButton  == null && waitButton != null) actButton  = CloneCommand(waitButton, "ActBtn", "Attack");
 
         moveButton?.onClick.AddListener(OnMove);
         actButton?.onClick.AddListener(OnAct);
@@ -196,12 +196,14 @@ public class ActionMenu : MonoBehaviour
         bool hasActed = bm != null && bm.HasActed;
 
         _entries.Clear();
-        AddCommand(moveButton, "Move", !hasMoved, OnMove);
-        AddCommand(actButton, "Act", !hasActed, OnAct);
-        if (hasMoved && !hasActed)
-            AddCommand(backButton, "Undo Move", true, OnUndoMove);
-        else if (backButton != null)
-            backButton.gameObject.SetActive(false);
+        // Keep this tier focused on commands that remain this turn.
+        if (!hasMoved) AddCommand(moveButton, "Move", true, OnMove);
+        else if (moveButton != null) moveButton.gameObject.SetActive(false);
+
+        if (!hasActed) AddCommand(actButton, "Attack", true, OnAct);
+        else if (actButton != null) actButton.gameObject.SetActive(false);
+
+        if (backButton != null) backButton.gameObject.SetActive(false);
         AddCommand(waitButton, "End Turn", true, OnWait);
 
         LayoutEntries();

@@ -43,6 +43,32 @@ public class SkillSlots
     }
 }
 
+[Serializable]
+public class BattleSkillAnimation
+{
+    public SkillDefinition skill;
+    public Sprite[] south;
+    public Sprite[] east;
+    public Sprite[] north;
+    public Sprite[] west;
+    [Min(1f)] public float fps = 12f;
+
+    public Sprite[] GetFrames(FacingDir direction)
+    {
+        Sprite[] directional = direction switch
+        {
+            FacingDir.East  => east,
+            FacingDir.North => north,
+            FacingDir.West  => west,
+            _               => south,
+        };
+
+        // PixelLab exports do not always contain every cardinal direction.
+        // Use south as the neutral fallback instead of dropping to an idle pose.
+        return directional != null && directional.Length > 0 ? directional : south;
+    }
+}
+
 [CreateAssetMenu(fileName = "Combatant_New", menuName = "InfernosCurse/Combatant Data")]
 public class CombatantData : ScriptableObject
 {
@@ -55,7 +81,54 @@ public class CombatantData : ScriptableObject
     public Sprite battleSprite;
     [Tooltip("Battlefield sprite tint — FFT-style palette swap for enemy variants sharing a sprite. White = untinted.")]
     public Color battleTint = Color.white;
+    [Tooltip("Optional battlefield scale override. 0 uses automatic 1.6-tile normalization. Use this for sprites whose transparent canvas makes their visible art normalize too small.")]
+    [Min(0f)] public float battleVisualScale;
+    [Tooltip("Local X/Y position used with Battle Visual Scale. Ignored while automatic normalization is active.")]
+    public Vector2 battleVisualOffset;
+
+    [Header("Battlefield Directional Animation")]
+    [Tooltip("Optional cardinal idle sprites. Missing directions fall back to Battle Sprite.")]
+    public Sprite battleIdleSouth;
+    public Sprite battleIdleEast;
+    public Sprite battleIdleNorth;
+    public Sprite battleIdleWest;
+    [Tooltip("Optional walk frames for each cardinal direction. Missing arrays keep the directional idle sprite while moving.")]
+    public Sprite[] battleWalkSouth;
+    public Sprite[] battleWalkEast;
+    public Sprite[] battleWalkNorth;
+    public Sprite[] battleWalkWest;
+    [Min(1f)] public float battleWalkFps = 10f;
+    [Tooltip("Optional visual sequences keyed to the exact equipped skill. Missing directions use that sequence's south frames.")]
+    public BattleSkillAnimation[] battleSkillAnimations;
     public CombatantRole role;
+
+    public Sprite GetBattleIdleSprite(FacingDir direction)
+    {
+        Sprite directional = direction switch
+        {
+            FacingDir.East  => battleIdleEast,
+            FacingDir.North => battleIdleNorth,
+            FacingDir.West  => battleIdleWest,
+            _               => battleIdleSouth,
+        };
+        return directional != null ? directional : battleSprite;
+    }
+
+    public Sprite[] GetBattleWalkFrames(FacingDir direction) => direction switch
+    {
+        FacingDir.East  => battleWalkEast,
+        FacingDir.North => battleWalkNorth,
+        FacingDir.West  => battleWalkWest,
+        _               => battleWalkSouth,
+    };
+
+    public BattleSkillAnimation GetBattleSkillAnimation(SkillDefinition skill)
+    {
+        if (skill == null || battleSkillAnimations == null) return null;
+        foreach (var animation in battleSkillAnimations)
+            if (animation != null && animation.skill == skill) return animation;
+        return null;
+    }
 
     [Header("Base Stats (before job bonuses)")]
     public CharacterStats baseStats = new CharacterStats();

@@ -148,14 +148,21 @@ public class BattleManager : MonoBehaviour
             var sr = unit.GetComponentInChildren<SpriteRenderer>();
             if (sr != null)
             {
-                if (unit.Data.battleSprite != null) sr.sprite = unit.Data.battleSprite;
+                var idleSprite = unit.Data.GetBattleIdleSprite(unit.facing);
+                if (idleSprite != null) sr.sprite = idleSprite;
                 if (unit.Data.battleTint != Color.white) sr.color = unit.Data.battleTint;
 
-                // Normalize the billboard: raw sheets vary wildly (Ben's read
-                // 3 tiles wide and visually spilled onto neighboring tiles —
-                // "the creature is hugging my tile", David 7/09). Every unit
-                // stands ~1.6 tiles tall, feet planted on its OWN cell.
-                if (sr.sprite != null && sr.sprite.bounds.size.y > 0.01f)
+                // Normalize ordinary billboards to a shared tile scale. Sprites
+                // with large transparent canvases can opt into authored scale
+                // and offset values on CombatantData instead.
+                if (unit.Data.battleVisualScale > 0f)
+                {
+                    float s = unit.Data.battleVisualScale;
+                    var offset = unit.Data.battleVisualOffset;
+                    sr.transform.localScale    = new Vector3(s, s, 1f);
+                    sr.transform.localPosition = new Vector3(offset.x, offset.y, 0f);
+                }
+                else if (sr.sprite != null && sr.sprite.bounds.size.y > 0.01f)
                 {
                     const float targetHeight = 1.6f;
                     float s = targetHeight / sr.sprite.bounds.size.y;
@@ -481,6 +488,8 @@ public class BattleManager : MonoBehaviour
         // a delayed charge must never stomp another unit's (or stale) state.
         bool liveOwnTurn = unit == _activeUnit && !_turnComplete;
 
+        unit.SetFacingToward(unit.QueuedTargetPos);
+        unit.PlaySkillAnimation(unit.QueuedSkill);
         AbilityResolver.Resolve(unit, unit.QueuedSkill, unit.QueuedTargetPos, unit.QueuedAbsorbedInstance);
         unit.QueuedSkill             = null;
         unit.QueuedTarget            = null;

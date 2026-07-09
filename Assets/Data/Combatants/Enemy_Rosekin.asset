@@ -19,6 +19,90 @@ MonoBehaviour:
   portrait: {fileID: 21300000, guid: eaa1a31405be34b45aa1d46f670f0352, type: 3}
   battleSprite: {fileID: 21300000, guid: 2f3a690744ebcc046abe485df6d4ab39, type: 3}
   battleTint: {r: 1, g: 1, b: 1, a: 1}
+  battleVisualScale: 2
+  battleVisualOffset: {x: 0, y: 1.15}
+  battleIdleSouth: {fileID: 21300000, guid: 2f3a690744ebcc046abe485df6d4ab39, type: 3}
+  battleIdleEast: {fileID: 21300000, guid: a71e17a32495ae94696b6548513e8aae, type: 3}
+  battleIdleNorth: {fileID: 21300000, guid: d49eb3df28de750469eccaefa19f662b, type: 3}
+  battleIdleWest: {fileID: 21300000, guid: 6cc86752eb2d8f242bf1703eed765f20, type: 3}
+  battleWalkSouth:
+  - {fileID: 21300000, guid: 376f6cdaca271d54fad579a5e4dd19eb, type: 3}
+  - {fileID: 21300000, guid: f57de87b637bda040884ec5479028209, type: 3}
+  - {fileID: 21300000, guid: f4a6dac4967a03b46bca02c325ac0d29, type: 3}
+  - {fileID: 21300000, guid: 1aaad3648abb25346bd1c84820bffb9c, type: 3}
+  - {fileID: 21300000, guid: 395bdc6deb8dee647a710768eb6b607f, type: 3}
+  - {fileID: 21300000, guid: 5a61b529ed1cfec49a81ab98528bbbdc, type: 3}
+  battleWalkEast:
+  - {fileID: 21300000, guid: 14a335f264ded9741bd085632717e03d, type: 3}
+  - {fileID: 21300000, guid: de4f38e02e5207a4aa27346905b4fd38, type: 3}
+  - {fileID: 21300000, guid: d121d61613e07c941a8b97dbe396760b, type: 3}
+  - {fileID: 21300000, guid: bc31a3defa8677944a855144060a4373, type: 3}
+  - {fileID: 21300000, guid: e32a082d7fb4cc7418750f24146e5d35, type: 3}
+  - {fileID: 21300000, guid: b94870b40f73ba94d8721bf2e6a9df3a, type: 3}
+  battleWalkNorth:
+  - {fileID: 21300000, guid: b4155e7998dffd14d99c01e308bd1a9e, type: 3}
+  - {fileID: 21300000, guid: 92b7299df6ec4854b90e56be10dd7f88, type: 3}
+  - {fileID: 21300000, guid: 24d69747cd40fd1419788f1653c07f4e, type: 3}
+  - {fileID: 21300000, guid: 964464405af134a448b22479f451d961, type: 3}
+  - {fileID: 21300000, guid: 5747ce90a182b6e46b1d3b3489dfa0e5, type: 3}
+  - {fileID: 21300000, guid: 4e4ee4df584a84345af0c410e6dd7419, type: 3}
+  battleWalkWest:
+  - {fileID: 21300000, guid: c071712a6622ec345b2205485c37d941, type: 3}
+  - {fileID: 21300000, guid: f056b9b574709064b9111a26263c2f85, type: 3}
+  - {fileID: 21300000, guid: f877190492c8a0841b0dafd753c2c582, type: 3}
+  - {fileID: 21300000, guid: 591931241f4b27c44b6aa08d25fee486, type: 3}
+  - {fileID: 21300000, guid: 31aaf0be037bd6143b99f8c550c9ea03, type: 3}
+  - {fileID: 21300000, guid: 5242d576f97bedb428ce8273aa1a901c, type: 3}
+  battleWalkFps: 10
+  battleSkillAnimations:
+  - skill: {fileID: 11400000, guid: ea827b80e96a88340b1bd8e58b7bafe1, type: 2}
+    south:
+    - {fileID: 21300000, guid: a60af620468732049962f2b68a564248, type: 3}
+    - {fileID: 21300000, guid: b7ab21ced1b07ec489d7224fb28c19b2, type: 3}
+    - {fileID: 21300000, guid: 69471b4bcd6c4b342b15d7b5a6e397bc, type: 3}
+    - {fileID: 21300000, guid: 93677a4556669784fb62d7db0a7f6abb, type: 3}
+    - {fileID: 21300000, guid: f5d8a6a3460a36e4da18dc6e744248a7, type: 3}
+    - {fileID: 21300000, guid: b1ccda39b46f2804d8176d462aab0d23, type: 3}
+    - {fileID: 21300000, guid: de24768ebc17b4a4aae2bfad4537d784, type: 3}
+    - {fileID: 21300000, guid: 7034446e7d4c9ab42a6287ac3efba747, type: 3}
+    - {fileID: 21300000, guid: 1fdeaaf00a213a542a0fd9a19f81311d, type: 3}
+    east: []
+    north: []
+    west: []
+    fps: 12
+  - skill: {fileID: 11400000, guid: 0b4834ca823ad4b4fbea17cb6edb48af, type: 2}
+    south:
+    - {fileID: 21300000, guid: 1941b6979e947584f8fcf271d517dcf4, type: 3}
+    - {fileID: 21300000, guid: d252f5b32b7b2c94daefdb52bafde4de, type: 3}
+    - {fileID: 21300000, guid: 30d93b7960fe306448f732c8d978e7cf, type: 3}
+    - {fileID: 21300000, guid: 40cd19efe7637f3469ea3e2c926c3d62, type: 3}
+    - {fileID: 21300000, guid: e876e3a3b471f5849a837f985bd6a77f, type: 3}
+    - {fileID: 21300000, guid: 49774cf118482bd4f9391ff2c509a750, type: 3}
+    - {fileID: 21300000, guid: 5fc5b02bb5688f14f93fd0e813c034d6, type: 3}
+    - {fileID: 21300000, guid: 05b54290416eb204797957dd999a6974, type: 3}
+    - {fileID: 21300000, guid: d9a86b3a89be5db408ca2c0e1b8ba873, type: 3}
+    east:
+    - {fileID: 21300000, guid: 5346e91d60befe148be03cbbe44f66b7, type: 3}
+    - {fileID: 21300000, guid: 46954f2240e76f24ca4b5456eaa7a7ca, type: 3}
+    - {fileID: 21300000, guid: 79e51ed26e05122438aca9a02d004e79, type: 3}
+    - {fileID: 21300000, guid: 5fa11ed4b0ede1f42ba68043f6548d72, type: 3}
+    - {fileID: 21300000, guid: 1f8ec0869b2dcb84bbf10a0388a8bd14, type: 3}
+    - {fileID: 21300000, guid: 8e1d36985ba2cd143b826085de815048, type: 3}
+    - {fileID: 21300000, guid: 3913deb6091398d4f946b26d906dc745, type: 3}
+    - {fileID: 21300000, guid: e377a71226abdf84fbfbad48e1091065, type: 3}
+    - {fileID: 21300000, guid: 18152ac2a4a9ec645ab7b55f029b2e08, type: 3}
+    north: []
+    west:
+    - {fileID: 21300000, guid: ec4bba4e663704143abda35719a9faec, type: 3}
+    - {fileID: 21300000, guid: c5594b55eb34ad6459bc5f9a6881d09f, type: 3}
+    - {fileID: 21300000, guid: f67de90b54972ef4fbf1d4d183ab996f, type: 3}
+    - {fileID: 21300000, guid: c21dad0f8ad063d4983da8b25ae5f581, type: 3}
+    - {fileID: 21300000, guid: 4e34b1804e807064293b803922109f5c, type: 3}
+    - {fileID: 21300000, guid: d90d4d0a0c4c10f4c8a05f4f897afe7b, type: 3}
+    - {fileID: 21300000, guid: 750b51f12a65ba144b0e3115405b5890, type: 3}
+    - {fileID: 21300000, guid: d1e0b69a4c7dca54e944814f50ccb03d, type: 3}
+    - {fileID: 21300000, guid: 0081850b50883b74080030a2601f1c9d, type: 3}
+    fps: 12
   role: 2
   baseStats:
     characterName: Dante

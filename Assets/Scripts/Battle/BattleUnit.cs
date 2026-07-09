@@ -122,6 +122,8 @@ public class BattleUnit : MonoBehaviour
     // ── Walk animation (visual only — grid data is already authoritative) ─────
 
     private Coroutine _walkRoutine;
+    private Coroutine _skillRoutine;
+    private SpriteRenderer _spriteRenderer;
 
     public void AnimateWalk(System.Collections.Generic.List<Vector2Int> path, BattleGrid grid)
     {
@@ -132,6 +134,8 @@ public class BattleUnit : MonoBehaviour
     System.Collections.IEnumerator WalkRoutine(System.Collections.Generic.List<Vector2Int> path, BattleGrid grid)
     {
         const float speed = 6f; // world units per second
+        _spriteRenderer ??= GetComponentInChildren<SpriteRenderer>();
+        float frameClock = 0f;
 
         // PlaceUnit already snapped us to the destination — pull back to the
         // path start before the first rendered frame (no yield yet = no flicker).
@@ -143,14 +147,31 @@ public class BattleUnit : MonoBehaviour
             var cell = grid.GetCell(path[i]);
             Vector3 target = grid.GridToWorld(path[i], cell?.elevation ?? 0);
 
-            if (i > 0) SetFacingToward(path[i] + (path[i] - path[i - 1])); // face travel direction
+            Sprite[] walkFrames = null;
+            if (i > 0)
+            {
+                // Grid occupancy already points at the final destination, so
+                // derive visual facing from this path segment, not gridPosition.
+                SetFacingFromDelta(path[i] - path[i - 1], applyIdleSprite: false);
+                walkFrames = Data?.GetBattleWalkFrames(facing);
+                if (_spriteRenderer != null && walkFrames != null && walkFrames.Length > 0)
+                    _spriteRenderer.sprite = walkFrames[0];
+            }
 
             while (Vector3.Distance(transform.position, target) > 0.01f)
             {
+                if (_spriteRenderer != null && walkFrames != null && walkFrames.Length > 0)
+                {
+                    frameClock += Time.deltaTime;
+                    float fps = Data != null ? Mathf.Max(1f, Data.battleWalkFps) : 10f;
+                    int frame = Mathf.FloorToInt(frameClock * fps) % walkFrames.Length;
+                    if (walkFrames[frame] != null) _spriteRenderer.sprite = walkFrames[frame];
+                }
                 transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
                 yield return null;
             }
         }
+        ApplyIdleSprite();
         _walkRoutine = null;
     }
 
@@ -161,10 +182,55 @@ public class BattleUnit : MonoBehaviour
         Vector2Int diff = target - gridPosition;
         if (diff == Vector2Int.zero) return;
 
+        SetFacingFromDelta(diff, applyIdleSprite: true);
+    }
+
+    void SetFacingFromDelta(Vector2Int diff, bool applyIdleSprite)
+    {
         if (Mathf.Abs(diff.x) >= Mathf.Abs(diff.y))
             facing = diff.x > 0 ? FacingDir.East : FacingDir.West;
         else
             facing = diff.y > 0 ? FacingDir.North : FacingDir.South;
+
+        if (applyIdleSprite) ApplyIdleSprite();
+    }
+
+    void ApplyIdleSprite()
+    {
+        _spriteRenderer ??= GetComponentInChildren<SpriteRenderer>();
+        var idle = Data?.GetBattleIdleSprite(facing);
+        if (_spriteRenderer != null && idle != null) _spriteRenderer.sprite = idle;
+    }
+
+    public void PlaySkillAnimation(SkillDefinition skill)
+    {
+        var animation = Data?.GetBattleSkillAnimation(skill);
+        if (animation == null) return;
+
+        if (_skillRoutine != null) StopCoroutine(_skillRoutine);
+        _skillRoutine = StartCoroutine(SkillAnimationRoutine(animation));
+    }
+
+    System.Collections.IEnumerator SkillAnimationRoutine(BattleSkillAnimation animation)
+    {
+        // AI movement updates the grid immediately while the billboard catches
+        // up visually. Finish that walk before this coroutine owns the sprite.
+        while (_walkRoutine != null) yield return null;
+
+        _spriteRenderer ??= GetComponentInChildren<SpriteRenderer>();
+        var frames = animation.GetFrames(facing);
+        if (_spriteRenderer != null && frames != null && frames.Length > 0)
+        {
+            float delay = 1f / Mathf.Max(1f, animation.fps);
+            foreach (var frame in frames)
+            {
+                if (frame != null) _spriteRenderer.sprite = frame;
+                yield return new WaitForSeconds(delay);
+            }
+        }
+
+        ApplyIdleSprite();
+        _skillRoutine = null;
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -267,6 +333,7 @@ public class BattleUnit : MonoBehaviour
                    ? Instantiate(data)
                    : data;
         IsPlayer = isPlayer;
+        _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         Data.InitRuntime();
         ct    = UnityEngine.Random.Range(0f, 40f); // stagger starting CT
         state = UnitState.Idle;

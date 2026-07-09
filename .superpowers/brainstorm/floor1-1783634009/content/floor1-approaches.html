@@ -1,0 +1,77 @@
+<style>
+  .plan-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+  .plan-card { cursor:pointer; }
+  .floor { display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:repeat(6,34px); gap:3px; padding:8px; background:var(--bg-tertiary); border:1px solid var(--border); }
+  .room { display:flex; align-items:center; justify-content:center; text-align:center; padding:3px; background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border); font-size:11px; }
+  .court { background:var(--selected-bg); border-color:var(--selected-border); }
+  .entry { border-bottom:4px solid var(--accent); }
+  .tag { display:inline-block; margin-top:8px; color:var(--text-secondary); font-size:12px; }
+  @media (max-width:760px){ .plan-grid{grid-template-columns:1fr;} }
+</style>
+
+<h2>Choose the Floor 1 blockout direction</h2>
+<p class="subtitle">All three retain the reference plan’s courtyard, reception, dining room, kitchen, service wing, salon, office, WC, and future stair connection.</p>
+
+<div class="plan-grid cards">
+  <div class="card plan-card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="floor" aria-label="Faithful reconstruction floor plan">
+        <div class="room" style="grid-area:1/1/4/3">Dining</div>
+        <div class="room" style="grid-area:1/3/3/5">Kitchen</div>
+        <div class="room" style="grid-area:1/5/2/7">Pantry</div>
+        <div class="room" style="grid-area:2/5/4/7">Staff + Storage</div>
+        <div class="room court" style="grid-area:3/3/5/5">Courtyard</div>
+        <div class="room" style="grid-area:4/1/5/3">Stairs + WC</div>
+        <div class="room entry" style="grid-area:5/1/7/3">Salon</div>
+        <div class="room entry" style="grid-area:5/3/7/5">Reception</div>
+        <div class="room entry" style="grid-area:5/5/7/7">Office</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Faithful 1:100 reconstruction</h3>
+      <p>Closest to the drawing, including tighter doors and narrower service passages.</p>
+      <span class="tag">Best historical fidelity · hardest camera/navigation</span>
+    </div>
+  </div>
+
+  <div class="card plan-card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="floor" aria-label="Isometric adapted floor plan">
+        <div class="room" style="grid-area:1/1/4/3">Dining</div>
+        <div class="room" style="grid-area:1/3/3/5">Kitchen</div>
+        <div class="room" style="grid-area:1/5/2/7">Pantry</div>
+        <div class="room" style="grid-area:2/5/4/7">Service</div>
+        <div class="room court" style="grid-area:3/3/5/5">Wider Courtyard</div>
+        <div class="room" style="grid-area:4/1/5/3">Stairs + WC</div>
+        <div class="room entry" style="grid-area:5/1/7/3">Salon</div>
+        <div class="room entry" style="grid-area:5/3/7/5">Open Reception</div>
+        <div class="room entry" style="grid-area:5/5/7/7">Office</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Isometric faithful adaptation</h3>
+      <p>Keeps every room and adjacency, but widens doors, circulation, courtyard sightlines, and reception frontage.</p>
+      <span class="tag">Recommended · best HD-2D readability and playability</span>
+    </div>
+  </div>
+
+  <div class="card plan-card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="floor" aria-label="Compressed gameplay hub floor plan">
+        <div class="room" style="grid-area:1/1/4/3">Dining</div>
+        <div class="room" style="grid-area:1/3/3/5">Kitchen</div>
+        <div class="room" style="grid-area:1/5/4/7">Service + Storage</div>
+        <div class="room court" style="grid-area:3/3/5/5">Courtyard</div>
+        <div class="room" style="grid-area:4/1/5/3">Stairs</div>
+        <div class="room entry" style="grid-area:5/1/7/3">Salon</div>
+        <div class="room entry" style="grid-area:5/3/7/6">Large Reception</div>
+        <div class="room entry" style="grid-area:5/6/7/7">Office</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Compressed gameplay hub</h3>
+      <p>Merges minor service rooms and enlarges the social spaces for a faster, smaller build.</p>
+      <span class="tag">Fastest production · least faithful to the plan</span>
+    </div>
+  </div>
+</div>
