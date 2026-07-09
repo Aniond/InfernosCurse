@@ -14,10 +14,11 @@ public class SkillButton : MonoBehaviour
     public Image     background;
     public Image     selectionBorder;
 
-    public static readonly Color HighlightColor    = new Color(0.85f, 0.68f, 0.25f, 1.00f); // gold
-    public static readonly Color NormalColor       = new Color(0.18f, 0.12f, 0.08f, 0.90f); // dark leather
-    public static readonly Color DisabledColor     = new Color(0.30f, 0.25f, 0.22f, 0.70f); // greyed
-    public static readonly Color InsufficientColor = new Color(0.80f, 0.15f, 0.10f, 0.90f); // red flash
+    // Sourced from the shared period theme so the whole battle UI stays one look.
+    public static readonly Color HighlightColor    = BattleUITheme.Gold;
+    public static readonly Color NormalColor       = BattleUITheme.LeatherHi;
+    public static readonly Color DisabledColor     = new Color(0.20f, 0.16f, 0.12f, 0.75f);
+    public static readonly Color InsufficientColor = BattleUITheme.Blood;
 
     public SkillDefinition       Skill            { get; private set; }
     public bool                  HasSkill         => Skill != null;
@@ -31,11 +32,17 @@ public class SkillButton : MonoBehaviour
     private int         _slotIndex;
     private Button      _btn;
     private Coroutine   _flashRoutine;
+    private bool        _usable = true;   // final verdict: SP + targetability
+
+    public bool Usable => _usable;
 
     void Awake()
     {
         _btn = GetComponent<Button>();
         _btn.onClick.AddListener(OnClick);
+        BattleUITheme.StyleBody(skillNameLabel);
+        BattleUITheme.StyleBody(spCostLabel);
+        if (spCostLabel) spCostLabel.color = BattleUITheme.GoldDim;
     }
 
     // ── Setup ─────────────────────────────────────────────────────────────────
@@ -57,7 +64,7 @@ public class SkillButton : MonoBehaviour
         _btn.interactable = true;
 
         if (skillNameLabel) skillNameLabel.text = skill.skillName;
-        if (spCostLabel)    spCostLabel.text    = $"SP {skill.spCost}";
+        if (spCostLabel)    spCostLabel.text    = skill.spCost > 0 ? $"SP {skill.spCost}" : "";
         if (icon)
         {
             icon.sprite = skill.icon;
@@ -66,8 +73,9 @@ public class SkillButton : MonoBehaviour
 
         // Grey out if not enough SP
         bool canAfford = unit.HasSP(skill.spCost);
+        _usable = canAfford;
         SetBackground(canAfford ? NormalColor : DisabledColor);
-        if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+        if (skillNameLabel) skillNameLabel.color = canAfford ? BattleUITheme.Parchment : BattleUITheme.ParchDim;
     }
 
     // Absorbed-slot variant — label shows DisplayName() ("Holy X +N" / "X +N")
@@ -89,7 +97,7 @@ public class SkillButton : MonoBehaviour
         _btn.interactable = true;
 
         if (skillNameLabel) skillNameLabel.text = instance.DisplayName();
-        if (spCostLabel)    spCostLabel.text    = $"SP {Skill.spCost}";
+        if (spCostLabel)    spCostLabel.text    = Skill.spCost > 0 ? $"SP {Skill.spCost}" : "";
         if (icon)
         {
             icon.sprite = Skill.icon;
@@ -97,8 +105,9 @@ public class SkillButton : MonoBehaviour
         }
 
         bool canAfford = unit.HasSP(Skill.spCost);
+        _usable = canAfford;
         SetBackground(canAfford ? NormalColor : DisabledColor);
-        if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+        if (skillNameLabel) skillNameLabel.color = canAfford ? BattleUITheme.Parchment : BattleUITheme.ParchDim;
     }
 
     // Grey a real skill without wiping its label — used when the turn's
@@ -107,14 +116,15 @@ public class SkillButton : MonoBehaviour
     public void SetUsable(bool usable)
     {
         if (!HasSkill) return;
-        _btn.interactable = usable;
-        bool canAfford = usable && _unit != null && _unit.HasSP(Skill.spCost);
-        SetBackground(canAfford ? NormalColor : DisabledColor);
-        if (skillNameLabel) skillNameLabel.color = canAfford ? Color.white : new Color(0.6f, 0.6f, 0.6f);
+        _usable = usable && _unit != null && _unit.HasSP(Skill.spCost);
+        _btn.interactable = _usable;
+        SetBackground(_usable ? NormalColor : DisabledColor);
+        if (skillNameLabel) skillNameLabel.color = _usable ? BattleUITheme.Parchment : BattleUITheme.ParchDim;
     }
 
     void SetEmpty()
     {
+        _usable = false;
         _btn.interactable = false;
         AbsorbedInstance = null;
         if (skillNameLabel) skillNameLabel.text  = "—";
@@ -143,8 +153,9 @@ public class SkillButton : MonoBehaviour
 
     public void SetHighlight(bool on)
     {
+        if (!_usable) on = false;   // exhausted options never light up
         if (selectionBorder) selectionBorder.gameObject.SetActive(on);
-        SetBackground(on ? HighlightColor : (HasSkill && _unit != null && _unit.HasSP(Skill.spCost) ? NormalColor : DisabledColor));
+        SetBackground(on ? HighlightColor : (_usable ? NormalColor : DisabledColor));
     }
 
     // ── Insufficient SP flash ─────────────────────────────────────────────────

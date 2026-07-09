@@ -2,9 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
-// FFT-style action menu — appears after a unit finishes moving.
-// Shows 4 skill slots + Wait button. Navigable by keyboard or click.
+// FFT-style TIERED action menu (David 7/09, modeled on FFT's command list):
+//   Tier 1 — commands:  Move / Act / End Turn (+ Undo Move after moving)
+//   Tier 2 — Act:       the skill list (actives + absorbed) with Back
+// Navigable by keyboard or click. Spent options grey out.
 public class ActionMenu : MonoBehaviour
 {
     [Header("Panel")]
@@ -17,11 +20,12 @@ public class ActionMenu : MonoBehaviour
     public SkillButton[] absorbedSkillButtons = new SkillButton[3];
 
     [Header("Wait / Back Buttons")]
-    public Button waitButton;
-    public Button backButton;
+    public Button waitButton;   // relabeled "End Turn"
+    public Button backButton;   // tier 1: "Undo Move"; tier 2: "Back"
 
-    [Header("Move Button (cloned from Wait at runtime when the prefab lacks one)")]
+    [Header("Runtime-cloned commands (prefab predates them)")]
     public Button moveButton;
+    public Button actButton;
 
     [Header("Detail Panel")]
     public GameObject     detailPanel;
@@ -34,32 +38,38 @@ public class ActionMenu : MonoBehaviour
     public Image          detailIcon;
 
     // ── Private ───────────────────────────────────────────────────────────────
-    private BattleUnit      _activeUnit;
-    // Logical slot index spans both button arrays plus Wait:
-    // [0..skillButtons.Length)                                   = actives
-    // [skillButtons.Length..skillButtons.Length+absorbed.Length) = absorbed
-    // last index                                                 = Wait
-    private int _selectedIndex = 0;
-    // Logical order: actives, absorbed, Move, End Turn.
-    int SlotCount => skillButtons.Length + absorbedSkillButtons.Length + 2;
-    int MoveIndex => SlotCount - 2;
-    int WaitIndex => SlotCount - 1;
+    enum Tier { Commands, Skills }
+    Tier _tier = Tier.Commands;
+
+    BattleUnit _activeUnit;
+
+    // The currently visible, selectable rows (rebuilt on every tier switch).
+    struct Entry
+    {
+        public Button      button;       // command entries
+        public SkillButton skill;        // skill entries
+        public System.Action onConfirm;
+        public bool        usable;
+    }
+    readonly List<Entry> _entries = new();
+    int _selected;
+
+    const float RowH = 54f, RowTop = -12f, RowW = 216f;
 
     void Start()
     {
-        // Menu-first turn flow (David 7/09): the menu needs a Move entry, but
-        // the built BattleKit prefab predates it — clone the Wait button so
-        // every existing kit gets one without a prefab rebuild.
-        if (moveButton == null && waitButton != null)
-            moveButton = CloneAsMoveButton(waitButton);
+        if (moveButton == null && waitButton != null) moveButton = CloneCommand(waitButton, "MoveBtn", "Move");
+        if (actButton  == null && waitButton != null) actButton  = CloneCommand(waitButton, "ActBtn", "Act");
 
         moveButton?.onClick.AddListener(OnMove);
+        actButton?.onClick.AddListener(OnAct);
         waitButton?.onClick.AddListener(OnWait);
         backButton?.onClick.AddListener(OnBack);
-        var waitLabel = waitButton != null ? waitButton.GetComponentInChildren<TMP_Text>() : null;
-        if (waitLabel != null) waitLabel.text = "End Turn";
-        var backLabel = backButton != null ? backButton.GetComponentInChildren<TMP_Text>() : null;
-        if (backLabel != null) backLabel.text = "Undo Move";
+
+        SetLabel(waitButton, "End Turn");
+
+        ApplyTheme();
+
         panel?.SetActive(false);
         detailPanel?.SetActive(false);
 
@@ -67,36 +77,60 @@ public class ActionMenu : MonoBehaviour
             BattleManager.Instance.OnStateChanged += OnStateChanged;
     }
 
-    Button CloneAsMoveButton(Button template)
+    void OnDestroy()
+    {
+        if (BattleManager.Instance != null)
+            BattleManager.Instance.OnStateChanged -= OnStateChanged;
+    }
+
+    Button CloneCommand(Button template, string name, string label)
     {
         var go = Instantiate(template.gameObject, template.transform.parent);
-        go.name = "MoveBtn";
-        var label = go.GetComponentInChildren<TMP_Text>();
-        if (label != null) label.text = "Move";
-
-        // Take the template's slot; push Wait/Back down one row and grow the panel.
-        var rt  = (RectTransform)go.transform;
-        var wrt = (RectTransform)template.transform;
-        rt.anchoredPosition = wrt.anchoredPosition;
-        float row = rt.sizeDelta.y + 8f;
-        wrt.anchoredPosition -= new Vector2(0f, row);
-        if (backButton != null)
-            ((RectTransform)backButton.transform).anchoredPosition -= new Vector2(0f, row);
-        if (panel != null)
-        {
-            var prt = (RectTransform)panel.transform;
-            prt.sizeDelta += new Vector2(0f, row);
-        }
-
+        go.name = name;
+        var l = go.GetComponentInChildren<TMP_Text>(true);
+        if (l != null) l.text = label;
         var btn = go.GetComponent<Button>();
         btn.onClick.RemoveAllListeners();
         return btn;
     }
 
-    void OnDestroy()
+    static void SetLabel(Button b, string text)
     {
-        if (BattleManager.Instance != null)
-            BattleManager.Instance.OnStateChanged -= OnStateChanged;
+        var l = b != null ? b.GetComponentInChildren<TMP_Text>(true) : null;
+        if (l != null) l.text = text;
+    }
+
+    void ApplyTheme()
+    {
+        var panelImg = panel != null ? panel.GetComponent<Image>() : null;
+        if (panelImg != null) panelImg.color = BattleUITheme.Ink;
+
+        StyleCommandButton(moveButton);
+        StyleCommandButton(actButton);
+        StyleCommandButton(waitButton);
+        StyleCommandButton(backButton);
+
+        var detailImg = detailPanel != null ? detailPanel.GetComponent<Image>() : null;
+        if (detailImg != null) detailImg.color = BattleUITheme.Ink;
+        BattleUITheme.StyleHeader(detailSkillName);
+        BattleUITheme.StyleBody(detailDescription);
+        BattleUITheme.StyleBody(detailPower);
+        BattleUITheme.StyleBody(detailRange);
+        BattleUITheme.StyleBody(detailSPCost);
+        BattleUITheme.StyleBody(detailDamageType);
+    }
+
+    static void StyleCommandButton(Button b)
+    {
+        if (b == null) return;
+        var img = b.GetComponent<Image>();
+        if (img != null) img.color = SkillButton.NormalColor;
+        var label = b.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+        {
+            BattleUITheme.StyleHeader(label);
+            label.color = BattleUITheme.Parchment;
+        }
     }
 
     // ── State-driven open/close ───────────────────────────────────────────────
@@ -122,6 +156,7 @@ public class ActionMenu : MonoBehaviour
         _activeUnit = unit;
         panel?.SetActive(true);
 
+        // (Re)populate skill slots so tier 2 is ready when Act is chosen.
         var slots = unit.Data.equippedSkills.actives;
         for (int i = 0; i < skillButtons.Length; i++)
         {
@@ -129,7 +164,6 @@ public class ActionMenu : MonoBehaviour
             var skill = (i < slots.Length) ? slots[i] : null;
             skillButtons[i].Setup(skill, i, this, unit);
         }
-
         var absorbed = unit.Data.equippedSkills.absorbed;
         for (int i = 0; i < absorbedSkillButtons.Length; i++)
         {
@@ -138,45 +172,116 @@ public class ActionMenu : MonoBehaviour
             absorbedSkillButtons[i].SetupAbsorbed(instance, i, this, unit);
         }
 
-        // Menu-first flow: grey what this turn already spent.
-        var bm = BattleManager.Instance;
-        bool hasMoved = bm != null && bm.HasMoved;
-        bool hasActed = bm != null && bm.HasActed;
-
-        if (moveButton != null)
-        {
-            moveButton.interactable = !hasMoved;
-            var moveLabel = moveButton.GetComponentInChildren<TMP_Text>();
-            if (moveLabel != null) moveLabel.color = hasMoved ? new Color(0.6f, 0.6f, 0.6f) : Color.white;
-            var moveBg = moveButton.GetComponent<Image>();
-            if (moveBg != null) moveBg.color = hasMoved ? SkillButton.DisabledColor : SkillButton.NormalColor;
-        }
-
-        if (hasActed)
-        {
-            foreach (var b in skillButtons)         b?.SetUsable(false);
-            foreach (var b in absorbedSkillButtons) b?.SetUsable(false);
-        }
-
-        // Land the highlight on something usable: skills normally, Move once
-        // acted, End Turn when everything is spent.
-        Select(!hasActed ? 0 : (!hasMoved ? MoveIndex : WaitIndex));
-    }
-
-    // Maps a logical slot index to its backing button, or null for Wait/OOB.
-    SkillButton ButtonAt(int index)
-    {
-        if (index < 0) return null;
-        if (index < skillButtons.Length) return skillButtons[index];
-        int absorbedIdx = index - skillButtons.Length;
-        if (absorbedIdx < absorbedSkillButtons.Length) return absorbedSkillButtons[absorbedIdx];
-        return null; // Wait or out of range
+        ShowCommands();
     }
 
     public void Close()
     {
         panel?.SetActive(false);
         detailPanel?.SetActive(false);
+    }
+
+    // ── Tiers ─────────────────────────────────────────────────────────────────
+
+    void ShowCommands()
+    {
+        _tier = Tier.Commands;
+        detailPanel?.SetActive(false);
+
+        foreach (var b in skillButtons)         if (b != null) b.gameObject.SetActive(false);
+        foreach (var b in absorbedSkillButtons) if (b != null) b.gameObject.SetActive(false);
+
+        var bm = BattleManager.Instance;
+        bool hasMoved = bm != null && bm.HasMoved;
+        bool hasActed = bm != null && bm.HasActed;
+
+        _entries.Clear();
+        AddCommand(moveButton, "Move", !hasMoved, OnMove);
+        AddCommand(actButton, "Act", !hasActed, OnAct);
+        if (hasMoved && !hasActed)
+            AddCommand(backButton, "Undo Move", true, OnUndoMove);
+        else if (backButton != null)
+            backButton.gameObject.SetActive(false);
+        AddCommand(waitButton, "End Turn", true, OnWait);
+
+        LayoutEntries();
+        SelectFirstUsable();
+    }
+
+    void ShowSkills()
+    {
+        _tier = Tier.Skills;
+
+        if (moveButton) moveButton.gameObject.SetActive(false);
+        if (actButton)  actButton.gameObject.SetActive(false);
+
+        // Only real skills get a row — empty slots would render as "—" filler
+        // (David 7/09 screenshot) and stretch the panel with dead rows.
+        // Exhausted options (no SP, or nothing in range to hit) grey out HARD:
+        // unclickable, and the keyboard cursor skips them (David 7/09).
+        var bm = BattleManager.Instance;
+        _entries.Clear();
+        foreach (var b in skillButtons)
+        {
+            if (b == null) continue;
+            b.gameObject.SetActive(b.HasSkill);
+            if (!b.HasSkill) continue;
+            b.SetUsable(bm == null || bm.SkillHasTarget(_activeUnit, b.Skill));
+            var captured = b;
+            _entries.Add(new Entry { skill = b, usable = b.Usable, onConfirm = () => captured.OnClick() });
+        }
+        foreach (var b in absorbedSkillButtons)
+        {
+            if (b == null) continue;
+            b.gameObject.SetActive(b.HasSkill);
+            if (!b.HasSkill) continue;
+            b.SetUsable(bm == null || bm.SkillHasTarget(_activeUnit, b.Skill));
+            var captured = b;
+            _entries.Add(new Entry { skill = b, usable = b.Usable, onConfirm = () => captured.OnClick() });
+        }
+        AddCommand(backButton, "Back", true, OnBack);
+        // Escape hatch: nothing in range → end the turn without backing out
+        // through the command tier first (David 7/09).
+        AddCommand(waitButton, "End Turn", true, OnWait);
+
+        LayoutEntries();
+        SelectFirstUsable();
+    }
+
+    void AddCommand(Button b, string label, bool usable, System.Action onConfirm)
+    {
+        if (b == null) return;
+        b.gameObject.SetActive(true);
+        SetLabel(b, label);
+        b.interactable = usable;
+        var l = b.GetComponentInChildren<TMP_Text>(true);
+        if (l != null) l.color = usable ? BattleUITheme.Parchment : BattleUITheme.ParchDim;
+        _entries.Add(new Entry { button = b, usable = usable, onConfirm = onConfirm });
+    }
+
+    void LayoutEntries()
+    {
+        for (int i = 0; i < _entries.Count; i++)
+        {
+            var go = _entries[i].button != null ? _entries[i].button.gameObject
+                   : _entries[i].skill  != null ? _entries[i].skill.gameObject : null;
+            if (go == null) continue;
+            var rt = (RectTransform)go.transform;
+            rt.anchoredPosition = new Vector2(0f, RowTop - i * RowH);
+        }
+        if (panel != null)
+        {
+            var prt = (RectTransform)panel.transform;
+            prt.sizeDelta = new Vector2(240f, -RowTop + _entries.Count * RowH + 12f);
+        }
+    }
+
+    void SelectFirstUsable()
+    {
+        _selected = 0;
+        for (int i = 0; i < _entries.Count; i++)
+            if (_entries[i].usable) { _selected = i; break; }
+        RefreshHighlights();
     }
 
     // ── Keyboard navigation ───────────────────────────────────────────────────
@@ -197,61 +302,99 @@ public class ActionMenu : MonoBehaviour
             Confirm();
 
         if (kb.xKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame)
-            OnBack();
+        {
+            if (_tier == Tier.Skills) OnBack();
+        }
     }
 
     void Navigate(int dir)
     {
-        var bm = BattleManager.Instance;
-        int count = SlotCount;
-        int next = (_selectedIndex + dir + count) % count;
-        // Skip empty skill slots and spent options
-        for (int i = 0; i < count; i++)
+        if (_entries.Count == 0) return;
+        for (int step = 1; step <= _entries.Count; step++)
         {
-            int candidate = ((next + i * dir) % count + count) % count;
-            if (candidate == WaitIndex) { Select(candidate); return; } // End Turn always valid
-            if (candidate == MoveIndex)
-            {
-                if (bm == null || !bm.HasMoved) { Select(candidate); return; }
-                continue;
-            }
-            if (bm != null && bm.HasActed) continue;
-            var btn = ButtonAt(candidate);
-            if (btn != null && btn.HasSkill) { Select(candidate); return; }
+            int candidate = ((_selected + dir * step) % _entries.Count + _entries.Count) % _entries.Count;
+            if (_entries[candidate].usable) { _selected = candidate; break; }
         }
+        RefreshHighlights();
     }
 
     void Confirm()
     {
-        if (_selectedIndex == WaitIndex) { OnWait(); return; }
-        if (_selectedIndex == MoveIndex) { OnMove(); return; }
-        ButtonAt(_selectedIndex)?.OnClick();
+        if (_selected < 0 || _selected >= _entries.Count) return;
+        var e = _entries[_selected];
+        if (e.usable) e.onConfirm?.Invoke();
     }
 
-    // ── Selection ─────────────────────────────────────────────────────────────
-
-    // Kept for SkillButton's non-absorbed OnClick path — identical to Select,
-    // named separately so absorbed buttons have their own call site to hook.
-    public void SelectAbsorbed(int absorbedSlotIndex) => Select(skillButtons.Length + absorbedSlotIndex);
-
-    public void Select(int index)
+    void RefreshHighlights()
     {
-        _selectedIndex = index;
+        for (int i = 0; i < _entries.Count; i++)
+        {
+            bool on = i == _selected;
+            var e = _entries[i];
+            if (e.skill != null)
+            {
+                e.skill.SetHighlight(on);
+                if (on && e.skill.HasSkill) ShowDetail(e.skill.Skill);
+            }
+            else if (e.button != null)
+            {
+                var img = e.button.GetComponent<Image>();
+                if (img != null)
+                    img.color = on ? SkillButton.HighlightColor
+                              : (e.usable ? SkillButton.NormalColor : SkillButton.DisabledColor);
+            }
+        }
+        if (_tier == Tier.Commands) detailPanel?.SetActive(false);
+    }
 
-        for (int i = 0; i < skillButtons.Length; i++)
-            skillButtons[i]?.SetHighlight(i == index);
-        for (int i = 0; i < absorbedSkillButtons.Length; i++)
-            absorbedSkillButtons[i]?.SetHighlight((skillButtons.Length + i) == index);
+    // ── Mouse-hover / click plumbing from SkillButton ─────────────────────────
 
-        SetWaitHighlight(index == WaitIndex);
-        SetMoveHighlight(index == MoveIndex);
+    // SkillButton hover/click calls these with its slot index; map to entries.
+    public void Select(int skillSlotIndex) => SelectSkillEntry(skillButtons, skillSlotIndex, 0);
+    public void SelectAbsorbed(int absorbedSlotIndex) => SelectSkillEntry(absorbedSkillButtons, absorbedSlotIndex, 0);
 
-        // Update detail panel
-        var btn = ButtonAt(index);
-        if (btn != null && btn.HasSkill)
-            ShowDetail(btn.Skill);
-        else
-            detailPanel?.SetActive(false);
+    void SelectSkillEntry(SkillButton[] array, int slotIndex, int _)
+    {
+        if (_tier != Tier.Skills) return;
+        if (slotIndex < 0 || slotIndex >= array.Length) return;
+        var target = array[slotIndex];
+        if (target == null || !target.Usable) return;   // hover can't land on exhausted options
+        for (int i = 0; i < _entries.Count; i++)
+            if (_entries[i].skill == target) { _selected = i; break; }
+        RefreshHighlights();
+    }
+
+    // ── Command handlers ──────────────────────────────────────────────────────
+
+    void OnMove()
+    {
+        var bm = BattleManager.Instance;
+        if (bm == null || bm.HasMoved) return;
+        bm.PlayerChooseMove();   // state change closes the menu
+    }
+
+    void OnAct()
+    {
+        var bm = BattleManager.Instance;
+        if (bm == null || bm.HasActed) return;
+        ShowSkills();
+    }
+
+    void OnWait()
+    {
+        BattleManager.Instance?.PlayerWait();
+        Close();
+    }
+
+    void OnUndoMove()
+    {
+        BattleManager.Instance?.PlayerUndoMove();
+        Close();
+    }
+
+    void OnBack()
+    {
+        if (_tier == Tier.Skills) ShowCommands();
     }
 
     // Called by SkillButton when the player clicks a skill. absorbedInstance
@@ -267,30 +410,26 @@ public class ActionMenu : MonoBehaviour
             return;
         }
 
+        // Fail check: nothing this skill could hit from here — say so and stay
+        // in the menu instead of entering aiming with no legal target.
+        var bmCheck = BattleManager.Instance;
+        var effective = absorbedInstance != null ? absorbedInstance.EffectiveDefinition : skill;
+        if (bmCheck != null && !bmCheck.SkillHasTarget(_activeUnit, effective))
+        {
+            FlashNoSP(slotIndex, absorbedInstance != null);
+            ShowDetail(effective);
+            if (detailDescription)
+            {
+                detailDescription.text  = "No target within range.";
+                detailDescription.color = BattleUITheme.Blood;
+            }
+            return;
+        }
+
         if (absorbedInstance != null)
             BattleManager.Instance?.PlayerSelectAbsorbedSkill(absorbedInstance);
         else
             BattleManager.Instance?.PlayerSelectSkill(skill);
-        Close();
-    }
-
-    void OnMove()
-    {
-        var bm = BattleManager.Instance;
-        if (bm == null || bm.HasMoved) return;
-        bm.PlayerChooseMove();   // state change closes the menu
-    }
-
-    void OnWait()
-    {
-        BattleManager.Instance?.PlayerWait();
-        Close();
-    }
-
-    void OnBack()
-    {
-        // Return to move selection
-        BattleManager.Instance?.PlayerUndoMove();
         Close();
     }
 
@@ -302,32 +441,17 @@ public class ActionMenu : MonoBehaviour
         detailPanel.SetActive(true);
 
         if (detailSkillName)   detailSkillName.text   = skill.skillName;
-        if (detailDescription) detailDescription.text = skill.description;
+        if (detailDescription)
+        {
+            detailDescription.text  = skill.description;
+            detailDescription.color = BattleUITheme.Parchment;   // clear any notice tint
+        }
         if (detailPower)       detailPower.text        = $"Power: {skill.basePower}";
         if (detailRange)       detailRange.text        = $"Range: {skill.range}{(skill.areaOfEffect > 0 ? $"  AoE: {skill.areaOfEffect}" : "")}";
         if (detailSPCost)      detailSPCost.text       = $"SP: {skill.spCost}";
         if (detailDamageType)  detailDamageType.text   = skill.damageType.ToString();
         if (detailIcon)        detailIcon.sprite       = skill.icon;
         if (detailIcon)        detailIcon.gameObject.SetActive(skill.icon != null);
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    void SetWaitHighlight(bool on)
-    {
-        if (waitButton == null) return;
-        var img = waitButton.GetComponent<Image>();
-        if (img) img.color = on ? SkillButton.HighlightColor : SkillButton.NormalColor;
-    }
-
-    void SetMoveHighlight(bool on)
-    {
-        if (moveButton == null) return;
-        var img = moveButton.GetComponent<Image>();
-        if (img == null) return;
-        bool spent = !moveButton.interactable;
-        img.color = on ? SkillButton.HighlightColor
-                       : (spent ? SkillButton.DisabledColor : SkillButton.NormalColor);
     }
 
     void FlashNoSP(int slotIndex, bool isAbsorbed = false)

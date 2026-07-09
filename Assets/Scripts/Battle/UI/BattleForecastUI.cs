@@ -36,36 +36,13 @@ public class BattleForecastUI : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
 
-        // Panel block — same dark-leather chrome as the action menu.
-        _panel = new GameObject("ForecastPanel");
-        _panel.transform.SetParent(canvasGo.transform, false);
-        var bg = _panel.AddComponent<Image>();
-        bg.color = new Color(0.10f, 0.08f, 0.06f, 0.92f);
-        var prt = _panel.GetComponent<RectTransform>();
-        prt.anchorMin = new Vector2(0.5f, 1f);
-        prt.anchorMax = new Vector2(0.5f, 1f);
-        prt.pivot     = new Vector2(0.5f, 1f);
-        prt.anchoredPosition = new Vector2(0f, -16f);
-        prt.sizeDelta = new Vector2(520f, 84f);
+        // Gold-framed leather block (period theme).
+        var face = BattleUITheme.MakePanel(canvasGo.transform, "ForecastPanel",
+            new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            new Vector2(0f, -16f), new Vector2(520f, 84f));
+        _panel = face.parent.gameObject;
 
-        // Thin gold keyline so the block reads as UI, not floating text.
-        var line = new GameObject("Keyline");
-        line.transform.SetParent(_panel.transform, false);
-        var li = line.AddComponent<Image>();
-        li.color = new Color(0.85f, 0.68f, 0.25f, 0.8f);
-        var lrt = li.rectTransform;
-        lrt.anchorMin = new Vector2(0f, 0f); lrt.anchorMax = new Vector2(1f, 0f);
-        lrt.pivot = new Vector2(0.5f, 0f);
-        lrt.anchoredPosition = Vector2.zero;
-        lrt.sizeDelta = new Vector2(0f, 2f);
-
-        var textGo = new GameObject("ForecastLabel");
-        textGo.transform.SetParent(_panel.transform, false);
-        label = textGo.AddComponent<TextMeshProUGUI>();
-        label.fontSize  = 24;
-        label.alignment = TextAlignmentOptions.Center;
-        label.color     = Color.white;
-
+        label = BattleUITheme.MakeBody(face, "ForecastLabel", 23f);
         var rt = label.rectTransform;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;

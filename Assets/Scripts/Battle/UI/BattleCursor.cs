@@ -125,12 +125,19 @@ public class BattleCursor : MonoBehaviour
         // its cell (David 7/09). If the pointer is close to a unit on screen,
         // snap to that unit's cell instead of the ground intersection.
         var pointer = mouse.position.ReadValue();
-        float bestPx = 48f; // max pixel distance that counts as "on the unit"
+        // Enemies get a bigger snap radius than allies — on contested clicks
+        // (adjacent units, overlapping billboards) the monster wins, since
+        // that's what you're aiming at.
         var bmgr = BattleManager.Instance;
         if (bmgr != null)
         {
+            float bestPx = 48f;
             SnapToNearestUnit(cam, pointer, bmgr.Enemies, ref bestPx, ref cell);
-            SnapToNearestUnit(cam, pointer, bmgr.Players, ref bestPx, ref cell);
+            if (bestPx >= 48f)  // no enemy under the pointer — allow ally snap
+            {
+                bestPx = 28f;
+                SnapToNearestUnit(cam, pointer, bmgr.Players, ref bestPx, ref cell);
+            }
         }
 
         if (!_grid.InBounds(cell)) return;
@@ -151,9 +158,25 @@ public class BattleCursor : MonoBehaviour
         {
             var u = units[i];
             if (u == null || !u.IsAlive) continue;
-            var sp = cam.WorldToScreenPoint(u.transform.position + Vector3.up * 0.6f);
+
+            var sr = u.GetComponentInChildren<SpriteRenderer>();
+            Vector3 center = sr != null ? sr.bounds.center
+                                        : u.transform.position + Vector3.up * 0.6f;
+            var sp = cam.WorldToScreenPoint(center);
             if (sp.z <= 0f) continue;
             float d = Vector2.Distance(pointer, new Vector2(sp.x, sp.y));
+
+            // Anywhere on the BODY is a direct hit — the old feet-point radius
+            // missed clicks on the head at close zoom, so the ground ray fell
+            // through to the tile BEHIND the monster (David 7/09).
+            if (sr != null)
+            {
+                var corner = cam.WorldToScreenPoint(center + new Vector3(sr.bounds.extents.x, sr.bounds.extents.y, 0f));
+                float rx = Mathf.Abs(corner.x - sp.x), ry = Mathf.Abs(corner.y - sp.y);
+                if (Mathf.Abs(pointer.x - sp.x) <= rx && Mathf.Abs(pointer.y - sp.y) <= ry)
+                    d = 0f;
+            }
+
             if (d < bestPx) { bestPx = d; cell = u.gridPosition; }
         }
     }

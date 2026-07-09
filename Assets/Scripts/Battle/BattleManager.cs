@@ -150,6 +150,18 @@ public class BattleManager : MonoBehaviour
             {
                 if (unit.Data.battleSprite != null) sr.sprite = unit.Data.battleSprite;
                 if (unit.Data.battleTint != Color.white) sr.color = unit.Data.battleTint;
+
+                // Normalize the billboard: raw sheets vary wildly (Ben's read
+                // 3 tiles wide and visually spilled onto neighboring tiles —
+                // "the creature is hugging my tile", David 7/09). Every unit
+                // stands ~1.6 tiles tall, feet planted on its OWN cell.
+                if (sr.sprite != null && sr.sprite.bounds.size.y > 0.01f)
+                {
+                    const float targetHeight = 1.6f;
+                    float s = targetHeight / sr.sprite.bounds.size.y;
+                    sr.transform.localScale    = new Vector3(s, s, 1f);
+                    sr.transform.localPosition = new Vector3(0f, targetHeight * 0.5f, 0f);
+                }
             }
         }
 
@@ -554,6 +566,26 @@ public class BattleManager : MonoBehaviour
     {
         OnMoveRangeReady?.Invoke(new List<GridCell>());
         OnAttackRangeReady?.Invoke(new List<GridCell>());
+    }
+
+    // True if casting this skill from where the unit stands could hit someone
+    // legal — the action menu refuses to enter aiming at nothing (David 7/09).
+    // AoE skills stay permissive: their splash can matter on empty ground.
+    public bool SkillHasTarget(BattleUnit user, SkillDefinition skill)
+    {
+        if (user == null || skill == null || Grid == null) return false;
+        if (skill.areaOfEffect > 0) return true;
+
+        var cells = Grid.GetAttackRange(user.gridPosition, skill.minRange, skill.range,
+                                        skill.requiresLineOfSight, user.Elevation);
+        foreach (var c in cells)
+        {
+            var occ = c.occupant;
+            if (occ == null || !occ.IsAlive) continue;
+            if (skill.isHealing) { if (occ.IsPlayer == user.IsPlayer) return true; }
+            else if (occ.IsPlayer != user.IsPlayer) return true;
+        }
+        return false;
     }
 
     // True while aiming and the cell is inside the skill's legal range —

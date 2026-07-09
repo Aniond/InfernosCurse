@@ -19,6 +19,7 @@ public class ZoneEncounterTrigger : MonoBehaviour
 
     BattleMapAuthoring _auth;
     BattleTerrainHeights _heights;
+    Unity.Cinemachine.CinemachineBrain _cineBrain;
     GameObject _kitInstance;
     GameObject _explorePlayer;
     List<BattleUnit> _staged = new();
@@ -89,11 +90,20 @@ public class ZoneEncounterTrigger : MonoBehaviour
         var cam = Camera.main;
         if (cam != null)
         {
+            // The explore camera is Cinemachine-driven — its Brain overwrites
+            // the transform every frame, which froze the battle camera at the
+            // explore pose and killed wheel zoom entirely (David 7/09).
+            // Suspend it for the battle; EndEncounter hands it back.
+            _cineBrain = cam.GetComponent<Unity.Cinemachine.CinemachineBrain>();
+            if (_cineBrain != null) _cineBrain.enabled = false;
+
             var rig = cam.GetComponent<BattleCameraRig>();
             if (rig == null) rig = cam.gameObject.AddComponent<BattleCameraRig>();
             var mid = Vector2.Lerp(playerCell, _staged[0].gridPosition, 0.5f);
             rig.pivot = new Vector3(mid.x, _heights != null ? _heights.HeightAt(playerCell) : 1f, mid.y);
-            cam.transform.position = rig.pivot + new Vector3(0.55f, 0.6f, -1f).normalized * 22f;
+            // 15u start distance — 22 read too far once unit sprites were
+            // normalized to true tile scale (David 7/09). Wheel still zooms.
+            cam.transform.position = rig.pivot + new Vector3(0.55f, 0.6f, -1f).normalized * 15f;
             cam.transform.LookAt(rig.pivot);
         }
 
@@ -162,6 +172,7 @@ public class ZoneEncounterTrigger : MonoBehaviour
         var cam = Camera.main;
         var rig = cam != null ? cam.GetComponent<BattleCameraRig>() : null;
         if (rig != null) Destroy(rig);
+        if (_cineBrain != null) { _cineBrain.enabled = true; _cineBrain = null; }
 
         if (_explorePlayer != null) _explorePlayer.SetActive(true);
         _battleRunning = false;
