@@ -5,7 +5,8 @@
             "name": "Player",
             "actions": [
                 { "name": "Move", "type": "Value", "expectedControlType": "Vector2" },
-                { "name": "Run",  "type": "Button" }
+                { "name": "Run",  "type": "Button" },
+                { "name": "Interact", "type": "Button" }
             ],
             "bindings": [
                 { "name": "WASD", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Move", "isComposite": true, "isPartOfComposite": false },
@@ -20,7 +21,9 @@
                 { "name": "Right", "path": "<Keyboard>/rightArrow", "action": "Move", "isComposite": false, "isPartOfComposite": true },
                 { "name": "",      "path": "<Gamepad>/leftStick",   "action": "Move", "isComposite": false, "isPartOfComposite": false },
                 { "name": "",      "path": "<Keyboard>/leftShift",  "action": "Run",  "isComposite": false, "isPartOfComposite": false },
-                { "name": "",      "path": "<Gamepad>/leftStickPress", "action": "Run", "isComposite": false, "isPartOfComposite": false }
+                { "name": "",      "path": "<Gamepad>/leftStickPress", "action": "Run", "isComposite": false, "isPartOfComposite": false },
+                { "name": "",      "path": "<Keyboard>/e",             "action": "Interact", "isComposite": false, "isPartOfComposite": false },
+                { "name": "",      "path": "<Gamepad>/buttonSouth",    "action": "Interact", "isComposite": false, "isPartOfComposite": false }
             ]
         }
     ]

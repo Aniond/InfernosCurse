@@ -177,7 +177,12 @@ public static class FlorentineInnFloor1Builder
     static void BuildReception(Transform parent)
     {
         var root = RoomRoot(parent, "Reception");
-        Box(root, "ReceptionCounter_Main", new Vector3(0.2f, 0.55f, -6.1f), new Vector3(5.8f, 1.1f, 0.8f), _darkWood);
+        var counter = Box(root, "ReceptionCounter_Main", new Vector3(0.2f, 0.55f, -6.1f), new Vector3(5.8f, 1.1f, 0.8f), _darkWood);
+        var innInteraction = counter.AddComponent<InnCounterInteraction>();
+        innInteraction.innName = "Albergo Fiorentino";
+        innInteraction.innPrice = 10;
+        innInteraction.isGuildInn = true;
+        innInteraction.prompt = "Speak to Innkeeper";
         Box(root, "ReceptionCounter_W", new Vector3(-2.35f, 0.55f, -5.45f), new Vector3(0.7f, 1.1f, 1.4f), _darkWood);
         Box(root, "ReceptionCounter_E", new Vector3(2.75f, 0.55f, -5.45f), new Vector3(0.7f, 1.1f, 1.4f), _darkWood);
         Box(root, "KeyCubbies", new Vector3(0.2f, 1.45f, -4.35f), new Vector3(4.2f, 2.3f, 0.3f), _wood);
@@ -266,17 +271,6 @@ public static class FlorentineInnFloor1Builder
     static void BuildInteractions()
     {
         var root = new GameObject("[Interactions]").transform;
-        var inn = new GameObject("InnRestZone");
-        inn.transform.SetParent(root, false);
-        inn.transform.position = new Vector3(0.2f, 0.9f, -7.1f);
-        inn.AddComponent<BoxCollider>().size = new Vector3(5.4f, 2f, 1.5f);
-        var zone = inn.AddComponent<GuildInteractionZone>();
-        zone.kind = GuildInteractionZone.Kind.Inn;
-        zone.guildId = "albergatori";
-        zone.label = "Albergo Fiorentino";
-        zone.innPrice = 10;
-        zone.isGuildInn = true;
-
         var landing = new GameObject("Floor2LockedInteraction");
         landing.transform.SetParent(root, false);
         landing.transform.position = new Vector3(-6.4f, 3.5f, 0.25f);
@@ -342,6 +336,8 @@ public static class FlorentineInnFloor1Builder
             copy.name = source.name;
             SceneManager.MoveGameObjectToScene(copy, target);
             copy.transform.position = new Vector3(0f, source.transform.position.y, -9.7f);
+            if (copy.GetComponent<PlayerWorldInteractor>() == null)
+                copy.AddComponent<PlayerWorldInteractor>();
             Debug.Log($"[FlorentineInnFloor1Builder] Player '{copy.name}' copied from PonteVecchio.");
         }
         else Debug.LogError("[FlorentineInnFloor1Builder] No Player-tagged object found in PonteVecchio.");

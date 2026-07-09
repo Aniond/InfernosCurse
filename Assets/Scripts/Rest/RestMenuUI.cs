@@ -40,6 +40,8 @@ public class RestMenuUI : MonoBehaviour
         private set => _instance = value;
     }
 
+    public static bool IsOpen => Instance != null && Instance._open;
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
