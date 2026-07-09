@@ -150,7 +150,9 @@ These exist today; don't add more (see [§4](#4-behavioral-restrictions--what-no
   {"file": "Assets/Scripts/Camera/DynamicZoom.cs", "line": 144, "issue": "Physics.RaycastAll ×8 directions per LateUpdate when useClearanceZoom=true"},
   {"file": "Assets/Scripts/Player/PlayerController.cs", "line": 130, "issue": "Physics.RaycastAll every FixedUpdate (SnapToGround)"},
   {"file": "Assets/Scripts/Curse/DailyCurseDrift.cs", "line": 61, "issue": "day-key string concat every frame (acknowledged safety-net poll)"},
-  {"file": "Assets/Scripts/Battle/UI/BattleForecastUI.cs", "line": "48-91", "issue": "interpolated label strings every frame while aiming"},
+  {"file": "Assets/Scripts/Battle/UI/BattleForecastUI.cs", "line": "Update()", "issue": "interpolated label strings every frame while aiming/moving"},
+  {"file": "Assets/Scripts/Battle/UI/BattleUnitInfoUI.cs", "line": "Update()/SetRow", "issue": "interpolated HP/SP/CT strings + GetComponentInChildren every frame while a unit is hovered"},
+  {"file": "Assets/Scripts/Battle/UI/BattleCursor.cs", "line": "SnapToNearestUnit", "issue": "GetComponentInChildren<SpriteRenderer> per unit per mouse-move frame"},
   {"file": "Assets/Scripts/UI/CalendarDisplayUI.cs", "line": 55, "issue": "FindAnyObjectByType per frame UNTIL calendar binds (permanent if none in scene)"}
 ]
 ```
@@ -178,6 +180,46 @@ Moral ledger (quest layer calls): HubMap.NudgeGlobalCurse(delta, reason) · Lose
 - **Progression contract**: Benidito = `Job_Hero` (levels/stats only, EMPTY skill tree — absorption is his only skill source). Job trees/AP are for NPCs & future party. Party = Benidito ALONE (invented "Piero" removed 7/08 — never add named characters David didn't ask for).
 - Stylized Water 3 ignores MaterialPropertyBlock — tint runtime `mr.material` instances (all FIVE color props; the intersection-foam ring carries the read on small basins).
 - Whisper audio hook ready on `InsanityPresenter.whisperLoop` — clip not sourced yet (David provides).
+
+### 2.5 Battle UX layer (built 7/09, commits dd58812 / 42b2520 / af12d82)
+
+```
+BattleUITheme (static)  — the ONE skin: ink/leather/gold/parchment palette, HP bar stops,
+                          Cinzel (headers) + EBGaramond (body) via Resources/UIFonts,
+                          MakePanel (gold frame + leather face) / MakeHeader / MakeBody
+ActionMenu              — FFT TIERED: turn OPENS on commands (Move / Act / End Turn,
+                          + Undo Move after moving); Act → skill list (+Back, +End Turn).
+                          Empty slots hidden; exhausted options HARD-disabled (grey,
+                          unclickable, keyboard skips, hover can't land); skills with no
+                          legal target grey out AND refuse with "No target within range."
+BattleUnitInfoUI        — FFT status bar (bottom center): portrait, name+job, HP/SP/CT
+                          bars + numbers; hovered unit, else the ACTIVE unit. Runtime-
+                          spawned by BattleManager.StartBattle (no prefab rebuild).
+BattleForecastUI        — context panel (top center): move mode = path-cost budget
+                          ("3 / 4 tiles — 1 left after", real BFS costs via BattleGrid
+                          costsOut → BattleManager.MovePoints/MoveCostTo); aim mode =
+                          dmg/hit/HP forecast ONLY on legal targets (IsValidActionTarget,
+                          never self for offense)
+Turn flow (menu-first)  — PlayerChooseMove/PlayerCancelMove; move+act each spend once,
+                          act-then-move preserved; Esc in move-select returns to menu
+                          WITHOUT spending; PlayerSelectActionTarget refuses bare-grid
+                          confirms for single-target skills (AoE free-aims)
+SpawnUnit normalization — every unit billboard scaled to 1.6 tiles tall, feet on its own
+                          cell (raw sheets varied 2-3 tiles wide and visually spilled
+                          onto neighbors); knob: targetHeight in SpawnUnit
+Cursor targeting        — click/hover anywhere on a sprite's on-screen BOUNDS snaps to
+                          that unit's cell; enemies win contested clicks; keyboard cursor
+                          caged to the active selection (blue move tiles / red aim tiles)
+Battle camera (zones)   — ZoneEncounterTrigger SUSPENDS the CinemachineBrain for the
+                          battle (restores at teardown) and opens at 15u orbit; wheel
+                          zoom 0.45–1.5×, Q/E rotate (BattleCameraRig)
+Hidden ambusher         — staged zone monsters: visual GameObject SetActive(false) +
+                          BattleUnit.stagedAmbusher flag (ZoneFogOfWar skips) — invisible
+                          until the ambush spawns the real combat unit
+```
+
+- **Stat scale contract (7/09)**: all combatant sheets live on the enemy scale — speed 7-12, primary stats ~3-15 at L1 (`move = speed/3`, CT gain = speed). Equipment bonuses are SMALL (+1..+3, one or two stats per item). A low-level unit with speed 20+ means scaffold data — the three starter items each carried a copy-pasted +10-everything block and Ben hit speed 41 (enemy looked frozen: 1 turn per ~6 of Ben's).
+- EnemyAI tuning: `BestFlankPosition` closes distance (−0.25/tile dominates; facing picks the side/back cell among close ones) and `ScoreDirectAttackIntent` has a flat 0.3 aggression base — without these, "Ambush" walked AWAY and attack intent zeroed out in uncursed zones.
 
 ## 3. AI-OPTIMIZED PROMPT BLOCKS
 
@@ -353,6 +395,9 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 28. Never `LoadScene` inside the death-callback chain (wait ~1 s realtime first).
 28a. **Every spawned enemy needs an `EnemyAI` component** — the battle loop silently `EndUnitTurn()`s brainless enemies (the Rosekin passed every turn of the 7/08 pilot). `SpawnUnit` auto-attaches base `EnemyAI`. **Stage zone monsters on WALKABLE cells** (boxed into obstacles = empty move range = statue), and seed `EnemyAI.WorldState.playerBelief` when the enemy initiated the ambush, or `HuntOrHold` holds forever (ZoneEncounterTrigger does both).
 28b. Per-unit battle looks come from the SHEET (`CombatantData.battleSprite`/`battleTint`, applied in `SpawnUnit`) — never hand sprites across by sheet reference; non-Benidito units fight as CLONES and reference-keyed lookups miss.
+28c. **Sheets live on the enemy stat scale** (speed 7-12, primaries ~3-15 at L1; CT gain = speed, move = speed/3; equipment bonuses +1..+3 on one or two stats). Off-scale numbers = scaffold data, and the symptom is systemic (an off-scale SPEED made the enemy look frozen). Check `GetTotalStats()` — the gear stack — not just base stats.
+28d. **To hide a staged zone monster, `SetActive(false)` its visual GameObjects and set `BattleUnit.stagedAmbusher`** — `Renderer.enabled = false` gets stomped by THREE systems (`ZoneFogOfWar` re-reveals on player sight — Ben sees 13 tiles, the ambush triggers at 9; `CameraOcclusionFader` and `LevelVisibilityFader` also flip renderer flags). All of them skip inactive objects. Verify hidden-ness with a mid-walk probe inside player sight range, not just at spawn.
+28e. **In-place zone battles must SUSPEND the CinemachineBrain** (`ZoneEncounterTrigger` does; restore at teardown) — any transform-driving explore system left running overwrites the battle camera every frame, and the symptom is indirect ("zoom does nothing", camera frozen at explore pose). The arena scene never shows this (no Cinemachine there).
 
 ### 4.6 UI
 29. **`MenuManager` wires buttons by exact English label text** (`Btn_*`/`Lbl` hierarchy). Renaming a label silently unwires the button — labels are IDs.
@@ -362,6 +407,7 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 33. **Curse is hidden**: no numbers, gauges, or curse-derived ratings in UI. UI chrome English, names Italian.
 33a. **Insanity/corruption appear NOWHERE in any UI (David 7/08 hard law)** — not a number, bar, darkened orb art, or icon pip. The Skill Orb screen (K) sells power only; the WORLD is the only display (`InsanityPresenter`: vignette/blood-water/whispers) plus encounter-beacon behavior. The player discovers the bargain through consequence.
 34. `ESC` ownership: map owns ESC while open; `M` is shared — every hotkey handler early-returns while `GugolMapUI.IsOpen`.
+34a. **All battle UI pulls from `BattleUITheme`** (palette, fonts, MakePanel/MakeHeader/MakeBody) — no hardcoded colors/fonts in battle panels. The theme fonts load from `Resources/UIFonts` (Cinzel = headers, EBGaramond = body); code-built UI can't use serialized font refs. Exhausted menu options are HARD-disabled: grey + non-interactable + keyboard-skipped + hover-blocked — never grey-but-clickable.
 
 ### 4.7 Player / movement
 35. **PlayerController Rigidbody contract**: `useGravity=false`, `FreezeRotation` only — **Y constraint must stay unfrozen** (terrain ramps). Height is position-controlled by `SnapToGround`; teleports must set `rb.position` (not just transform).
@@ -373,6 +419,8 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 39. **Never edit `Packages/com.distantlands.cozy.core`** or "clean up" the `Refrences/` typo folder (coupled to .gitignore) or blind-delete `FastTravelMenu` (MenuManager fallback).
 40. Dynamic/RunCommand editor scripts: `System.Reflection` imports are blocked; `DistantLands.Cozy` asmdef is not visible — probe via project types (`GameClock.Describe()`).
 41. After scripted scene saves, run duplication canaries (§3.3). Never do full-scene MCP saves on large scenes.
+42. **MCP compile verification (burned 3× on 7/09)**: `AssetDatabase.Refresh` alone does NOT reliably compile — use `CompilationPipeline.RequestScriptCompilation()`, then grep the console for `"error CS"` (compiler errors surface as plain **Log** entries through the MCP bridge — an empty Error-type read proves nothing), then **canary-check the new API exists** (compile a RunCommand referencing it) before entering play. A failed compile silently keeps the OLD assembly loaded: `IsCompiling=false`, zero visible errors, your method just doesn't exist. Brand-new .cs files may also need `AssetDatabase.ImportAsset` before the compile picks them up. And never trust behavior from a play session that started before the compile landed.
+43. Programmatic play entry can start PAUSED — check `IsPaused` in `GetState` and unpause before assuming drivers are running (a stalled walk driver looks identical to a broken one).
 
 ---
 
