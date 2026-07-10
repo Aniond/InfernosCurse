@@ -25,6 +25,11 @@ public static class GiardinoWalledGardenBuilder
     const string PlayerSourceScene = "Assets/Scenes/PonteVecchio.unity";
     const string CameraKitPath = "Assets/Prefabs/HD2D_CameraKit.prefab";
     const string LayerFolder = "Assets/Environment/GiardinoDelleRose/TerrainLayers";
+    const string BattleKitPath = "Assets/Prefabs/Battle/BattleKit.prefab";
+    const string RosekinPath = "Assets/Data/Combatants/Enemy_Rosekin.asset";
+    const string HybridRoot = "Assets/Art/Environment/HybridZones";
+    const string HybridProfilePath = HybridRoot + "/Profiles/GiardinoDelleRose_Terrain.asset";
+    const string HybridMaterialPath = HybridRoot + "/Materials/GiardinoDelleRose_Terrain.mat";
 
     // Grid: 32x32 cells, 1 cell = 1m. World x/z 0..32. Fountain at (16,16).
     const int GRID = 32;
@@ -43,6 +48,7 @@ public static class GiardinoWalledGardenBuilder
 
         _terrain = BuildTerrain();
         PaintTerrain(_terrain);
+        ConfigureHybridTerrain(_terrain);
         BuildStylizedGrass();
         BuildWallsAndTrees();
         BuildRoseQuads();
@@ -58,11 +64,14 @@ public static class GiardinoWalledGardenBuilder
         BuildZonePost();
         CopyPlayerFromPonteVecchio(scene);
         PlaceCameraKit();
+        BuildZoneEncounter();
 
         BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
+        GiardinoDelleRosePropPlacement.Place();
+        EditorSceneManager.SaveScene(scene, ScenePath);
         Debug.Log("[GiardinoWalledGarden] v4 walled garden built (32x32 grid @ origin). " +
-                  "Run 'Giardino delle Rose/3. Place Hero Props' next.");
+                  "Hybrid terrain, combat wiring, and hero props are ready.");
     }
 
     static float GroundAt(float x, float z)
@@ -114,13 +123,13 @@ public static class GiardinoWalledGardenBuilder
         var dry = AssetDatabase.LoadAssetAtPath<Texture2D>($"{LayerFolder}/TL_DryGrass_Diffuse.png");
         if (grass == null || gravel == null) { Debug.LogWarning("[GiardinoWalledGarden] terrain layers missing"); return; }
 
-        TerrainLayer L(Texture2D t, float tile) => new TerrainLayer { diffuseTexture = t, tileSize = new Vector2(tile, tile) };
-        var layers = new List<TerrainLayer> { L(grass, 4f), L(gravel, 3f) };
-        if (dry != null) layers.Add(L(dry, 4f));
-        for (int i = 0; i < layers.Count; i++)
+        var layers = new List<TerrainLayer>
         {
-            AssetDatabase.CreateAsset(layers[i], $"{LayerFolder}/WG_Layer_{i}.terrainlayer");
-        }
+            CreateOrUpdateTerrainLayer($"{LayerFolder}/WG_Layer_0.terrainlayer", grass, 4f),
+            CreateOrUpdateTerrainLayer($"{LayerFolder}/WG_Layer_1.terrainlayer", gravel, 3f),
+        };
+        if (dry != null)
+            layers.Add(CreateOrUpdateTerrainLayer($"{LayerFolder}/WG_Layer_2.terrainlayer", dry, 4f));
         terrain.terrainData.terrainLayers = layers.ToArray();
 
         int ares = terrain.terrainData.alphamapResolution;
@@ -138,6 +147,72 @@ public static class GiardinoWalledGardenBuilder
                 if (layers.Count > 2) maps[iz, ix, 2] = bed;
             }
         terrain.terrainData.SetAlphamaps(0, 0, maps);
+    }
+
+    static TerrainLayer CreateOrUpdateTerrainLayer(string path, Texture2D texture, float tile)
+    {
+        var layer = AssetDatabase.LoadAssetAtPath<TerrainLayer>(path);
+        if (layer == null)
+        {
+            layer = new TerrainLayer();
+            AssetDatabase.CreateAsset(layer, path);
+        }
+        layer.diffuseTexture = texture;
+        layer.tileSize = new Vector2(tile, tile);
+        EditorUtility.SetDirty(layer);
+        return layer;
+    }
+
+    static void ConfigureHybridTerrain(Terrain terrain)
+    {
+        EnsureFolder(HybridRoot);
+        EnsureFolder(HybridRoot + "/Profiles");
+        EnsureFolder(HybridRoot + "/Materials");
+
+        var profile = AssetDatabase.LoadAssetAtPath<HybridZoneTerrainProfile>(HybridProfilePath);
+        if (profile == null)
+        {
+            profile = ScriptableObject.CreateInstance<HybridZoneTerrainProfile>();
+            AssetDatabase.CreateAsset(profile, HybridProfilePath);
+        }
+        profile.surfaceFamily = HybridZoneSurfaceFamily.Natural;
+        profile.layer0Tint = new Color(0.77f, 0.84f, 0.65f, 1f);
+        profile.layer1Tint = new Color(0.82f, 0.74f, 0.60f, 1f);
+        profile.layer2Tint = new Color(0.65f, 0.59f, 0.43f, 1f);
+        profile.layer3Tint = Color.white;
+        profile.blendExponent = 1.12f;
+        profile.macroScale = 0.052f;
+        profile.macroStrength = 0.085f;
+        profile.exposedTint = new Color(1.035f, 1.01f, 0.93f, 1f);
+        profile.recessTint = new Color(0.75f, 0.83f, 0.86f, 1f);
+        profile.slopeStrength = 0.22f;
+        profile.elevationTintStrength = 0.07f;
+        profile.heightMinMax = new Vector2(GroundY, TerraceY);
+        profile.ambientBoost = 0.22f;
+        profile.wetDarkening = 0.28f;
+        profile.wetHighlight = 0.075f;
+        profile.wetTint = new Color(0.45f, 0.42f, 0.34f, 1f);
+        profile.layerWetResponse = new Vector4(0.45f, 1f, 0.82f, 1f);
+        EditorUtility.SetDirty(profile);
+
+        var shader = Shader.Find("InfernosCurse/HybridZoneTerrain");
+        if (shader == null)
+            throw new System.InvalidOperationException("InfernosCurse/HybridZoneTerrain shader is missing or failed to compile.");
+        var material = AssetDatabase.LoadAssetAtPath<Material>(HybridMaterialPath);
+        if (material == null)
+        {
+            material = new Material(shader) { name = "GiardinoDelleRose_Terrain" };
+            AssetDatabase.CreateAsset(material, HybridMaterialPath);
+        }
+        else material.shader = shader;
+        profile.ApplyTo(material);
+        EditorUtility.SetDirty(material);
+
+        terrain.materialTemplate = material;
+        terrain.drawInstanced = false;
+        terrain.basemapDistance = 1000f;
+        EditorUtility.SetDirty(terrain);
+        AssetDatabase.SaveAssets();
     }
 
     // Paths: N-S at x 15..18 (3m, gate to gate), E-W at z 15..18, ring path
@@ -468,6 +543,52 @@ public static class GiardinoWalledGardenBuilder
         exit.AddComponent<ZoneExit>().mode = ZoneExit.ExitMode.ToWorldMap;
     }
 
+    static void BuildZoneEncounter()
+    {
+        var root = GameObject.Find("[BattleGridData]");
+        if (root == null)
+            throw new System.InvalidOperationException("[BattleGridData] was not built.");
+
+        var auth = root.GetComponent<BattleMapAuthoring>();
+        var heights = root.GetComponent<BattleTerrainHeights>();
+        var battleKit = AssetDatabase.LoadAssetAtPath<GameObject>(BattleKitPath);
+        var rosekin = AssetDatabase.LoadAssetAtPath<CombatantData>(RosekinPath);
+        var profile = AssetDatabase.LoadAssetAtPath<HybridZoneTerrainProfile>(HybridProfilePath);
+        if (auth == null || heights == null || battleKit == null || rosekin == null || profile == null)
+            throw new System.InvalidOperationException(
+                "Rose Garden encounter requires grid authoring, height data, BattleKit, Rosekin data, and hybrid terrain profile.");
+
+        var trigger = root.AddComponent<ZoneEncounterTrigger>();
+        trigger.battleKitPrefab = battleKit;
+        trigger.proximityTrigger = 2.5f;
+        trigger.ambushRevealSeconds = 8f;
+
+        var zone = root.AddComponent<ZoneBattleAuthoring>();
+        zone.combatAllowed = true;
+        zone.mapAuthoring = auth;
+        zone.terrainHeights = heights;
+        zone.encounterTrigger = trigger;
+        zone.battleKitPrefab = battleKit;
+        zone.zoneTerrain = _terrain;
+        zone.terrainProfile = profile;
+        zone.zoneExits = Object.FindObjectsByType<ZoneExit>(FindObjectsSortMode.None);
+
+        var enemy = new GameObject("ENEMY_Rosekin");
+        var unit = enemy.AddComponent<BattleUnit>();
+        unit.Data = rosekin;
+        unit.IsPlayer = false;
+        unit.gridPosition = new Vector2Int(18, 21);
+        unit.facing = FacingDir.South;
+        enemy.transform.position = auth.CellToWorld(unit.gridPosition);
+
+        var visual = new GameObject("Visual");
+        visual.transform.SetParent(enemy.transform, false);
+        var sprite = visual.AddComponent<SpriteRenderer>();
+        sprite.sprite = rosekin.GetBattleIdleSprite(FacingDir.South);
+        sprite.sortingOrder = 10;
+        visual.AddComponent<SpriteBillboard>();
+    }
+
     static void MakeEntry(string id, string label, Vector3 pos, Vector2 face)
     {
         var go = new GameObject("ENTRY_" + id);
@@ -560,5 +681,15 @@ public static class GiardinoWalledGardenBuilder
         var shader = Shader.Find("Universal Render Pipeline/Lit");
         if (shader == null) shader = Shader.Find("Standard");
         renderer.sharedMaterial = new Material(shader) { color = color };
+    }
+
+    static void EnsureFolder(string path)
+    {
+        if (AssetDatabase.IsValidFolder(path)) return;
+        int slash = path.LastIndexOf('/');
+        string parent = path.Substring(0, slash);
+        string name = path.Substring(slash + 1);
+        if (!AssetDatabase.IsValidFolder(parent)) EnsureFolder(parent);
+        AssetDatabase.CreateFolder(parent, name);
     }
 }

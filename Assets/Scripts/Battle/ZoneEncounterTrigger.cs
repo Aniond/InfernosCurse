@@ -1,70 +1,79 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 
-// The zones=battlemaps encounter trigger: staged enemies (BattleUnits placed
-// in the zone, like the Rosekin in the flowerbed) AMBUSH the player the
-// moment they can SEE them — sheet sight range x weather, true LoS at eye
-// height. On trigger: spawn the BattleKit prefab, stamp the zone's authored
-// grid, freeze the explore player, and StartBattle right where you stand.
-// Victory/defeat tears the kit down and hands the garden back.
+// Starts tactical combat inside an explorable zone. The visible environment is
+// never replaced: exploration control is suspended, the authored grid is
+// stamped into a temporary BattleKit, and the shared camera changes owner.
+[DisallowMultipleComponent]
 public class ZoneEncounterTrigger : MonoBehaviour
 {
     [Tooltip("The BattleKit prefab (InfernosCurse/Zones/1 builds it from BattleArena).")]
     public GameObject battleKitPrefab;
     [Tooltip("Extra ambush radius even without LoS (creature senses you brushing past).")]
     public float proximityTrigger = 2.5f;
-    [Tooltip("Seconds the fog parts over each ambusher at battle start — being jumped IS seeing the attacker. 0 = no reveal (pure fog honesty).")]
+    [Tooltip("Seconds the fog parts over each ambusher at battle start. 0 = no reveal.")]
     public float ambushRevealSeconds = 8f;
 
+    ZoneBattleAuthoring _zone;
     BattleMapAuthoring _auth;
     BattleTerrainHeights _heights;
-    Unity.Cinemachine.CinemachineBrain _cineBrain;
+    CinemachineBrain _cineBrain;
+    BattleCameraRig _battleRig;
+    BattleManager _battleManager;
     GameObject _kitInstance;
     GameObject _explorePlayer;
+    GameObject _createdEventSystem;
+    Vector3 _explorePlayerPosition;
+    Quaternion _explorePlayerRotation;
+    bool _playerWasActive;
+    bool _brainWasEnabled;
+    bool _ownsBattleRig;
+    bool[] _exitStates = Array.Empty<bool>();
+    bool[] _exploreRootStates = Array.Empty<bool>();
+    bool[] _battleRootStates = Array.Empty<bool>();
     List<BattleUnit> _staged = new();
     bool _battleRunning;
     float _poll;
 
     void Start()
     {
+        _zone = GetComponent<ZoneBattleAuthoring>();
         _auth = GetComponent<BattleMapAuthoring>();
         _heights = GetComponent<BattleTerrainHeights>();
-        _staged = Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None)
+        _explorePlayer = GameObject.FindWithTag("Player");
+        _staged = UnityEngine.Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None)
             .Where(u => !u.IsPlayer).ToList();
 
-        // Staged ambushers stay INVISIBLE in explore — being jumped is the
-        // first time you see the creature (David 7/09). They're destroyed and
-        // re-spawned as battle units when the encounter fires, so there's
-        // nothing to un-hide.
-        foreach (var u in _staged)
+        // Staged ambushers are encounter data, not exploration actors. Their
+        // first visible frame is the battle reveal.
+        foreach (var unit in _staged)
         {
-            u.stagedAmbusher = true;   // ZoneFogOfWar must not fog-reveal it
-            // Deactivate the visual GameObjects rather than toggling
-            // Renderer.enabled — fog, occlusion faders, and level faders all
-            // flip renderer flags and were re-revealing the ambusher (David
-            // 7/09); none of them touch inactive children.
-            foreach (var r in u.GetComponentsInChildren<Renderer>())
-                if (r.gameObject != u.gameObject) r.gameObject.SetActive(false);
-                else r.enabled = false;
+            unit.stagedAmbusher = true;
+            foreach (var renderer in unit.GetComponentsInChildren<Renderer>(true))
+            {
+                if (renderer.gameObject != unit.gameObject) renderer.gameObject.SetActive(false);
+                else renderer.enabled = false;
+            }
         }
     }
 
     void Update()
     {
-        if (_battleRunning || battleKitPrefab == null || _staged.Count == 0) return;
+        if (_battleRunning || _zone == null || !_zone.combatAllowed || _staged.Count == 0) return;
         _poll += Time.deltaTime;
         if (_poll < 0.3f) return;
         _poll = 0f;
 
-        var player = GameObject.FindWithTag("Player");
+        var player = _explorePlayer;
         if (player == null) return;
-        var pc = new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
-                                Mathf.FloorToInt(player.transform.position.z));
+        var playerCell = new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
+                                        Mathf.FloorToInt(player.transform.position.z));
 
-        // Carried corruption is a scent: insanity (0-100%) widens how far
-        // staged creatures notice Ben — +30% detection radius at full madness
-        // (David 7/08 — insanity raises encounter chance in zones). Balance knob.
         float insanityScent = GameFeatures.CorruptionEnabled
             ? 1f + InsanityState.Current() * 0.003f
             : 1f;
@@ -72,13 +81,14 @@ public class ZoneEncounterTrigger : MonoBehaviour
         foreach (var enemy in _staged)
         {
             if (enemy == null) continue;
-            float dx = enemy.gridPosition.x - pc.x, dz = enemy.gridPosition.y - pc.y;
-            float d2 = dx * dx + dz * dz;
+            float dx = enemy.gridPosition.x - playerCell.x;
+            float dz = enemy.gridPosition.y - playerCell.y;
+            float distanceSquared = dx * dx + dz * dz;
             float sight = enemy.SightRange * WeatherVision.SightMultiplier() * insanityScent;
-            bool sees = d2 <= sight * sight;   // LoS refined below with a real grid
-            if (d2 <= proximityTrigger * proximityTrigger || sees)
+            if (distanceSquared <= proximityTrigger * proximityTrigger ||
+                distanceSquared <= sight * sight)
             {
-                StartEncounter(pc);
+                StartEncounter(playerCell);
                 return;
             }
         }
@@ -86,81 +96,138 @@ public class ZoneEncounterTrigger : MonoBehaviour
 
     void StartEncounter(Vector2Int playerCell)
     {
-        _battleRunning = true;
-        Debug.Log("[ZoneEncounter] AMBUSH — battle begins in place.");
-
-        // battle UI needs an EventSystem — zones don't always carry one
-        if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
-            new GameObject("EventSystem",
-                typeof(UnityEngine.EventSystems.EventSystem),
-                typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
-
-        _kitInstance = Instantiate(battleKitPrefab);
-        var bm = _kitInstance.GetComponentInChildren<BattleManager>();
-        var grid = _kitInstance.GetComponentInChildren<BattleGrid>();
-        _auth.Apply(grid);   // stamp the zone's authored cells into the kit's grid
-
-        // freeze + hide the explore player; battle-Benidito takes over
-        _explorePlayer = GameObject.FindWithTag("Player");
-        if (_explorePlayer != null) _explorePlayer.SetActive(false);
-
-        // camera: FFT rig orbiting the ambush site (Q/E works in-zone)
-        var cam = Camera.main;
-        if (cam != null)
+        if (!ValidateStartup(out string validationError))
         {
-            // The explore camera is Cinemachine-driven — its Brain overwrites
-            // the transform every frame, which froze the battle camera at the
-            // explore pose and killed wheel zoom entirely (David 7/09).
-            // Suspend it for the battle; EndEncounter hands it back.
-            _cineBrain = cam.GetComponent<Unity.Cinemachine.CinemachineBrain>();
-            if (_cineBrain != null) _cineBrain.enabled = false;
-
-            var rig = cam.GetComponent<BattleCameraRig>();
-            if (rig == null) rig = cam.gameObject.AddComponent<BattleCameraRig>();
-            var mid = Vector2.Lerp(playerCell, _staged[0].gridPosition, 0.5f);
-            rig.pivot = new Vector3(mid.x, _heights != null ? _heights.HeightAt(playerCell) : 1f, mid.y);
-            // 15u start distance — 22 read too far once unit sprites were
-            // normalized to true tile scale (David 7/09). Wheel still zooms.
-            cam.transform.position = rig.pivot + new Vector3(0.55f, 0.6f, -1f).normalized * 15f;
-            cam.transform.LookAt(rig.pivot);
+            Debug.LogError($"[ZoneEncounter] Cannot start encounter: {validationError}", this);
+            return;
         }
 
-        // party from the roster; enemies from the staged units' sheets
-        PartyRoster.EnsureInitialized();
-        var party = new List<CombatantData>(RestSystem.PartyMembers);
-        var enemySheets = _staged.Where(u => u != null).Select(u => u.Data).ToList();
+        _battleRunning = true;
+        try
+        {
+            _kitInstance = Instantiate(battleKitPrefab);
+            _battleManager = _kitInstance.GetComponentInChildren<BattleManager>(true);
+            var grid = _kitInstance.GetComponentInChildren<BattleGrid>(true);
+            if (_battleManager == null || grid == null)
+                throw new InvalidOperationException("BattleKit is missing BattleManager or BattleGrid");
 
-        var playerSpawns = SpawnsAround(playerCell, party.Count, grid);
-        var enemySpawns = new List<Vector2Int>();
-        foreach (var u in _staged.Where(u => u != null))
-            enemySpawns.Add(u.gridPosition);
-        while (enemySpawns.Count < enemySheets.Count)
-            enemySpawns.Add(enemySpawns[0] + Vector2Int.right);
+            _auth.Apply(grid);
+            PartyRoster.EnsureInitialized();
+            var party = new List<CombatantData>(RestSystem.PartyMembers);
+            var enemies = _staged.Where(u => u != null).Select(u => u.Data).ToList();
+            if (party.Count == 0) throw new InvalidOperationException("party roster is empty");
+            if (enemies.Count == 0 || enemies.Any(data => data == null))
+                throw new InvalidOperationException("staged enemies have no combatant data");
 
-        foreach (var u in _staged.Where(u => u != null)) Destroy(u.gameObject);
-        _staged.Clear();
+            var playerSpawns = SpawnsAround(playerCell, party.Count, grid);
+            if (playerSpawns.Count < party.Count)
+                throw new InvalidOperationException($"only {playerSpawns.Count}/{party.Count} valid party spawn cells near {playerCell}");
 
-        bm.OnVictory += EndEncounter;
-        bm.OnDefeat += EndEncounter;
-        bm.StartBattle(party, enemySheets, playerSpawns, enemySpawns);
+            var enemySpawns = _staged.Where(u => u != null).Select(u => u.gridPosition).ToList();
+            if (enemySpawns.Any(cell => grid.GetCell(cell) == null || !grid.GetCell(cell).walkable))
+                throw new InvalidOperationException("one or more staged enemies occupy invalid or blocked cells");
 
-        // The ambusher struck ON SIGHT — it opens the battle knowing where you
-        // stand. Without this seed the AI's belief map starts empty, and a
-        // HuntOrHold creature just holds its flowerbed: an invisible no-show
-        // for the whole fight (David 7/08).
-        if (EnemyAI.WorldState != null)
-            foreach (var pu in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
-                if (pu.IsPlayer) EnemyAI.WorldState.playerBelief.Update(pu);
+            EnsureEventSystem();
+            CaptureAndSuspendExploration();
+            ConfigureBattleCamera(playerCell);
 
-        // The fog parts over each attacker: an ambush you can't see reads as
-        // "the monster didn't load" (David 7/08). Sprites come from the SHEET
-        // (CombatantData.battleSprite) — SpawnUnit applies them, clones included.
-        var fow = GetComponent<ZoneFogOfWar>();
-        if (fow != null && ambushRevealSeconds > 0f)
-            foreach (var spawn in enemySpawns)
-                for (int dx = -1; dx <= 1; dx++)
-                    for (int dz = -1; dz <= 1; dz++)
-                        fow.RevealCell(spawn + new Vector2Int(dx, dz), ambushRevealSeconds);
+            _battleManager.OnVictory += EndEncounter;
+            _battleManager.OnDefeat += EndEncounter;
+            _battleManager.StartBattle(party, enemies, playerSpawns, enemySpawns);
+
+            foreach (var unit in _staged.Where(u => u != null)) Destroy(unit.gameObject);
+            _staged.Clear();
+
+            if (EnemyAI.WorldState != null)
+                foreach (var unit in UnityEngine.Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
+                    if (unit.IsPlayer) EnemyAI.WorldState.playerBelief.Update(unit);
+
+            var fog = GetComponent<ZoneFogOfWar>();
+            if (fog != null && ambushRevealSeconds > 0f)
+                foreach (var spawn in enemySpawns)
+                    for (int dx = -1; dx <= 1; dx++)
+                        for (int dz = -1; dz <= 1; dz++)
+                            fog.RevealCell(spawn + new Vector2Int(dx, dz), ambushRevealSeconds);
+
+            Debug.Log("[ZoneEncounter] AMBUSH — battle begins in place.");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"[ZoneEncounter] Startup failed; exploration restored. {exception.Message}", this);
+            RestoreExploration(clearBattleUnits: true);
+        }
+    }
+
+    bool ValidateStartup(out string message)
+    {
+        _zone ??= GetComponent<ZoneBattleAuthoring>();
+        _auth ??= GetComponent<BattleMapAuthoring>();
+        _heights ??= GetComponent<BattleTerrainHeights>();
+        if (_zone == null) { message = "ZoneBattleAuthoring is missing"; return false; }
+        if (!_zone.TryValidate(out message)) return false;
+        if (battleKitPrefab == null) battleKitPrefab = _zone.battleKitPrefab;
+        if (battleKitPrefab == null) { message = "BattleKit prefab is missing"; return false; }
+        if (battleKitPrefab.GetComponentInChildren<BattleManager>(true) == null ||
+            battleKitPrefab.GetComponentInChildren<BattleGrid>(true) == null)
+        { message = "BattleKit prefab is incomplete"; return false; }
+        if (_staged.Count == 0 || _staged.All(unit => unit == null))
+        { message = "no staged enemies remain"; return false; }
+        var player = _explorePlayer;
+        if (player == null) _explorePlayer = player = GameObject.FindWithTag("Player");
+        if (player == null) { message = "active Player-tagged exploration actor is missing"; return false; }
+        var camera = Camera.main;
+        if (camera == null || camera.GetComponent<CinemachineBrain>() == null)
+        { message = "Main Camera with CinemachineBrain is required"; return false; }
+        message = string.Empty;
+        return true;
+    }
+
+    void CaptureAndSuspendExploration()
+    {
+        if (_explorePlayer == null) _explorePlayer = GameObject.FindWithTag("Player");
+        _explorePlayerPosition = _explorePlayer.transform.position;
+        _explorePlayerRotation = _explorePlayer.transform.rotation;
+        _playerWasActive = _explorePlayer.activeSelf;
+
+        _zone.ResolveLocalReferences();
+        _exitStates = _zone.zoneExits.Select(exit => exit != null && exit.enabled).ToArray();
+        for (int i = 0; i < _zone.zoneExits.Length; i++)
+            if (_zone.zoneExits[i] != null) _zone.zoneExits[i].enabled = false;
+
+        _exploreRootStates = _zone.explorationOnlyRoots.Select(root => root != null && root.activeSelf).ToArray();
+        foreach (var root in _zone.explorationOnlyRoots)
+            if (root != null) root.SetActive(false);
+
+        _battleRootStates = _zone.battleOnlyRoots.Select(root => root != null && root.activeSelf).ToArray();
+        foreach (var root in _zone.battleOnlyRoots)
+            if (root != null) root.SetActive(true);
+
+        _explorePlayer.SetActive(false);
+    }
+
+    void ConfigureBattleCamera(Vector2Int playerCell)
+    {
+        var camera = Camera.main;
+        _cineBrain = camera.GetComponent<CinemachineBrain>();
+        _brainWasEnabled = _cineBrain.enabled;
+        _cineBrain.enabled = false;
+
+        _battleRig = camera.GetComponent<BattleCameraRig>();
+        _ownsBattleRig = _battleRig == null;
+        if (_battleRig == null) _battleRig = camera.gameObject.AddComponent<BattleCameraRig>();
+
+        var firstEnemy = _staged.First(unit => unit != null);
+        Vector2 midpoint = Vector2.Lerp(playerCell, firstEnemy.gridPosition, 0.5f);
+        float pivotHeight = _heights != null ? _heights.HeightAt(playerCell) : 1f;
+        _battleRig.pivot = new Vector3(midpoint.x, pivotHeight, midpoint.y);
+        camera.transform.position = _battleRig.pivot + new Vector3(0.55f, 0.6f, -1f).normalized * 15f;
+        camera.transform.LookAt(_battleRig.pivot);
+    }
+
+    void EnsureEventSystem()
+    {
+        if (UnityEngine.Object.FindFirstObjectByType<EventSystem>() != null) return;
+        _createdEventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
     }
 
     List<Vector2Int> SpawnsAround(Vector2Int center, int count, BattleGrid grid)
@@ -170,30 +237,67 @@ public class ZoneEncounterTrigger : MonoBehaviour
             for (int dx = -ring; dx <= ring && spawns.Count < count; dx++)
                 for (int dz = -ring; dz <= ring && spawns.Count < count; dz++)
                 {
-                    var c = center + new Vector2Int(dx, dz);
-                    var cell = grid.GetCell(c);
-                    if (cell != null && cell.walkable && !spawns.Contains(c)) spawns.Add(c);
+                    var cellPosition = center + new Vector2Int(dx, dz);
+                    var cell = grid.GetCell(cellPosition);
+                    if (cell != null && cell.walkable && !spawns.Contains(cellPosition))
+                        spawns.Add(cellPosition);
                 }
         return spawns;
     }
 
-    void EndEncounter()
+    void EndEncounter() => RestoreExploration(clearBattleUnits: true);
+
+    void RestoreExploration(bool clearBattleUnits)
     {
-        var bm = _kitInstance != null ? _kitInstance.GetComponentInChildren<BattleManager>() : null;
-        if (bm != null) { bm.OnVictory -= EndEncounter; bm.OnDefeat -= EndEncounter; }
+        if (_battleManager != null)
+        {
+            _battleManager.OnVictory -= EndEncounter;
+            _battleManager.OnDefeat -= EndEncounter;
+        }
 
-        // battle units belong to the kit's battle — clear survivors
-        foreach (var u in Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
-            Destroy(u.gameObject);
-        if (_kitInstance != null) Destroy(_kitInstance, 0.5f);
+        if (clearBattleUnits)
+            foreach (var unit in UnityEngine.Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
+                Destroy(unit.gameObject);
 
-        var cam = Camera.main;
-        var rig = cam != null ? cam.GetComponent<BattleCameraRig>() : null;
-        if (rig != null) Destroy(rig);
-        if (_cineBrain != null) { _cineBrain.enabled = true; _cineBrain = null; }
+        if (_kitInstance != null) Destroy(_kitInstance);
+        if (_ownsBattleRig && _battleRig != null) Destroy(_battleRig);
+        if (_cineBrain != null) _cineBrain.enabled = _brainWasEnabled;
+        if (_createdEventSystem != null) Destroy(_createdEventSystem);
 
-        if (_explorePlayer != null) _explorePlayer.SetActive(true);
+        RestoreModeObjects();
+        if (_explorePlayer != null)
+        {
+            _explorePlayer.transform.SetPositionAndRotation(_explorePlayerPosition, _explorePlayerRotation);
+            _explorePlayer.SetActive(_playerWasActive);
+        }
+
+        _battleManager = null;
+        _kitInstance = null;
+        _battleRig = null;
+        _cineBrain = null;
+        _createdEventSystem = null;
+        _ownsBattleRig = false;
         _battleRunning = false;
-        Debug.Log("[ZoneEncounter] Battle over — the garden is yours again.");
+        Debug.Log("[ZoneEncounter] Battle over — exploration restored.");
+    }
+
+    void RestoreModeObjects()
+    {
+        if (_zone == null) return;
+        for (int i = 0; i < _zone.zoneExits.Length && i < _exitStates.Length; i++)
+            if (_zone.zoneExits[i] != null) _zone.zoneExits[i].enabled = _exitStates[i];
+        for (int i = 0; i < _zone.explorationOnlyRoots.Length && i < _exploreRootStates.Length; i++)
+            if (_zone.explorationOnlyRoots[i] != null) _zone.explorationOnlyRoots[i].SetActive(_exploreRootStates[i]);
+        for (int i = 0; i < _zone.battleOnlyRoots.Length && i < _battleRootStates.Length; i++)
+            if (_zone.battleOnlyRoots[i] != null) _zone.battleOnlyRoots[i].SetActive(_battleRootStates[i]);
+    }
+
+    void OnDestroy()
+    {
+        if (_battleManager != null)
+        {
+            _battleManager.OnVictory -= EndEncounter;
+            _battleManager.OnDefeat -= EndEncounter;
+        }
     }
 }
