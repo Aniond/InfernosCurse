@@ -2,7 +2,7 @@
 
 ## Objective
 
-Replace the remaining primitive prop placeholders in `FlorentineInnFloor1`, fully dress its rooms, add an animated courtyard fountain, prepare reusable upstairs bed/rest behavior, and make interior windows and lighting reflect persistent world time and weather.
+Replace the remaining primitive prop placeholders in `FlorentineInnFloor1`, fully dress its rooms, add an animated courtyard fountain, prepare reusable upstairs bed/rest behavior, and make building windows and associated lighting across the project reflect persistent world time and weather.
 
 The approved structural layout, doorway widths, collider footprints, counter interaction, and blocked second-floor landing remain unchanged.
 
@@ -113,6 +113,23 @@ The presentation includes:
 
 The lighting adapter reads world-time state and applies it to scene lights and window presentation. It does not own or advance the clock.
 
+## Shared Building Window Environment
+
+The inn implementation is the reference installation for a reusable `WorldWindowEnvironment` system. After it is validated there, the same system is applied to existing buildings and interiors that expose usable window surfaces.
+
+The shared system has these responsibilities:
+
+- Read the existing persistent world clock and weather services without owning, advancing, or duplicating their state.
+- Drive window emissive color and intensity, exterior-view brightness, cloud or fog muting, rain presentation, and synchronized storm flashes.
+- Optionally drive scene-provided interior lights and ambient response profiles when a playable interior exists.
+- Support both interior-facing windows and exterior building-window materials so unentered buildings still look consistent with the current hour and weather.
+- Use lightweight per-building configuration for window renderers, exterior-effect anchors, local lights, and profile overrides.
+- Degrade to the documented clear daytime presentation when a scene is inspected without runtime world services.
+
+The implementation audit covers existing scenes and reusable building prefabs, including Ponte Vecchio, Mercato Vecchio, Fiesole, Piazza della Signoria, the street-template building set, Salone delle Arti, Duomo-related interiors, and gardener or service buildings where applicable. Shared prefabs are updated when that propagates the correct behavior to multiple maps; scene-local configuration is used where window geometry or lighting is unique.
+
+Buildings without an identifiable or usable window surface are recorded and skipped. The pass does not create arbitrary windows, remodel building geometry, or expose empty space solely to force participation in the system.
+
 ## Persistent Weather Through Windows
 
 Windows use the same persistent world-weather state as outdoor maps. Indoor weather is visual and audible only; precipitation never appears inside the rooms.
@@ -126,7 +143,7 @@ Supported presentation states are:
 - Fog: muted exterior views and softened window contrast.
 - Snow may be supported only if the global weather system already exposes it; it is not required for this pass.
 
-Window effects react to weather state changes without reloading the scene. Lightning must use the outdoor storm event/state rather than an unrelated indoor random timer, keeping visible flashes and lighting synchronized.
+Window effects react to weather state changes without reloading the scene. Lightning must use the outdoor storm event/state rather than an unrelated indoor random timer, keeping visible flashes and lighting synchronized across outdoor building windows and affected interiors.
 
 ## Builder and Asset Organization
 
@@ -134,7 +151,7 @@ Prop assets live under `Assets/Environment/FlorentineInnFloor1/PropKit` with sep
 
 `FlorentineInnFloor1Builder` remains authoritative. Existing prop coordinates are retained where they preserve the approved floor plan. Finished prop prefabs replace primitive helper calls so rebuilding the scene does not restore placeholders. Small decorative variants may use deterministic selection or explicitly authored placements; scene rebuilds must remain repeatable.
 
-Time and weather components receive references to the persistent world-state services through the project's existing access pattern. Missing services must degrade safely to a documented default daytime/clear-weather presentation and log at most one actionable warning.
+Time and weather components receive references to the persistent world-state services through the project's existing access pattern. A shared runtime component owns the state-to-presentation mapping, while per-building configuration identifies window renderers, exterior-effect anchors, and optional lights. Missing services must degrade safely to a documented default daytime/clear-weather presentation and log at most one actionable warning per scene or system instance.
 
 ## Validation
 
@@ -152,9 +169,12 @@ The pass is accepted when:
 - Clear, cloudy, rain, storm, and fog states are visible through windows.
 - Storm lightning synchronizes window flashes and temporary interior illumination.
 - Entering and leaving the inn preserves time and weather state.
+- Every audited building or reusable building prefab with a usable window surface is either connected to the shared system or documented with a concrete reason it was skipped.
+- Exterior building windows and playable interiors show the same hour, weather state, and storm-lightning event at the same time.
+- Reused building prefabs behave consistently in every scene without scene-specific clocks or weather generators.
 - Rebuilding the scene twice retains the finished props and deterministic dressing.
 - Unity reports zero console errors after rebuild and runtime testing.
 
 ## Delivery Boundary
 
-This pass does not build the second floor, replace NPC capsules, add loot interactions, create new quests, or change the approved structural layout. Upstairs bedrooms and live bed wake-up placement are activated only during the future second-floor pass.
+This pass does not build the second floor, replace NPC capsules, add loot interactions, create new quests, change the approved structural layout, or remodel unrelated buildings. Upstairs bedrooms and live bed wake-up placement are activated only during the future second-floor pass. The cross-building extension is limited to existing usable windows, their exterior effects, and associated lighting response.
