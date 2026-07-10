@@ -25,12 +25,27 @@ Fiesole remains outside this pass because it needs a rural terrain family. Giard
 ## Architecture
 
 - Extend the existing `InfernosCurse/HybridZoneTerrain` shader and `HybridZoneTerrainProfile` workflow.
+- Use RealBlend as the approved editor authoring tool for mesh subdivision, RGB vertex-layer painting, and baked production meshes.
 - Add shared Layered Florence controls for stone color, secondary paving, terracotta repairs, wear, edge dirt, and moisture.
 - Create one profile asset and one material instance per urban zone.
 - Assign the zone-specific profile through `ZoneBattleAuthoring`.
 - Preserve authored geometry, colliders, routes, props, and non-ground materials.
 - Use the same terrain material in exploration and battle. Tactical cells, ranges, and targeting remain separate overlays.
 - Extend `HybridZoneStandardValidator` so urban scenes require an approved shader, profile, material assignment, compatible ground coverage, and valid hybrid battle authoring.
+
+## RealBlend Authoring Workflow
+
+RealBlend is an editor-time authoring dependency, not the runtime owner of hybrid-zone behavior.
+
+1. Duplicate representative Piazza della Signoria ground geometry into `Assets/ToolingSandbox`.
+2. Use RealBlend to create even topology with sufficient vertex density for controlled transitions.
+3. Paint three URP layers: base Florentine stone, terracotta or alternate paving, and dirt or edge wear.
+4. Bake the approved colors into a new production mesh asset rather than modifying the source mesh in place.
+5. Extend `InfernosCurse/HybridZoneTerrain` to read vertex colors as the urban blend source while retaining the existing control-texture path for natural Unity Terrain.
+6. Keep wetness in the existing global weather path; it does not consume a painted vertex layer.
+7. Validate the Piazza proof before migrating any production city scene.
+
+The RealBlend package itself remains a separately reviewed dependency. Its untracked package files must not enter a feature commit accidentally; package inclusion requires explicit commit scope.
 
 ## Zone Profiles
 
@@ -68,6 +83,8 @@ Use darker compact paving, directional traffic wear, and frequent narrow repair 
 - The editor migration operates on an explicit allowlist of the five approved scenes.
 - Compatible ground renderers are identified deliberately; the tool does not replace every renderer using a floor-like material name.
 - Unsupported or ambiguous renderers are skipped and reported for review.
+- Each migrated renderer receives a new baked mesh asset so imported or shared source meshes remain unchanged.
+- Vertex colors must exist and contain meaningful variation before an urban material assignment is considered valid.
 - Original scene geometry and collider components are never rebuilt by the terrain migration.
 - Existing material references remain recoverable through version control and are not deleted.
 - A scene is saved only after its required profile, material, shader, and authoring assignments validate.
@@ -95,10 +112,11 @@ Each Play Mode test must verify:
 ## Acceptance Criteria
 
 - All five urban zones use `InfernosCurse/HybridZoneTerrain` through individual Layered Florence profile and material assets.
+- Urban ground meshes use baked RealBlend-authored vertex colors for the stone, repair, and grime blend channels.
+- Natural Unity Terrain retains its existing control-texture blend path.
 - Districts remain recognizably distinct while sharing one coherent material language.
 - No authored geometry, routes, colliders, or props change as part of the terrain pass.
 - The terrain does not visibly swap when combat starts or ends.
 - All three project validators pass.
 - Piazza della Signoria and Mercato Vecchio pass the full exploration-to-battle-to-exploration Play Mode probe.
 - Unity reports no new errors or warnings.
-
