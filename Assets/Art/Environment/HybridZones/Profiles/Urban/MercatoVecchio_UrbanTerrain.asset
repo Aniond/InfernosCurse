@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5de3d199c44ec4342aba02934db944e5, type: 3}
+  m_Name: MercatoVecchio_UrbanTerrain
+  m_EditorClassIdentifier: Assembly-CSharp::HybridZoneTerrainProfile
+  surfaceFamily: 1
+  blendSource: 1
+  vertexBlendContrast: 1.25
+  layer0Tint: {r: 0.79, g: 0.72, b: 0.62, a: 1}
+  layer1Tint: {r: 0.78, g: 0.44, b: 0.29, a: 1}
+  layer2Tint: {r: 0.42, g: 0.35, b: 0.27, a: 1}
+  layer3Tint: {r: 1, g: 1, b: 1, a: 1}
+  blendExponent: 1.1
+  macroScale: 0.06
+  macroStrength: 0.045
+  exposedTint: {r: 1.02, g: 1, b: 0.94, a: 1}
+  recessTint: {r: 0.82, g: 0.84, b: 0.82, a: 1}
+  slopeStrength: 0.1
+  elevationTintStrength: 0.02
+  heightMinMax: {x: -0.2, y: 0.4}
+  ambientBoost: 0.32
+  wetDarkening: 0.28
+  wetHighlight: 0.05
+  wetTint: {r: 0.55, g: 0.52, b: 0.46, a: 1}
+  layerWetResponse: {x: 0.42, y: 0.72, z: 1, w: 0}

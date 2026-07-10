@@ -21105,21 +21105,6 @@ MonoBehaviour:
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
   FollowOffset: {x: 0, y: 13, z: -12}
---- !u!114 &7000000000000000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1182498823}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2aa2c48eb02d3544faa12d93a4e250fe, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::CameraController
-  playerCam: {fileID: 1182498828}
-  followTarget: {fileID: 0}
-  playerTag: Player
 --- !u!114 &1182498827
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27696,7 +27681,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7c9db0295bf06684fa28ff4da93a7073, type: 2}
+  - {fileID: 2100000, guid: 21538f7b9486d8247af40ba8dad620d2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -27748,7 +27733,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1943085687}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300000, guid: 74242ff9b3aa0994dab9d6ff552c49f0, type: 2}
 --- !u!1 &1979549673
 GameObject:
   m_ObjectHideFlags: 0
@@ -29217,6 +29202,21 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -7091441805879785097, guid: 2e44ca7f4fa179a4b946cb72bc2f3569, type: 3}
   m_PrefabInstance: {fileID: 2147469447}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7000000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182498823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2aa2c48eb02d3544faa12d93a4e250fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraController
+  playerCam: {fileID: 1182498828}
+  followTarget: {fileID: 0}
+  playerTag: Player
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

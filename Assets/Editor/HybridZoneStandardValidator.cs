@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 
 public static class HybridZoneStandardValidator
 {
+    const string UrbanAssetRoot = "Assets/Art/Environment/HybridZones";
+    const string UrbanShaderName = "InfernosCurse/HybridZoneTerrain";
     static readonly HashSet<string> SafeScenes = new()
     {
         "FlorentineInnFloor1",
@@ -55,6 +57,90 @@ public static class HybridZoneStandardValidator
             Debug.Log($"[HybridZoneValidator] Validation passed: {findings.Count} scene(s) classified, 0 invalid.");
         else
             Debug.LogError($"[HybridZoneValidator] Validation found {invalid} invalid partial configuration(s).");
+    }
+
+    [MenuItem("InfernosCurse/Zones/Validate Urban Terrain Assets")]
+    public static void ValidateUrbanTerrainAssets()
+    {
+        string[] profileGuids = AssetDatabase.FindAssets("t:HybridZoneTerrainProfile", new[] { UrbanAssetRoot + "/Profiles/Urban" });
+        var errors = new List<string>();
+        foreach (string guid in profileGuids)
+        {
+            string profilePath = AssetDatabase.GUIDToAssetPath(guid);
+            var profile = AssetDatabase.LoadAssetAtPath<HybridZoneTerrainProfile>(profilePath);
+            string key = Path.GetFileNameWithoutExtension(profilePath).Replace("_UrbanTerrain", string.Empty);
+            string materialPath = $"{UrbanAssetRoot}/Materials/Urban/{key}_UrbanTerrain.mat";
+            string meshPath = $"{UrbanAssetRoot}/Meshes/Urban/{key}_UrbanGround.asset";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
+
+            if (profile == null || profile.surfaceFamily != HybridZoneSurfaceFamily.Urban || profile.blendSource != HybridZoneBlendSource.VertexColors)
+                errors.Add($"{key}: urban vertex-color profile is missing or invalid");
+            if (material == null || material.shader == null || material.shader.name != UrbanShaderName || material.GetFloat("_UrbanVertexBlend") < 0.5f)
+                errors.Add($"{key}: urban hybrid material is missing or invalid");
+            if (mesh == null || mesh.vertexCount == 0 || mesh.colors.Length != mesh.vertexCount)
+                errors.Add($"{key}: baked vertex-color mesh is missing or invalid");
+        }
+
+        foreach (string error in errors) Debug.LogError("[UrbanTerrainValidator] " + error);
+        if (errors.Count == 0 && profileGuids.Length == 5)
+            Debug.Log("[UrbanTerrainValidator] Validation passed for 5 urban profile/material/mesh sets.");
+        else if (errors.Count == 0)
+            Debug.LogError($"[UrbanTerrainValidator] Expected 5 urban profile sets, found {profileGuids.Length}.");
+        else
+            Debug.LogError($"[UrbanTerrainValidator] Validation failed with {errors.Count} error(s).");
+
+        ValidateProductionUrbanSurface("Assets/Scenes/MercatoVecchio.unity", "[MarketSquare]", "Floor_Cobblestone", "MercatoVecchio", errors);
+        ValidateProductionUrbanSurface("Assets/Scenes/PiazzaDellaSignoria.unity", "[Ground]", "Floor_Piazza", "PiazzaDellaSignoria", errors);
+        ValidateProductionUrbanSurface("Assets/Scenes/PonteVecchio.unity", "[BridgeDeck]", "Deck", "PonteVecchio", errors);
+        ValidateProductionUrbanSurface("Assets/Scenes/Duomo.unity", "[Floors]", "Floor_Octagon", "Duomo", errors);
+        ValidateProductionUrbanSurface("Assets/Scenes/ViaCalimala.unity", "Street_EW_Template", "Street_Paving", "ViaCalimala", errors);
+        if (errors.Count == 0)
+            Debug.Log("[UrbanTerrainValidator] Production validation passed for 5 urban surfaces; colliders retained.");
+    }
+
+    static void ValidateProductionUrbanSurface(string scenePath, string rootName, string objectName, string zoneKey,
+        List<string> errors)
+    {
+        Scene scene = SceneManager.GetSceneByPath(scenePath);
+        bool previewOpened = false;
+        try
+        {
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                scene = EditorSceneManager.OpenPreviewScene(scenePath);
+                previewOpened = true;
+            }
+
+            Transform root = scene.GetRootGameObjects().FirstOrDefault(candidate => candidate.name == rootName)?.transform;
+            Transform surface = root == null
+                ? null
+                : root.GetComponentsInChildren<Transform>(true).FirstOrDefault(candidate => candidate.name == objectName);
+            MeshFilter filter = surface != null ? surface.GetComponent<MeshFilter>() : null;
+            MeshRenderer renderer = surface != null ? surface.GetComponent<MeshRenderer>() : null;
+            Collider collider = surface != null ? surface.GetComponent<Collider>() : null;
+            string meshPath = filter != null && filter.sharedMesh != null
+                ? AssetDatabase.GetAssetPath(filter.sharedMesh)
+                : string.Empty;
+            string expectedMaterial = $"{zoneKey}_UrbanTerrain";
+
+            if (surface == null || filter == null || filter.sharedMesh == null ||
+                filter.sharedMesh.colors.Length != filter.sharedMesh.vertexCount ||
+                !meshPath.Contains("/Meshes/Urban/Production/") ||
+                renderer == null || renderer.sharedMaterial == null || renderer.sharedMaterial.name != expectedMaterial ||
+                collider == null)
+            {
+                string error = $"{zoneKey}/{objectName}: production vertex mesh, urban material, or retained collider is invalid";
+                errors.Add(error);
+                Debug.LogError("[UrbanTerrainValidator] " + error);
+            }
+
+        }
+        finally
+        {
+            if (previewOpened && scene.IsValid())
+                EditorSceneManager.ClosePreviewScene(scene);
+        }
     }
 
     public static List<Finding> AuditBuildScenes()

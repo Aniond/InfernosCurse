@@ -13,6 +13,8 @@ Shader "InfernosCurse/HybridZoneTerrain"
         _LayerTint1 ("Layer 1 Tint", Color) = (0.83,0.76,0.62,1)
         _LayerTint2 ("Layer 2 Tint", Color) = (0.66,0.61,0.45,1)
         _LayerTint3 ("Layer 3 Tint", Color) = (1,1,1,1)
+        _UrbanVertexBlend ("Use Urban Vertex Blend", Range(0,1)) = 0
+        _VertexBlendContrast ("Vertex Blend Contrast", Range(0.25,4)) = 1
         _BlendExponent ("Blend Exponent", Range(0.25,4)) = 1.15
         _MacroScale ("Macro Variation Scale", Float) = 0.055
         _MacroStrength ("Macro Variation Strength", Range(0,0.35)) = 0.10
@@ -68,6 +70,8 @@ Shader "InfernosCurse/HybridZoneTerrain"
                 half4 _WetColor;
                 float4 _HeightMinMax;
                 float4 _LayerWetResponse;
+                float _UrbanVertexBlend;
+                float _VertexBlendContrast;
                 float _BlendExponent;
                 float _MacroScale;
                 float _MacroStrength;
@@ -85,6 +89,7 @@ Shader "InfernosCurse/HybridZoneTerrain"
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
                 float2 uv : TEXCOORD0;
+                float4 color : COLOR;
             };
 
             struct Varyings
@@ -94,6 +99,7 @@ Shader "InfernosCurse/HybridZoneTerrain"
                 float3 normalWS : TEXCOORD1;
                 float2 controlUV : TEXCOORD2;
                 float fogFactor : TEXCOORD3;
+                float4 color : TEXCOORD4;
             };
 
             Varyings vert(Attributes input)
@@ -105,6 +111,7 @@ Shader "InfernosCurse/HybridZoneTerrain"
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.controlUV = input.uv;
                 output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
+                output.color = input.color;
                 return output;
             }
 
@@ -126,8 +133,15 @@ Shader "InfernosCurse/HybridZoneTerrain"
 
             half4 frag(Varyings input) : SV_Target
             {
-                float4 weights = SAMPLE_TEXTURE2D(_Control, sampler_Control, input.controlUV);
-                weights = pow(max(weights, 1e-4), _BlendExponent);
+                float4 terrainWeights = SAMPLE_TEXTURE2D(_Control, sampler_Control, input.controlUV);
+                float4 urbanWeights = float4(
+                    saturate(input.color.b),
+                    saturate(input.color.r),
+                    saturate(input.color.g),
+                    0.0);
+                float4 weights = lerp(terrainWeights, urbanWeights, saturate(_UrbanVertexBlend));
+                float contrast = lerp(_BlendExponent, _VertexBlendContrast, saturate(_UrbanVertexBlend));
+                weights = pow(max(weights, 1e-4), contrast);
                 weights /= max(dot(weights, 1.0), 1e-4);
 
                 half3 c0 = SAMPLE_TEXTURE2D(_Splat0, sampler_Splat0, input.controlUV * _Splat0_ST.xy + _Splat0_ST.zw).rgb * _LayerTint0.rgb;

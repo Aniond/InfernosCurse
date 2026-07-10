@@ -2474,7 +2474,7 @@ PrefabInstance:
     - target: {fileID: 5584482818757815335, guid: 09d36b0d79538b440a87acf5562ddcf3, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 7570e7152fe3ec748a8de03570e266f5, type: 2}
+      objectReference: {fileID: 2100000, guid: 03dcc5496534e7241848af47e3ef9d0b, type: 2}
     - target: {fileID: 5633891956267288302, guid: 09d36b0d79538b440a87acf5562ddcf3, type: 3}
       propertyPath: m_LocalPosition.z
       value: 3.1999998
@@ -2539,6 +2539,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8587716912141143897, guid: 09d36b0d79538b440a87acf5562ddcf3, type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: b0182a12db5f9024e872b1af61529cde, type: 2}
     - target: {fileID: 8946012042176088050, guid: 09d36b0d79538b440a87acf5562ddcf3, type: 3}
       propertyPath: m_Name
       value: Street_EW_Template

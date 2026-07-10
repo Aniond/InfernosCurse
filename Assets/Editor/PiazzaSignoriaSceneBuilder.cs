@@ -81,6 +81,7 @@ public static class PiazzaSignoriaSceneBuilder
         ApplyFrictionless();
 
         BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
+        UrbanHybridTerrainSceneMigrator.ApplyPiazzaSurface(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         AddToBuildSettings(ScenePath);
         Debug.Log("[PiazzaSignoriaSceneBuilder] Scene built. Next: prop concepts/batch, " +
@@ -821,7 +822,6 @@ public static class PiazzaSignoriaSceneBuilder
         int done = 0;
         foreach (var (goName, tex, tile, smooth) in new (string, Texture2D, float, float)[]
         {
-            ("Floor_Piazza", texPaving, FloorTileWu, 0.16f),
             ("Floor_Yard", texDirt, 3.4f, 0.08f),
             ("Floor_Waste", texAshen, 2.6f, 0.05f),
         })
@@ -843,6 +843,10 @@ public static class PiazzaSignoriaSceneBuilder
             r.sharedMaterial = mat;
             done++;
         }
+
+        // The main paving uses the shared vertex-painted urban terrain system.
+        // Yard and Uberti waste remain authored overlays with their own materials.
+        UrbanHybridTerrainSceneMigrator.ApplyPiazzaSurface(scene);
 
         // Rusticated stone on the palazzo massing, binned by integer repeats.
         // The Foraboschi tower stump keeps its OLD grey stone tint (it predates

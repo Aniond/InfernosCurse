@@ -6,11 +6,21 @@ public enum HybridZoneSurfaceFamily
     Urban,
 }
 
+public enum HybridZoneBlendSource
+{
+    TerrainControl,
+    VertexColors,
+}
+
 [CreateAssetMenu(menuName = "Inferno's Curse/Environment/Hybrid Zone Terrain Profile",
     fileName = "HybridZoneTerrainProfile")]
 public sealed class HybridZoneTerrainProfile : ScriptableObject
 {
     public HybridZoneSurfaceFamily surfaceFamily = HybridZoneSurfaceFamily.Natural;
+
+    [Header("Blend source")]
+    public HybridZoneBlendSource blendSource = HybridZoneBlendSource.TerrainControl;
+    [Range(0.25f, 4f)] public float vertexBlendContrast = 1f;
 
     [Header("Layer palette")]
     public Color layer0Tint = new(0.78f, 0.86f, 0.68f, 1f);
@@ -43,6 +53,8 @@ public sealed class HybridZoneTerrainProfile : ScriptableObject
         SetColor(material, "_LayerTint1", layer1Tint);
         SetColor(material, "_LayerTint2", layer2Tint);
         SetColor(material, "_LayerTint3", layer3Tint);
+        SetFloat(material, "_UrbanVertexBlend", blendSource == HybridZoneBlendSource.VertexColors ? 1f : 0f);
+        SetFloat(material, "_VertexBlendContrast", vertexBlendContrast);
         SetFloat(material, "_BlendExponent", blendExponent);
         SetFloat(material, "_MacroScale", macroScale);
         SetFloat(material, "_MacroStrength", macroStrength);

@@ -59,6 +59,7 @@ public static class DuomoTilePass
         int floors = 0;
         foreach (var name in FloorPieces)
         {
+            if (name == "Floor_Octagon") continue;
             var go = GameObject.Find(name);
             if (go == null) { Debug.LogWarning($"[DuomoTilePass] floor piece not found: {name}"); continue; }
             var r = go.GetComponent<Renderer>();
@@ -76,6 +77,9 @@ public static class DuomoTilePass
             r.sharedMaterial = mat;
             floors++;
         }
+
+        // The octagonal crossing uses the shared vertex-painted urban surface.
+        UrbanHybridTerrainSceneMigrator.ApplyDuomoSurface(scene);
 
         // ── walls: integer repeats binned by (repX, repY) ─────────────────────
         var wallMats = new Dictionary<(int, int), Material>();
