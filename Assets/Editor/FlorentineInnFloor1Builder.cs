@@ -510,8 +510,6 @@ public static class FlorentineInnFloor1Builder
         if (prefab == null) { Debug.LogError($"[FlorentineInnFloor1Builder] Missing {CameraKitPath}"); return; }
 
         var kit = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-        var zoom = kit.GetComponentInChildren<DynamicZoom>(true);
-        if (zoom != null) zoom.useClearanceZoom = true;
 
         var camera = kit.GetComponentInChildren<Camera>(true);
         if (camera != null)

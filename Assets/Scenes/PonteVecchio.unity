@@ -21063,7 +21063,7 @@ GameObject:
   - component: {fileID: 1182498828}
   - component: {fileID: 1182498827}
   - component: {fileID: 1182498826}
-  - component: {fileID: 1182498825}
+  - component: {fileID: 7000000000000000004}
   m_Layer: 0
   m_Name: CM_PlayerCam
   m_TagString: Untagged
@@ -21086,34 +21086,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 25466532}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1182498825
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1182498823}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62e8456f045ea334dac8bc881f9ec2ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DynamicZoom
-  target: {fileID: 1612533119}
-  playerTag: Player
-  useClearanceZoom: 1
-  closeClearance: 3
-  wideClearance: 9
-  minArchitectureHeight: 2.5
-  rayHeight: 1.2
-  zoneCenterXZ: {x: 0, y: 0}
-  outerRadius: 8
-  innerRadius: 16
-  wideOffset: {x: 0, y: 15, z: -14.5}
-  closeOffset: {x: 0, y: 11, z: -9.5}
-  zoomLerpSpeed: 2.5
-  bottomSafeMargin: 0.25
-  edgePushBack: 1
-  edgePushUp: 0.5
 --- !u!114 &1182498826
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21132,7 +21104,22 @@ MonoBehaviour:
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
-  FollowOffset: {x: 0, y: 4.5, z: -8}
+  FollowOffset: {x: 0, y: 13, z: -12}
+--- !u!114 &7000000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1182498823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2aa2c48eb02d3544faa12d93a4e250fe, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CameraController
+  playerCam: {fileID: 1182498828}
+  followTarget: {fileID: 0}
+  playerTag: Player
 --- !u!114 &1182498827
 MonoBehaviour:
   m_ObjectHideFlags: 0

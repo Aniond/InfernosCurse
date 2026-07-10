@@ -584,10 +584,7 @@ public static class SaloneDelleArtiSceneBuilder
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(CameraKitPath);
         if (prefab == null) { Debug.LogError($"[SaloneDelleArtiSceneBuilder] Missing {CameraKitPath}"); return; }
-        var kit = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-        // Interior corridors → clearance mode (HD2D_Camera.md).
-        var zoom = kit.GetComponentInChildren<DynamicZoom>(true);
-        if (zoom != null) zoom.useClearanceZoom = true;
+        PrefabUtility.InstantiatePrefab(prefab);
     }
 
     // ── 3. Place Hero Props ───────────────────────────────────────────────────

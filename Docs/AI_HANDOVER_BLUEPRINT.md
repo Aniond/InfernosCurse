@@ -147,7 +147,6 @@ These exist today; don't add more (see [§4](#4-behavioral-restrictions--what-no
 [
   {"file": "Assets/Scripts/Environment/LightShaft.cs", "line": 122, "issue": "new MaterialPropertyBlock() per shaft per LateUpdate ([ExecuteAlways] — churns in edit mode too)"},
   {"file": "Assets/Scripts/Camera/OcclusionFade.cs", "line": "59-65", "issue": "Physics.RaycastAll + new HashSet<Renderer>() + GetComponentsInChildren per hit, every Update"},
-  {"file": "Assets/Scripts/Camera/DynamicZoom.cs", "line": 144, "issue": "Physics.RaycastAll ×8 directions per LateUpdate when useClearanceZoom=true"},
   {"file": "Assets/Scripts/Player/PlayerController.cs", "line": 130, "issue": "Physics.RaycastAll every FixedUpdate (SnapToGround)"},
   {"file": "Assets/Scripts/Curse/DailyCurseDrift.cs", "line": 61, "issue": "day-key string concat every frame (acknowledged safety-net poll)"},
   {"file": "Assets/Scripts/Battle/UI/BattleForecastUI.cs", "line": "Update()", "issue": "interpolated label strings every frame while aiming/moving"},
@@ -369,7 +368,7 @@ Ordered by blast radius. Each rule was learned the hard way; violations have a d
 10. **Don't put non-URP-Lit materials on `Building`-tagged objects** (breaks `OcclusionFade`'s transparent conversion), and don't rename Duomo geometry prefixes (`Oct_`, `Nave_Wall_`, `PierModel_<name>` …) — occlusion is name-coupled.
 11. TorchFlicker cookies: Spot lights only (URP point lights reject 2D cookies).
 42. **Never save in-memory materials into a PREFAB asset** — `new Material(...)` on a renderer serializes fine into a `.unity` scene but goes MAGENTA in any prefab instance (Street template incident 7/06). Prefab tints must be material ASSETS (`Assets/Prefabs/Templates/Materials/Street_<RRGGBB>.mat` pattern).
-43. **Skyline backdrop quads: single-sided (Cull Back) + faces pointing INWARD** (N-quad yRot 0, S 180, E +90, W −90). DynamicZoom's pullback (offsets reach −20 behind the player) can put the camera BEHIND the south quad — double-sided art fills the whole screen (street/Signoria incident 7/06). Also: opaque URP-Unlit only — transparent mats write no depth and COZY's fog erases them in play mode.
+43. **Skyline backdrop quads: single-sided (Cull Back) + faces pointing INWARD** (N-quad yRot 0, S 180, E +90, W −90). The uniform exploration camera remains 12 units behind the player, so backdrop coverage must account for that fixed offset. Double-sided art can fill the whole screen (street/Signoria incident 7/06). Also: opaque URP-Unlit only — transparent mats write no depth and COZY's fog erases them in play mode.
 
 ### 4.3 Time / calendar / weather
 12. **Backward `GameClock.SetHour` ⇒ must call `GameCalendar.ResyncClock()`** (else spurious `AdvanceDay` from the >6 h wrap detector). **Forward jump ⇒ never ResyncClock** (the wrap must roll the day). Multi-day = `AdvanceDay()×N` + `SetHour(morning)` + `ResyncClock()`.

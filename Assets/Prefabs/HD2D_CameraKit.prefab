@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 5731497885189856920}
   - component: {fileID: 7547992047974998724}
   - component: {fileID: 5685077269432120573}
-  - component: {fileID: 5429560445217694744}
+  - component: {fileID: 7000000000000000001}
   m_Layer: 0
   m_Name: CM_PlayerCam
   m_TagString: Untagged
@@ -149,8 +149,8 @@ MonoBehaviour:
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
-  FollowOffset: {x: 0, y: 4.5, z: -8}
---- !u!114 &5429560445217694744
+  FollowOffset: {x: 0, y: 13, z: -12}
+--- !u!114 &7000000000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -159,25 +159,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 4570409057130530129}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62e8456f045ea334dac8bc881f9ec2ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DynamicZoom
-  target: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 2aa2c48eb02d3544faa12d93a4e250fe, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::CameraController
+  playerCam: {fileID: 5731497885189856920}
+  followTarget: {fileID: 0}
   playerTag: Player
-  useClearanceZoom: 1
-  closeClearance: 3
-  wideClearance: 9
-  minArchitectureHeight: 6.5
-  rayHeight: 1.2
-  zoneCenterXZ: {x: 0, y: 0}
-  outerRadius: 8
-  innerRadius: 16
-  wideOffset: {x: 0, y: 15, z: -14.5}
-  closeOffset: {x: 0, y: 11, z: -9.5}
-  zoomLerpSpeed: 2.5
-  bottomSafeMargin: 0.25
-  edgePushBack: 1
-  edgePushUp: 0.5
 --- !u!1 &4971721456787289316
 GameObject:
   m_ObjectHideFlags: 0

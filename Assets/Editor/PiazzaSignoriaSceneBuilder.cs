@@ -564,17 +564,7 @@ public static class PiazzaSignoriaSceneBuilder
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(CameraKitPath);
         if (prefab == null) { Debug.LogError($"[PiazzaSignoriaSceneBuilder] Missing {CameraKitPath}"); return; }
-        var kit = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-        // Open plaza: radial center-distance mode (Mercato's), NOT clearance.
-        var zoom = kit.GetComponentInChildren<DynamicZoom>(true);
-        if (zoom != null)
-        {
-            zoom.useClearanceZoom = false;
-            zoom.zoneCenterXZ = Vector2.zero;
-            zoom.outerRadius = 10f;
-            zoom.innerRadius = 20f;
-        }
-        else Debug.LogWarning("[PiazzaSignoriaSceneBuilder] No DynamicZoom on the camera kit?");
+        PrefabUtility.InstantiatePrefab(prefab);
     }
 
     // ── 3. Place Hero Props (marker consumption; safe to re-run) ─────────────

@@ -14,12 +14,29 @@ public class CameraController : MonoBehaviour
     [Header("Follow Target")]
     [Tooltip("The transform Cinemachine will follow and look at")]
     [SerializeField] private Transform followTarget;
+    [Tooltip("Player tag used when no follow target is assigned")]
+    [SerializeField] private string playerTag = "Player";
 
     private CinemachineCamera _activeCam;
+
+    private void Awake()
+    {
+        if (playerCam == null)
+            playerCam = GetComponent<CinemachineCamera>();
+
+        ResolveFollowTarget();
+    }
+
+    private void OnEnable()
+    {
+        ResolveFollowTarget();
+        ApplyTarget(playerCam);
+    }
 
     private void Start()
     {
         _activeCam = playerCam;
+        ResolveFollowTarget();
         ApplyTarget(_activeCam);
     }
 
@@ -39,5 +56,14 @@ public class CameraController : MonoBehaviour
         if (cam == null || followTarget == null) return;
         cam.Follow = followTarget;
         cam.LookAt = followTarget;
+    }
+
+    private void ResolveFollowTarget()
+    {
+        if (followTarget != null) return;
+
+        var player = GameObject.FindGameObjectWithTag(playerTag);
+        if (player != null)
+            followTarget = player.transform;
     }
 }

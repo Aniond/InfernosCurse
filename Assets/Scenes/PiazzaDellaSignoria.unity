@@ -407,18 +407,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5429560445217694744, guid: 8fa4cee6cde894648a730539714c6240, type: 3}
-      propertyPath: innerRadius
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 5429560445217694744, guid: 8fa4cee6cde894648a730539714c6240, type: 3}
-      propertyPath: outerRadius
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 5429560445217694744, guid: 8fa4cee6cde894648a730539714c6240, type: 3}
-      propertyPath: useClearanceZoom
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

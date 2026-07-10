@@ -273,16 +273,7 @@ public static class StreetTemplateBuilder
         var kitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CameraKitPath);
         if (kitPrefab != null)
         {
-            var kit = (GameObject)PrefabUtility.InstantiatePrefab(kitPrefab);
-            var zoom = kit.GetComponentInChildren<DynamicZoom>(true);
-            if (zoom != null)
-            {
-                // Corridor: clearance mode (the PV recipe)
-                zoom.useClearanceZoom = true;
-                zoom.closeClearance = 3f;
-                zoom.wideClearance = 9f;
-                zoom.minArchitectureHeight = 2.5f;
-            }
+            PrefabUtility.InstantiatePrefab(kitPrefab);
         }
         else Debug.LogError($"[StreetTemplateBuilder] Missing {CameraKitPath}");
 
@@ -458,15 +449,7 @@ public static class StreetTemplateBuilder
         var kitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CameraKitPath);
         if (kitPrefab != null)
         {
-            var kit = (GameObject)PrefabUtility.InstantiatePrefab(kitPrefab);
-            var zoom = kit.GetComponentInChildren<DynamicZoom>(true);
-            if (zoom != null)
-            {
-                zoom.useClearanceZoom = true;
-                zoom.closeClearance = 3f;
-                zoom.wideClearance = 9f;
-                zoom.minArchitectureHeight = 2.5f;
-            }
+            PrefabUtility.InstantiatePrefab(kitPrefab);
         }
 
         BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
