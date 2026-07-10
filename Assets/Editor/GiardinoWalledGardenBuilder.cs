@@ -37,11 +37,13 @@ public static class GiardinoWalledGardenBuilder
     [MenuItem("InfernosCurse/Giardino delle Rose/5. Rebuild WALLED GARDEN (v4, zones=battlemaps)")]
     public static void Build()
     {
+        WeatherSurfaceStandardBuilder.EnsureSharedStandard();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         SceneManager.SetActiveScene(scene);
 
         _terrain = BuildTerrain();
         PaintTerrain(_terrain);
+        BuildStylizedGrass();
         BuildWallsAndTrees();
         BuildRoseQuads();
         BuildSouthDressing();
@@ -348,12 +350,22 @@ public static class GiardinoWalledGardenBuilder
 
     static void BuildFountainWater()
     {
-        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Stylized Water 3/Materials/StylizedWater3_Clear.mat");
-        if (mat == null) return;
-        var mesh = StylizedWater3.WaterMesh.Create(StylizedWater3.WaterMesh.Shape.Disk, 2.9f, 0.2f);
-        var wo = StylizedWater3.WaterObject.New(mat, mesh);
-        wo.gameObject.name = "FountainWater";
-        wo.transform.position = new Vector3(16f, SampleY(16f, 16f) + 1.43f, 16f);
+        WeatherSurfaceStandardBuilder.CreateWaterDisk(
+            "FountainWater", 2.9f,
+            new Vector3(16f, SampleY(16f, 16f) + 1.43f, 16f),
+            StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
+    }
+
+    static void BuildStylizedGrass()
+    {
+        Bounds bounds = new Bounds(new Vector3(16f, GroundY, 16f), new Vector3(31f, 0.1f, 31f));
+        WeatherSurfaceStandardBuilder.CreateGrassField(
+            "StylizedGrass_Garden", _terrain.transform, bounds,
+            (x, z) => SampleY(x, z) + 0.025f,
+            (x, z) => x > 0.5f && x < 31.5f && z > 0.5f && z < 31.5f &&
+                      PathMask(x, z) < 0.2f && !InAnyBed(x, z) &&
+                      Vector2.Distance(new Vector2(x, z), new Vector2(16f, 16f)) > 3.4f,
+            0.70f, 1333, false, "GiardinoWalled_GrassField");
     }
 
     // ── zones=battlemaps: emit the combat grid over the SAME layout ──────────

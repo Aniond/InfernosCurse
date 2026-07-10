@@ -49,11 +49,18 @@ public static class GiardinoDelleRoseSceneBuilder
     [MenuItem("InfernosCurse/Giardino delle Rose/1. Build Scene")]
     public static void Build()
     {
+        WeatherSurfaceStandardBuilder.EnsureSharedStandard();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         SceneManager.SetActiveScene(scene);
 
         var terrain = BuildTerrain();
         PaintTerrain(terrain);
+        WeatherSurfaceStandardBuilder.CreateGrassField(
+            "StylizedGrass_Hillside", terrain.transform,
+            new Bounds(new Vector3(0f, MidY, 0f), new Vector3(TerrainWidth - 4f, 0.1f, TerrainLength - 4f)),
+            (x, z) => SampleGroundY(x, z) + 0.025f,
+            (x, z) => IsGrassAllowed(x, z),
+            0.45f, 1269, false, "GiardinoHillside_GrassField");
         SpawnVegetation(terrain);
         ScatterTrees(terrain);
         ScatterTrailFlora();
@@ -179,6 +186,23 @@ public static class GiardinoDelleRoseSceneBuilder
         (new Vector2(0, 24), 3.5f),   // overlook
         (new Vector2(19, 5), 2.5f),   // cottage yard
     };
+
+    static bool IsGrassAllowed(float x, float z)
+    {
+        if (Mathf.Abs(x) > TerrainWidth * 0.5f - 2f ||
+            Mathf.Abs(z) > TerrainLength * 0.5f - 2f) return false;
+
+        var point = new Vector2(x, z);
+        foreach (var trail in Trails)
+            for (int i = 0; i < trail.pts.Length - 1; i++)
+                if (DistToSegment(point, trail.pts[i], trail.pts[i + 1]) < trail.width * 0.5f + 0.55f)
+                    return false;
+
+        foreach (var pad in Pads)
+            if (Vector2.Distance(point, pad.c) < pad.r + 0.55f) return false;
+
+        return true;
+    }
 
     static void PaintTerrain(Terrain terrain)
     {
@@ -673,14 +697,10 @@ public static class GiardinoDelleRoseSceneBuilder
 
     static void BuildFountainWater()
     {
-        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Stylized Water 3/Materials/StylizedWater3_Clear.mat");
-        if (mat == null) return;
-        // Sized/heighted for the 2.2m basin (was 1.6f disk at +0.78 for 1.2m).
-        var mesh = StylizedWater3.WaterMesh.Create(StylizedWater3.WaterMesh.Shape.Disk, 2.9f, 0.2f);
-        var wo = StylizedWater3.WaterObject.New(mat, mesh);
-        wo.gameObject.name = "FountainWater";
-        wo.transform.position = new Vector3(GardenCenter.x,
-            SampleGroundY(GardenCenter.x, GardenCenter.y) + 1.43f, GardenCenter.y);
+        WeatherSurfaceStandardBuilder.CreateWaterDisk(
+            "FountainWater", 2.9f,
+            new Vector3(GardenCenter.x, SampleGroundY(GardenCenter.x, GardenCenter.y) + 1.43f, GardenCenter.y),
+            StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
     }
 
     // ── Pond (Stylized Water 3 in the dug basin) ─────────────────────────────
@@ -691,14 +711,11 @@ public static class GiardinoDelleRoseSceneBuilder
         // prefabs carry a huge plane mesh (scaling guesses flooded the whole
         // lower fan on the first attempt; the same oversized plane was also
         // the source of the "cyan cutout patches" misdiagnosed as grass).
-        var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Stylized Water 3/Materials/StylizedWater3_Clear.mat");
-        if (mat == null) { Debug.LogWarning("[GiardinoDelleRoseSceneBuilder] Missing StylizedWater3_Clear.mat — pond skipped."); return; }
-
-        var mesh = StylizedWater3.WaterMesh.Create(StylizedWater3.WaterMesh.Shape.Disk, PondRx * 1.9f, 0.5f);
-        var wo = StylizedWater3.WaterObject.New(mat, mesh);
-        wo.gameObject.name = "PondWater";
-        wo.transform.position = new Vector3(PondCenter.x, MidY - PondDepth * 0.45f, PondCenter.y);
-        wo.transform.localScale = new Vector3(1f, 1f, PondRz / PondRx); // squash disk into the ellipse basin
+        var pond = WeatherSurfaceStandardBuilder.CreateWaterDisk(
+            "PondWater", PondRx * 1.9f,
+            new Vector3(PondCenter.x, MidY - PondDepth * 0.45f, PondCenter.y),
+            StandardWaterProfile.Pond, WeatherSurfaceExposure.Outdoor);
+        pond.transform.localScale = new Vector3(1f, 1f, PondRz / PondRx); // squash disk into the ellipse basin
     }
 
     // ── Boundaries / travel / NPC / dressing ─────────────────────────────────

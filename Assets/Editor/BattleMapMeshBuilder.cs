@@ -46,6 +46,7 @@ public static class BattleMapMeshBuilder
 
     static void BuildFor(GameObject srcPrefab)
     {
+        WeatherSurfaceStandardBuilder.EnsureSharedStandard();
         var srcAuth = srcPrefab.GetComponent<BattleMapAuthoring>();
         string baseName = srcPrefab.name;                       // e.g. BattleMap_Plains
         string name3D = baseName + "3D";
@@ -263,6 +264,26 @@ public static class BattleMapMeshBuilder
         terrain.AddComponent<MeshFilter>().sharedMesh = mesh;
         terrain.AddComponent<MeshRenderer>().sharedMaterial = mat;
 
+        var grassBlocked = new HashSet<Vector2Int>(srcAuth.pathCells);
+        foreach (var cell in srcAuth.partySpawns) grassBlocked.Add(cell);
+        foreach (var cell in srcAuth.enemySpawns) grassBlocked.Add(cell);
+        foreach (var obstacle in srcPrefab.GetComponentsInChildren<BattleObstacle>(true))
+            grassBlocked.Add(obstacle.cell);
+
+        int grassSeed = 1269;
+        foreach (char c in baseName) grassSeed = grassSeed * 31 + c;
+        WeatherSurfaceStandardBuilder.CreateGrassField(
+            "StylizedGrass_Battle", root.transform,
+            new Bounds(new Vector3(W * 0.5f, BASE_Y, H * 0.5f), new Vector3(W, 0.1f, H)),
+            (x, z) => Sample(x, z) + 0.025f,
+            (x, z) =>
+            {
+                var cell = new Vector2Int(Mathf.FloorToInt(x), Mathf.FloorToInt(z));
+                if (grassBlocked.Contains(cell)) return false;
+                return style.waterLevel <= -99f || Sample(x, z) > style.waterLevel + 0.08f;
+            },
+            0.35f, grassSeed, false, name3D + "_GrassField");
+
         var heights = root.AddComponent<BattleTerrainHeights>();
         heights.width = W;
         heights.height = H;
@@ -280,8 +301,10 @@ public static class BattleMapMeshBuilder
         root.AddComponent<ZoneFogOfWar>();   // battle fog: party-sheet vision + CT ambush
 
         // Optional water plane (Arno/river maps): style sets level + material.
-        if (style.waterLevel > -99f && style.waterMaterial != null)
+        if (style.waterLevel > -99f)
         {
+            style.waterMaterial = WeatherSurfaceStandardBuilder.EnsureWaterMaterial(StandardWaterProfile.BattleShallow);
+            EditorUtility.SetDirty(style);
             var water = GameObject.CreatePrimitive(PrimitiveType.Quad);
             water.name = "Water";
             Object.DestroyImmediate(water.GetComponent<Collider>());
@@ -290,6 +313,8 @@ public static class BattleMapMeshBuilder
             water.transform.position = new Vector3(W * 0.5f, style.waterLevel, H * 0.5f);
             water.transform.localScale = new Vector3(gw + 6f, gh + 6f, 1f);
             water.GetComponent<MeshRenderer>().sharedMaterial = style.waterMaterial;
+            WeatherSurfaceStandardBuilder.ConfigureWater(
+                water, StandardWaterProfile.BattleShallow, WeatherSurfaceExposure.Outdoor);
         }
 
         // Obstacles: copy cells (gameplay); visuals come later with props.

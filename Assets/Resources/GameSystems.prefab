@@ -25,6 +25,9 @@ GameObject:
   - component: {fileID: 8033714565646588844}
   - component: {fileID: 1322070463685444192}
   - component: {fileID: 7937870915207787966}
+  - component: {fileID: 8731842912088372831}
+  - component: {fileID: 7933120963479071022}
+  - component: {fileID: 612618384792126125}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -858,6 +861,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillOrbMenu
   headerFont: {fileID: 11400000, guid: 76be3f0f08802eb4c99dbec53fa14193, type: 2}
   bodyFont: {fileID: 11400000, guid: 2e1d36bd33f227741ba92d7b3d3afc17, type: 2}
+--- !u!114 &8731842912088372831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0903cc85a9c038544adada1c389844e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeatherSurfaceController
+  wetnessRisePerSecond: 0.35
+  wetnessDryPerSecond: 0.045
+--- !u!114 &7933120963479071022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6f60c696eab4ac49824a64b5daefd2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: sc.stylizedgrass.runtime::sc.stylizedgrass.runtime.WindController
+  windZone: {fileID: 0}
+  windAmbientMultiplier: 1
+  windGustMultiplier: 1
+--- !u!114 &612618384792126125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8365712553221212847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 568f02955fc24a86bf7cbea9a3904d47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: sc.stylizedgrass.runtime::sc.stylizedgrass.runtime.WeatherShadingController
+  wetness: 0
+  snowAmount: 0
 --- !u!1001 &3242152288469685475
 PrefabInstance:
   m_ObjectHideFlags: 0

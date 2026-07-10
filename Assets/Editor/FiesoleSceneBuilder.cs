@@ -27,6 +27,7 @@ public static class FiesoleSceneBuilder
     [MenuItem("InfernosCurse/Gugol Mappe/4. Build Fiesole Scene")]
     public static void Build()
     {
+        WeatherSurfaceStandardBuilder.EnsureSharedStandard();
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         SceneManager.SetActiveScene(scene);
 
@@ -76,6 +77,14 @@ public static class FiesoleSceneBuilder
         piazza.transform.position = new Vector3(0f, 0.04f, 5.5f);
         piazza.transform.localScale = new Vector3(1.4f, 1f, 1.0f);   // 14×10
         Tint(piazza, new Color(0.58f, 0.53f, 0.45f));
+
+        var meadowBounds = meadow.GetComponent<Renderer>().bounds;
+        WeatherSurfaceStandardBuilder.CreateGrassField(
+            "StylizedGrass_Meadow", group.transform, meadowBounds,
+            (x, z) => meadowBounds.max.y + 0.025f,
+            (x, z) => !(Mathf.Abs(x) < 3f && z > -14f && z < 6f) &&
+                      !(Mathf.Abs(x) < 7.5f && z > 0f && z < 11f),
+            0.75f, 1269, true, "Fiesole_GrassField");
     }
 
     // ── Structures ───────────────────────────────────────────────────────────

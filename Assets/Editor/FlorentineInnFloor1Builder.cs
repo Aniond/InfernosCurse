@@ -52,6 +52,7 @@ public static class FlorentineInnFloor1Builder
     [MenuItem("InfernosCurse/Florentine Inn/1. Build Floor 1")]
     public static void Build()
     {
+        WeatherSurfaceStandardBuilder.EnsureSharedStandard();
         EnsureMaterials();
 
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -370,7 +371,9 @@ public static class FlorentineInnFloor1Builder
     {
         var root = RoomRoot(parent, "Courtyard");
         Cylinder(root, "CourtyardFountain_Basin", new Vector3(0.35f, 0.22f, -0.4f), new Vector3(2.4f, 0.22f, 2.4f), _stone);
-        Cylinder(root, "CourtyardFountain_Water", new Vector3(0.35f, 0.47f, -0.4f), new Vector3(1.9f, 0.06f, 1.9f), _water, collider: false);
+        var water = Cylinder(root, "CourtyardFountain_Water", new Vector3(0.35f, 0.47f, -0.4f), new Vector3(1.9f, 0.06f, 1.9f), _water, collider: false);
+        WeatherSurfaceStandardBuilder.ConfigureWater(
+            water, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Indoor);
         Cylinder(root, "CourtyardFountain_Pedestal", new Vector3(0.35f, 0.8f, -0.4f), new Vector3(0.45f, 0.8f, 0.45f), _stone);
         foreach (var pos in new[]
         {
@@ -533,7 +536,7 @@ public static class FlorentineInnFloor1Builder
         _wood = MaterialAsset("Inn_Wood", new Color(0.34f, 0.17f, 0.07f), 0.16f);
         _darkWood = MaterialAsset("Inn_DarkWood", new Color(0.18f, 0.075f, 0.03f), 0.2f);
         _courtyard = MaterialAsset("Inn_CourtyardBrick", new Color(0.48f, 0.24f, 0.16f), 0.1f);
-        _water = MaterialAsset("Inn_Water", new Color(0.18f, 0.48f, 0.63f), 0.75f);
+        _water = WeatherSurfaceStandardBuilder.EnsureWaterMaterial(StandardWaterProfile.Fountain);
         _green = MaterialAsset("Inn_Plants", new Color(0.14f, 0.36f, 0.12f), 0.1f);
         _npc = MaterialAsset("Inn_NPC_Guest", new Color(0.52f, 0.20f, 0.16f), 0.1f);
         _serviceNpc = MaterialAsset("Inn_NPC_Staff", new Color(0.16f, 0.29f, 0.48f), 0.1f);

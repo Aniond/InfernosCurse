@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
-  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
-  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientSkyColor: {r: 0.63919544, g: 0.9581203, b: 1.018868, a: 1.5}
+  m_AmbientEquatorColor: {r: 0.63583124, g: 0.8300802, b: 0.9169811, a: 1.3499999}
+  m_AmbientGroundColor: {r: 0.31791562, g: 0.4150401, b: 0.45849055, a: 1.3499999}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
@@ -32,7 +32,7 @@ RenderSettings:
   m_FlareFadeSpeed: 3
   m_HaloTexture: {fileID: 0}
   m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
-  m_DefaultReflectionMode: 0
+  m_DefaultReflectionMode: 1
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
@@ -119,6 +119,116 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &33227757
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 33227758}
+  - component: {fileID: 33227761}
+  - component: {fileID: 33227760}
+  - component: {fileID: 33227759}
+  m_Layer: 0
+  m_Name: StylizedGrass_Meadow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &33227758
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 33227757}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 934214676}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &33227759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 33227757}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cb3532d6262baa4a8e0acbb35aabcfa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeatherSurface
+  surfaceKind: 0
+  exposure: 0
+  targetRenderer: {fileID: 33227760}
+  targetTerrain: {fileID: 0}
+  rainEmitter: {fileID: 0}
+  stormEmissionRate: 12
+  weatherResponse: 1
+--- !u!23 &33227760
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 33227757}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 4f5fa5db5ee7bcb40980859b308c8323, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &33227761
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 33227757}
+  m_Mesh: {fileID: 4300000, guid: 5a65e7a3873ec12438406b4b62ea1532, type: 2}
 --- !u!114 &43804388
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,7 +245,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -287,8 +397,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -385,7 +497,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.58, g: 0.53, b: 0.45, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.58, g: 0.53, b: 0.45, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -497,12 +609,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -609,7 +721,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -667,12 +779,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -779,8 +891,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -877,7 +991,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.62, g: 0.7, b: 0.72, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.62, g: 0.7, b: 0.72, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -898,7 +1012,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -1096,7 +1210,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -1154,12 +1268,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -1280,8 +1394,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -1378,7 +1494,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.45, g: 0.52, b: 0.28, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.45, g: 0.52, b: 0.27999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -1605,12 +1721,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -1794,12 +1910,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -1857,12 +1973,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -1920,12 +2036,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -2031,12 +2147,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -2382,7 +2498,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -2441,8 +2557,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -2539,7 +2657,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.52, g: 0.48, b: 0.42, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.52, g: 0.47999996, b: 0.41999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -2576,6 +2694,7 @@ Transform:
   - {fileID: 1167408886}
   - {fileID: 1956417566}
   - {fileID: 2074168037}
+  - {fileID: 33227758}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &944464496
@@ -2594,12 +2713,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -2657,7 +2776,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -2965,7 +3084,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -3023,7 +3142,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -3081,12 +3200,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -3284,7 +3403,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -3489,6 +3608,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1130180155}
   - component: {fileID: 1130180154}
+  - component: {fileID: 1130180156}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -3576,6 +3696,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1130180156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1130180153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!114 &1143961523
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3592,12 +3741,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -3942,7 +4091,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -4000,7 +4149,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -4058,12 +4207,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -4209,7 +4358,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -4457,7 +4606,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -4515,7 +4664,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -4573,12 +4722,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5089,7 +5238,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5147,12 +5296,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5313,12 +5462,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5376,12 +5525,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5661,7 +5810,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5719,7 +5868,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5777,12 +5926,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -5961,12 +6110,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -6366,7 +6515,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -6424,12 +6573,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -6487,7 +6636,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -6607,12 +6756,12 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
@@ -6822,7 +6971,7 @@ MonoBehaviour:
   - renderer: {fileID: 0}
     role: 1
     emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
-    emissionMultiplier: 1.5
+    emissionMultiplier: 0.25
     lightningMultiplier: 2.5
   localLights: []
   exteriorWeatherObjects: []
