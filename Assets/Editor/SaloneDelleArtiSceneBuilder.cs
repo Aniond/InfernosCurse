@@ -117,6 +117,7 @@ public static class SaloneDelleArtiSceneBuilder
         CopyPlayerFromPonteVecchio(scene);
         PlaceCameraKit();
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         AddToBuildSettings(ScenePath);
         Debug.Log("[SaloneDelleArtiSceneBuilder] Shell built. Next: '4. Setup Guilds', " +

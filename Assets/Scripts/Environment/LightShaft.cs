@@ -104,7 +104,7 @@ public class LightShaft : MonoBehaviour
     void LateUpdate()
     {
         float hour = GameClock.Hour;
-        float strength = TimeStrength(hour);
+        float strength = TimeStrength(hour) * WeatherStrength();
 
         for (int i = 0; i < _shafts.Count; i++)
         {
@@ -136,6 +136,20 @@ public class LightShaft : MonoBehaviour
         float dusk = 1f - Mathf.Clamp01(Mathf.Abs(hour - duskPeakHour) / peakWidth);
         // Smooth the linear tent so the fade eases in/out.
         return Mathf.SmoothStep(0f, 1f, Mathf.Max(dawn, dusk));
+    }
+
+    // Uses the same persistent profile FlorenceWeather applies to COZY. Indoor
+    // shafts therefore dim with cloud, rain, storm, and fog without owning any
+    // weather state or running a separate transition.
+    static float WeatherStrength()
+    {
+        string profile = (FlorenceWeather.CurrentProfileName ?? string.Empty).ToLowerInvariant();
+        if (profile.Contains("thunder") || profile.Contains("storm") || profile.Contains("hail")) return 0.24f;
+        if (profile.Contains("rain") || profile.Contains("precipitation") || profile.Contains("sleet")) return 0.46f;
+        if (profile.Contains("fog") || profile.Contains("haze")) return 0.34f;
+        if (profile.Contains("cloud") || profile.Contains("overcast") || profile.Contains("wind")) return 0.68f;
+        if (profile.Contains("snow")) return 0.74f;
+        return 1f;
     }
 
     /// <summary>

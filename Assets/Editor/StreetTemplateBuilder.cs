@@ -286,6 +286,7 @@ public static class StreetTemplateBuilder
         }
         else Debug.LogError($"[StreetTemplateBuilder] Missing {CameraKitPath}");
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         Debug.Log($"[StreetTemplateBuilder] {ScenePath} created. Rename it (File > Save As), " +
                   "swap SLOT_N* buildings, set ShopDoor targets, retarget the end exits, " +
@@ -468,6 +469,7 @@ public static class StreetTemplateBuilder
             }
         }
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, NSScenePath);
         Debug.Log($"[StreetTemplateBuilder] {NSScenePath} created (P5 depth street). Rename, dress, wire.");
     }

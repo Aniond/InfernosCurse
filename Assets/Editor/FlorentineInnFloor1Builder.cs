@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -37,6 +38,16 @@ public static class FlorentineInnFloor1Builder
     static Material _structPublicTile;
     static Material _structServiceTerracotta;
     static Material _structCourtyard;
+    static Material _windowGlow;
+    static Material _windowFog;
+    static Material _windowRain;
+
+    struct WindowBuild
+    {
+        public Renderer pane;
+        public GameObject rain;
+        public GameObject fog;
+    }
 
     [MenuItem("InfernosCurse/Florentine Inn/1. Build Floor 1")]
     public static void Build()
@@ -51,6 +62,7 @@ public static class FlorentineInnFloor1Builder
         BuildWalls(architecture);
         BuildCourtyardArcade(architecture);
         BuildStairs(architecture);
+        var windows = BuildWindows(architecture);
 
         var props = new GameObject("[Props]").transform;
         BuildReception(props);
@@ -63,7 +75,7 @@ public static class FlorentineInnFloor1Builder
         BuildNpcMarkers();
         BuildInteractions();
         BuildTravel();
-        BuildLighting();
+        BuildLighting(windows);
         CopyPlayerFromPonteVecchio(scene);
         PlaceCameraKit();
 
@@ -159,6 +171,107 @@ public static class FlorentineInnFloor1Builder
         StructuralLintel(arcade, "CourtyardLintel_N", new Vector3(0.35f, 0f, 2.95f), 8.2f, 0f);
         StructuralLintel(arcade, "CourtyardLintel_W", new Vector3(-3.55f, 0f, -0.4f), 6.4f, 90f);
         StructuralLintel(arcade, "CourtyardLintel_E", new Vector3(4.25f, 0f, -0.4f), 6.4f, 90f);
+    }
+
+    static List<WindowBuild> BuildWindows(Transform parent)
+    {
+        var root = new GameObject("Windows").transform;
+        root.SetParent(parent, false);
+        var built = new List<WindowBuild>();
+
+        // Decorative recessed windows retain the approved exterior-wall collider
+        // footprints. Their exterior cards provide a readable sky/weather view
+        // without exposing empty scene space beyond the inn shell.
+        built.Add(BuildWindow(root, "Window_Salon_S", new Vector3(-7.4f, 0f, -10.98f), 0f));
+        built.Add(BuildWindow(root, "Window_Office_S", new Vector3(7.5f, 0f, -10.98f), 0f));
+        built.Add(BuildWindow(root, "Window_Dining_N", new Vector3(-7.4f, 0f, 10.98f), 180f));
+        built.Add(BuildWindow(root, "Window_Kitchen_N", new Vector3(1f, 0f, 10.98f), 180f));
+        built.Add(BuildWindow(root, "Window_Pantry_N", new Vector3(8.4f, 0f, 10.98f), 180f));
+        built.Add(BuildWindow(root, "Window_Salon_W", new Vector3(-10.98f, 0f, -7.3f), 90f));
+        built.Add(BuildWindow(root, "Window_Dining_W", new Vector3(-10.98f, 0f, 5.4f), 90f));
+        built.Add(BuildWindow(root, "Window_Office_E", new Vector3(10.98f, 0f, -7.3f), -90f));
+        built.Add(BuildWindow(root, "Window_Service_E", new Vector3(10.98f, 0f, 4.5f), -90f));
+        built.Add(BuildWindow(root, "Window_Pantry_E", new Vector3(10.98f, 0f, 9f), -90f));
+        return built;
+    }
+
+    static WindowBuild BuildWindow(Transform parent, string name, Vector3 position, float yaw)
+    {
+        var root = new GameObject(name).transform;
+        root.SetParent(parent, false);
+        root.position = position;
+        root.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+        WindowPart(root, "Frame_L", new Vector3(-0.82f, 2.05f, 0f), new Vector3(0.13f, 1.9f, 0.13f), _darkWood);
+        WindowPart(root, "Frame_R", new Vector3(0.82f, 2.05f, 0f), new Vector3(0.13f, 1.9f, 0.13f), _darkWood);
+        WindowPart(root, "Frame_T", new Vector3(0f, 2.94f, 0f), new Vector3(1.76f, 0.13f, 0.13f), _darkWood);
+        WindowPart(root, "Sill", new Vector3(0f, 1.16f, 0.04f), new Vector3(1.95f, 0.18f, 0.38f), _stone);
+        WindowPart(root, "Mullion_V", new Vector3(0f, 2.05f, -0.02f), new Vector3(0.08f, 1.68f, 0.09f), _darkWood);
+        WindowPart(root, "Mullion_H", new Vector3(0f, 2.05f, -0.02f), new Vector3(1.52f, 0.08f, 0.09f), _darkWood);
+
+        var pane = WindowPart(root, "ExteriorView", new Vector3(0f, 2.05f, -0.07f),
+            new Vector3(1.55f, 1.68f, 0.05f), _windowGlow).GetComponent<Renderer>();
+
+        var fog = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        fog.name = "FogOverlay";
+        fog.transform.SetParent(root, false);
+        fog.transform.localPosition = new Vector3(0f, 2.05f, 0.02f);
+        fog.transform.localScale = new Vector3(1.52f, 1.64f, 1f);
+        fog.GetComponent<Renderer>().sharedMaterial = _windowFog;
+        Object.DestroyImmediate(fog.GetComponent<Collider>());
+        fog.SetActive(false);
+
+        var rain = BuildExteriorRain(root);
+        rain.SetActive(false);
+        return new WindowBuild { pane = pane, rain = rain, fog = fog };
+    }
+
+    static GameObject WindowPart(Transform parent, string name, Vector3 localPosition, Vector3 localScale, Material material)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPosition;
+        go.transform.localScale = localScale;
+        go.GetComponent<Renderer>().sharedMaterial = material;
+        Object.DestroyImmediate(go.GetComponent<Collider>());
+        return go;
+    }
+
+    static GameObject BuildExteriorRain(Transform parent)
+    {
+        var go = new GameObject("ExteriorRain");
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = new Vector3(0f, 2.15f, -0.65f);
+
+        var particles = go.AddComponent<ParticleSystem>();
+        var main = particles.main;
+        main.loop = true;
+        main.startLifetime = 0.9f;
+        main.startSpeed = 0f;
+        main.startSize3D = true;
+        main.startSizeX = 0.035f;
+        main.startSizeY = 0.32f;
+        main.startSizeZ = 0.035f;
+        main.maxParticles = 90;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+
+        var emission = particles.emission;
+        emission.rateOverTime = 70f;
+        var shape = particles.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = new Vector3(1.7f, 1.9f, 0.3f);
+        var velocity = particles.velocityOverLifetime;
+        velocity.enabled = true;
+        velocity.space = ParticleSystemSimulationSpace.Local;
+        velocity.y = -4.2f;
+
+        var renderer = particles.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = _windowRain;
+        renderer.renderMode = ParticleSystemRenderMode.Stretch;
+        renderer.lengthScale = 1.3f;
+        renderer.velocityScale = 0.08f;
+        return go;
     }
 
     static void BuildStairs(Transform parent)
@@ -305,7 +418,7 @@ public static class FlorentineInnFloor1Builder
         exit.AddComponent<ZoneExit>().mode = ZoneExit.ExitMode.ToWorldMap;
     }
 
-    static void BuildLighting()
+    static void BuildLighting(List<WindowBuild> windows)
     {
         var root = new GameObject("[Lighting]").transform;
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
@@ -320,11 +433,46 @@ public static class FlorentineInnFloor1Builder
         directional.intensity = 1.05f;
         directional.shadows = LightShadows.Soft;
 
-        Point(root, "Reception Lamp", new Vector3(0.2f, 2.8f, -7.2f), 5.5f, 7f);
-        Point(root, "Salon Lamp", new Vector3(-7.4f, 2.8f, -7.3f), 4.5f, 6f);
-        Point(root, "Dining Lamp", new Vector3(-7.4f, 2.8f, 5.3f), 5.5f, 7f);
-        Point(root, "Kitchen Lamp", new Vector3(1f, 2.8f, 7.3f), 5f, 6f);
-        Point(root, "Office Lamp", new Vector3(7.5f, 2.8f, -7.2f), 4f, 5f);
+        var lamps = new[]
+        {
+            Point(root, "Reception Lamp", new Vector3(0.2f, 2.8f, -7.2f), 5.5f, 7f),
+            Point(root, "Salon Lamp", new Vector3(-7.4f, 2.8f, -7.3f), 4.5f, 6f),
+            Point(root, "Dining Lamp", new Vector3(-7.4f, 2.8f, 5.3f), 5.5f, 7f),
+            Point(root, "Kitchen Lamp", new Vector3(1f, 2.8f, 7.3f), 5f, 6f),
+            Point(root, "Office Lamp", new Vector3(7.5f, 2.8f, -7.2f), 4f, 5f)
+        };
+
+        var environment = root.gameObject.AddComponent<WorldWindowEnvironment>();
+        environment.Windows = windows.Select(w => new WorldWindowEnvironment.WindowSurface
+        {
+            renderer = w.pane,
+            role = WorldWindowEnvironment.WindowRole.InteriorLookingOut,
+            emissionTint = Color.white,
+            emissionMultiplier = 2.2f,
+            lightningMultiplier = 4f
+        }).ToArray();
+        environment.LocalLights = lamps.Select(l => new WorldWindowEnvironment.DrivenLight
+        {
+            light = l,
+            daylightIntensity = l.intensity * 0.10f,
+            nightIntensity = l.intensity,
+            daylightColor = new Color(1f, 0.82f, 0.62f),
+            nightColor = new Color(1f, 0.62f, 0.28f),
+            lightningIntensity = 4.5f
+        }).ToArray();
+        environment.ExteriorWeatherObjects = windows.SelectMany(w => new[]
+        {
+            new WorldWindowEnvironment.WeatherObject
+            {
+                target = w.rain,
+                visibleDuring = WorldWindowEnvironment.WeatherMask.Wet
+            },
+            new WorldWindowEnvironment.WeatherObject
+            {
+                target = w.fog,
+                visibleDuring = WorldWindowEnvironment.WeatherMask.Fog
+            }
+        }).ToArray();
     }
 
     static void CopyPlayerFromPonteVecchio(Scene target)
@@ -396,6 +544,9 @@ public static class FlorentineInnFloor1Builder
         _structPublicTile = StructuralMaterial("Inn_PublicTile", _tile);
         _structServiceTerracotta = StructuralMaterial("Inn_ServiceTerracotta", _terracotta);
         _structCourtyard = StructuralMaterial("Inn_CourtyardPavers", _courtyard);
+        _windowGlow = EmissiveMaterialAsset("Inn_WindowGlow", new Color(0.32f, 0.58f, 0.88f), 1.5f);
+        _windowFog = TransparentMaterialAsset("Inn_WindowFog", new Color(0.68f, 0.72f, 0.73f, 0.58f));
+        _windowRain = TransparentMaterialAsset("Inn_WindowRain", new Color(0.62f, 0.78f, 0.92f, 0.72f));
     }
 
     static Material StructuralMaterial(string name, Material fallback)
@@ -415,6 +566,37 @@ public static class FlorentineInnFloor1Builder
         material = new Material(shader) { name = name, color = color };
         if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", smoothness);
         AssetDatabase.CreateAsset(material, path);
+        return material;
+    }
+
+    static Material EmissiveMaterialAsset(string name, Color color, float emission)
+    {
+        var material = MaterialAsset(name, color * 0.22f, 0.42f);
+        material.EnableKeyword("_EMISSION");
+        if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", color * emission);
+        EditorUtility.SetDirty(material);
+        return material;
+    }
+
+    static Material TransparentMaterialAsset(string name, Color color)
+    {
+        string path = $"{MaterialDir}/{name}.mat";
+        var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+            material = new Material(shader) { name = name };
+            AssetDatabase.CreateAsset(material, path);
+        }
+        material.color = color;
+        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+        if (material.HasProperty("_Surface")) material.SetFloat("_Surface", 1f);
+        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        material.SetInt("_ZWrite", 0);
+        material.renderQueue = 3000;
+        EditorUtility.SetDirty(material);
         return material;
     }
 
@@ -538,7 +720,7 @@ public static class FlorentineInnFloor1Builder
         go.GetComponent<Renderer>().sharedMaterial = material;
     }
 
-    static void Point(Transform parent, string name, Vector3 position, float intensity, float range)
+    static Light Point(Transform parent, string name, Vector3 position, float intensity, float range)
     {
         var go = new GameObject(name);
         go.transform.SetParent(parent, false);
@@ -549,6 +731,7 @@ public static class FlorentineInnFloor1Builder
         light.intensity = intensity;
         light.range = range;
         light.shadows = LightShadows.None;
+        return light;
     }
 
     static GameObject Box(Transform parent, string name, Vector3 position, Vector3 size, Material material, bool collider = true)

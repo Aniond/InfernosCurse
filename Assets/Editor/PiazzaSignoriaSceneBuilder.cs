@@ -80,6 +80,7 @@ public static class PiazzaSignoriaSceneBuilder
 
         ApplyFrictionless();
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         AddToBuildSettings(ScenePath);
         Debug.Log("[PiazzaSignoriaSceneBuilder] Scene built. Next: prop concepts/batch, " +

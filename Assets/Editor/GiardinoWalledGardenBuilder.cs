@@ -57,6 +57,7 @@ public static class GiardinoWalledGardenBuilder
         CopyPlayerFromPonteVecchio(scene);
         PlaceCameraKit();
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         Debug.Log("[GiardinoWalledGarden] v4 walled garden built (32x32 grid @ origin). " +
                   "Run 'Giardino delle Rose/3. Place Hero Props' next.");

@@ -39,6 +39,7 @@ public static class FiesoleSceneBuilder
         CopyPlayerFromPonteVecchio(scene);
         PlaceCameraKit();
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         AddToBuildSettings(ScenePath);
         Debug.Log("[FiesoleSceneBuilder] Fiesole built, saved, and added to Build Settings — " +

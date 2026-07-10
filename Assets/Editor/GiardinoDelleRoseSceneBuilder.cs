@@ -69,6 +69,7 @@ public static class GiardinoDelleRoseSceneBuilder
         CopyPlayerFromPonteVecchio(scene);
         PlaceCameraKit();
 
+        BuildingWindowEnvironmentInstaller.ApplyToScene(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         AddToBuildSettings(ScenePath);
         Debug.Log("[GiardinoDelleRoseSceneBuilder] Layout v3 built. Run " +

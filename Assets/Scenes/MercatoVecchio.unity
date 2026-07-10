@@ -190,6 +190,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 472846}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 472849}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 472848}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &472845 stripped
 GameObject:
@@ -217,6 +223,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7877357, y: 0.97912943, z: 0.7786311}
   m_Center: {x: -0.0000051612806, y: 0.00051487196, z: 0.0013893354}
+--- !u!23 &472847 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 472844}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &472848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &472849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 472847}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &9100879
 GameObject:
   m_ObjectHideFlags: 0
@@ -6722,6 +6806,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 464146528}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 464146531}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 464146530}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &464146527 stripped
 GameObject:
@@ -6749,6 +6839,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7786311, y: 0.97912943, z: 0.7877357}
   m_Center: {x: -0.000005161061, y: 0.00051487196, z: 0.0013893351}
+--- !u!23 &464146529 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 464146526}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &464146530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464146527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &464146531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464146527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 464146529}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &472649582
 GameObject:
   m_ObjectHideFlags: 0
@@ -8835,6 +9003,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 668575156}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 668575159}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 668575158}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &668575155 stripped
 GameObject:
@@ -8862,6 +9036,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7786311, y: 0.97912943, z: 0.7877357}
   m_Center: {x: -0.000005161061, y: 0.00051487196, z: 0.0013893351}
+--- !u!23 &668575157 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 668575154}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &668575158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668575155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &668575159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668575155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 668575157}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1001 &671417535
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13903,6 +14155,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 931354364}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 931354367}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 931354366}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &931354363 stripped
 GameObject:
@@ -13930,6 +14188,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7877357, y: 0.97912943, z: 0.7786311}
   m_Center: {x: -0.0000051612806, y: 0.00051489996, z: 0.0013893354}
+--- !u!23 &931354365 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 931354362}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &931354366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 931354363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &931354367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 931354363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 931354365}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &937181454
 GameObject:
   m_ObjectHideFlags: 0
@@ -21612,6 +21948,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1375798323}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1375798326}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1375798325}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &1375798322 stripped
 GameObject:
@@ -21639,6 +21981,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7786311, y: 0.97912943, z: 0.7877357}
   m_Center: {x: -0.000005161061, y: 0.00051487196, z: 0.0013893351}
+--- !u!23 &1375798324 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 1375798321}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1375798325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1375798322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1375798326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1375798322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1375798324}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &1382919592
 GameObject:
   m_ObjectHideFlags: 0
@@ -23281,6 +23701,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1381111141935410588, guid: 1e6950277e718aa43ae1495b81c5b7c7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1496769931}
+    - targetCorrespondingSourceObject: {fileID: 1381111141935410588, guid: 1e6950277e718aa43ae1495b81c5b7c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1496769934}
+    - targetCorrespondingSourceObject: {fileID: 1381111141935410588, guid: 1e6950277e718aa43ae1495b81c5b7c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1496769933}
   m_SourcePrefab: {fileID: -4161369568681901532, guid: 1e6950277e718aa43ae1495b81c5b7c7, type: 3}
 --- !u!1 &1496769930 stripped
 GameObject:
@@ -23308,6 +23734,94 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.66628003, y: 0.9038231, z: 0.97815144}
   m_Center: {x: -0.0001288414, y: -0.00000667572, z: -0.000077307246}
+--- !u!23 &1496769932 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -8024970394036694105, guid: 1e6950277e718aa43ae1495b81c5b7c7, type: 3}
+  m_PrefabInstance: {fileID: 1496769929}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1496769933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496769930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1496769934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496769930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1496769932}
+  direction: 0
+  columns: 3
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1001 &1499923830
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -23482,6 +23996,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1501991272}
+    - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1501991275}
+    - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1501991274}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
 --- !u!1 &1501991271 stripped
 GameObject:
@@ -23509,6 +24029,74 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6335584, y: 0.7962738, z: 0.98180175}
   m_Center: {x: 0.000038820162, y: -0.00035117654, z: -0.000061708335}
+--- !u!23 &1501991273 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4372974568001972204, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+  m_PrefabInstance: {fileID: 1501991270}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1501991274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501991271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1501991275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1501991271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1501991273}
+  direction: 0
+  columns: 2
+  rows: 1
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &1507793872
 GameObject:
   m_ObjectHideFlags: 0
@@ -31829,6 +32417,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1701904252}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1701904255}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1701904254}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &1701904251 stripped
 GameObject:
@@ -31856,6 +32450,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7786311, y: 0.97912943, z: 0.7877357}
   m_Center: {x: -0.000005161061, y: 0.00051487196, z: 0.0013893351}
+--- !u!23 &1701904253 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 1701904250}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1701904254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701904251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1701904255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701904251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1701904253}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &1705371722
 GameObject:
   m_ObjectHideFlags: 0
@@ -32064,6 +32736,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1707737244}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1707737247}
+    - targetCorrespondingSourceObject: {fileID: 267988722325446276, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1707737246}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
 --- !u!1 &1707737243 stripped
 GameObject:
@@ -32091,6 +32769,84 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.7877357, y: 0.97912943, z: 0.7786311}
   m_Center: {x: -0.0000051612806, y: 0.00051487196, z: 0.0013893354}
+--- !u!23 &1707737245 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5938942607415520519, guid: 0d7047371fd994f43a761a9246904ea9, type: 3}
+  m_PrefabInstance: {fileID: 1707737242}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1707737246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707737243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1707737247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1707737243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1707737245}
+  direction: 0
+  columns: 2
+  rows: 2
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &1716073482
 GameObject:
   m_ObjectHideFlags: 0
@@ -33422,6 +34178,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1768854907}
+    - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1768854910}
+    - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1768854909}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
 --- !u!1 &1768854906 stripped
 GameObject:
@@ -33449,6 +34211,74 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6335584, y: 0.7962738, z: 0.98180175}
   m_Center: {x: 0.000038820162, y: -0.00035117654, z: -0.00006172236}
+--- !u!23 &1768854908 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4372974568001972204, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+  m_PrefabInstance: {fileID: 1768854905}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1768854909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768854906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1768854910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768854906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1768854908}
+  direction: 0
+  columns: 2
+  rows: 1
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1001 &1769710660
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39718,6 +40548,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1988723089}
+    - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1988723092}
+    - targetCorrespondingSourceObject: {fileID: 3352908360392696082, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1988723091}
   m_SourcePrefab: {fileID: 3150474306388093854, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
 --- !u!1 &1988723088 stripped
 GameObject:
@@ -39745,6 +40581,74 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6335584, y: 0.7962738, z: 0.98180175}
   m_Center: {x: 0.000038820162, y: -0.00035117654, z: -0.000061708335}
+--- !u!23 &1988723090 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4372974568001972204, guid: 8f2a8fbdfc060d74a8fb2dc0b931a288, type: 3}
+  m_PrefabInstance: {fileID: 1988723087}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1988723091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988723088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadc8c9fb2113d4b84c6d6296f77b54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldWindowEnvironment
+  windows:
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  - renderer: {fileID: 0}
+    role: 1
+    emissionTint: {r: 1, g: 0.64, b: 0.3, a: 1}
+    emissionMultiplier: 1.5
+    lightningMultiplier: 2.5
+  localLights: []
+  exteriorWeatherObjects: []
+  dawnStart: 5.5
+  dayStart: 7.5
+  duskStart: 17.5
+  nightStart: 20
+  interiorNightGlow: 0.12
+  exteriorNightGlow: 1.8
+  nightExteriorTint: {r: 0.18, g: 0.28, b: 0.55, a: 1}
+  dayExteriorTint: {r: 0.78, g: 0.9, b: 1, a: 1}
+  dawnDuskExteriorTint: {r: 1, g: 0.52, b: 0.22, a: 1}
+  cloudyLight: 0.72
+  rainLight: 0.55
+  stormLight: 0.3
+  fogLight: 0.48
+  snowLight: 0.78
+  thunderReferenceIntensity: 3
+  warnIfWorldServicesMissing: 1
+--- !u!114 &1988723092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1988723088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 077f3c124915d574b96e07c108f14851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ExteriorWindowFacade
+  targetRenderer: {fileID: 1988723090}
+  direction: 0
+  columns: 2
+  rows: 1
+  windowWidthFraction: 0.42
+  windowHeightFraction: 0.38
+  surfaceOffset: 0.035
+  windowColor: {r: 1, g: 0.64, b: 0.3, a: 1}
+  emissionMultiplier: 0.25
+  lightningMultiplier: 2.5
 --- !u!1 &2008768246
 GameObject:
   m_ObjectHideFlags: 0
