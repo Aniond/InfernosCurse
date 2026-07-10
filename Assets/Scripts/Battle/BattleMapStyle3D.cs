@@ -22,6 +22,24 @@ public class BattleMapStyle3D : ScriptableObject
     public Texture2D pathTex;
     public Color pathTint = new Color(0.82f, 0.76f, 0.66f);
 
+    [Header("Painterly material blending")]
+    [Range(0f, 1f)] public float transitionSoftness = 0.62f;
+    [Tooltip("World-space scale of the broad color breakup.")]
+    [Min(0.001f)] public float macroVariationScale = 0.055f;
+    [Range(0f, 0.35f)] public float macroVariationStrength = 0.11f;
+
+    [Header("Painterly depth")]
+    public Color exposedTint = new Color(1.06f, 1.01f, 0.90f);
+    public Color recessTint = new Color(0.72f, 0.82f, 0.88f);
+    [Range(0f, 0.65f)] public float foldStrength = 0.28f;
+    [Range(0f, 0.35f)] public float elevationTintStrength = 0.10f;
+    [Tooltip("Small readability floor added after world ambient lighting. Keep low so nighttime remains meaningful.")]
+    [Range(0f, 0.35f)] public float painterlyAmbientBoost = 0.22f;
+
+    [Header("Persistent weather response")]
+    [Range(0f, 0.65f)] public float wetDarkening = 0.30f;
+    [Range(0f, 0.35f)] public float wetHighlight = 0.10f;
+
     [Header("Water (optional — Arno/river maps)")]
     [Tooltip("World Y of the water plane; -100 = no water")]
     public float waterLevel = -100f;

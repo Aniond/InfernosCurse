@@ -30,9 +30,23 @@ public class BattleCurseAutomata : MonoBehaviour
         Instance = this;
     }
 
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
     // Called by BattleManager after each unit turn resolves
     public void Step(InfernalWorldState world)
     {
+        if (!GameFeatures.CorruptionEnabled)
+        {
+            if (world != null)
+            {
+                world.curseDensity.Clear();
+                world.globalCurseLevel = 0f;
+            }
+            return;
+        }
         _world = world;
         if (activeCurse == null || grid == null) return;
 
@@ -50,6 +64,8 @@ public class BattleCurseAutomata : MonoBehaviour
     {
         _world = world;
         world.curseDensity.Clear();
+        world.globalCurseLevel = 0f;
+        if (!GameFeatures.CorruptionEnabled) return;
 
         // Base noise seeded by hub level
         for (int x = 0; x < grid.width; x++)
@@ -230,6 +246,7 @@ public class BattleCurseAutomata : MonoBehaviour
     // Called by AbilityResolver for Holy skills targeting a tile
     public void CleanseTile(Vector2Int pos, float amount)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         if (!EnsureWorld()) return;
         float current = _world.GetCurseDensity(pos);
         _world.SetCurseDensity(pos, Mathf.Max(0f, current - amount));
@@ -241,6 +258,7 @@ public class BattleCurseAutomata : MonoBehaviour
     // Spread curse from a Carrier unit's position (called by CarrierAI on move)
     public void SpreadFromUnit(Vector2Int pos, float amount)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         if (!EnsureWorld()) return;
         _world.SetCurseDensity(pos, Mathf.Min(1f, _world.GetCurseDensity(pos) + amount));
         var dirs = new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };

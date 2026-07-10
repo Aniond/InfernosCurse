@@ -21,6 +21,7 @@ public class CurseOverlay : MonoBehaviour
 
     void OnEnable()
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         if (automata != null)
             automata.OnCellCurseChanged += OnCellChanged;
     }
@@ -35,6 +36,7 @@ public class CurseOverlay : MonoBehaviour
     public void Initialise(InfernalWorldState world)
     {
         Clear();
+        if (!GameFeatures.CorruptionEnabled) return;
         _terrainCurse = FindFirstObjectByType<BattleTerrainCurse>();
         for (int x = 0; x < grid.width; x++)
         {
@@ -51,6 +53,7 @@ public class CurseOverlay : MonoBehaviour
 
     void OnCellChanged(Vector2Int pos, float density)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         if (_terrainCurse != null) { _terrainCurse.SetDensity(pos, density); return; }
         if (!_overlays.ContainsKey(pos)) CreateOverlay(pos);
         SetOverlayColor(pos, density);

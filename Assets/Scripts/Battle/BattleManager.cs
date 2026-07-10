@@ -109,8 +109,13 @@ public class BattleManager : MonoBehaviour
             ? HubMap.Instance.GetBattleSeedCurse(DistrictTracker.CurrentNodeId)
             : 0f;
         _worldState.ritualNodes.Clear();
-        if (CurseAutomata != null)
+        if (GameFeatures.CorruptionEnabled && CurseAutomata != null)
             CurseAutomata.SeedFromHub(_worldState, hubCurse, _worldState.ritualNodes);
+        else
+        {
+            _worldState.curseDensity.Clear();
+            _worldState.globalCurseLevel = 0f;
+        }
 
         // Hand the enemy AI its shared belief state + influence map. Without this
         // every EnemyAI hits its null-guard and passes the turn forever.
@@ -243,7 +248,7 @@ public class BattleManager : MonoBehaviour
                     unit.ClearChargeComplete();
                     ResolveQueuedAction(unit);
                     unit.EndTurn();
-                    if (CurseAutomata != null) CurseAutomata.Step(_worldState);
+                    if (GameFeatures.CorruptionEnabled && CurseAutomata != null) CurseAutomata.Step(_worldState);
                     continue;
                 }
 
@@ -276,7 +281,7 @@ public class BattleManager : MonoBehaviour
             Debug.Log($"{unit.Data.displayName} can't act (stopped/frozen).");
             yield return new WaitForSeconds(0.35f);
             unit.EndTurn();
-            if (CurseAutomata != null) CurseAutomata.Step(_worldState);
+            if (GameFeatures.CorruptionEnabled && CurseAutomata != null) CurseAutomata.Step(_worldState);
             if (!IsBattleOver()) SetState(BattleState.TickCT);
             yield break;
         }
@@ -309,7 +314,7 @@ public class BattleManager : MonoBehaviour
         if (unit.IsAlive) unit.EndTurn();
 
         // Step curse automata between turns
-        if (CurseAutomata != null)
+        if (GameFeatures.CorruptionEnabled && CurseAutomata != null)
             CurseAutomata.Step(_worldState);
 
         if (!IsBattleOver())
@@ -679,6 +684,7 @@ public class BattleManager : MonoBehaviour
     public void CleanseTile(Vector2Int pos, float amount)
     {
         _worldState.SetSanctity(pos, Mathf.Min(1f, _worldState.GetSanctity(pos) + amount));
-        CurseAutomata?.CleanseTile(pos, amount);
+        if (GameFeatures.CorruptionEnabled)
+            CurseAutomata?.CleanseTile(pos, amount);
     }
 }

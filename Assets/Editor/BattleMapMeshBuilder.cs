@@ -51,6 +51,17 @@ public static class BattleMapMeshBuilder
         string baseName = srcPrefab.name;                       // e.g. BattleMap_Plains
         string name3D = baseName + "3D";
         var style = LoadOrCreateStyle(baseName);
+        var terrainShader = Shader.Find("InfernosCurse/BattleTerrainSplat");
+        if (terrainShader == null)
+        {
+            Debug.LogError("[BattleMapMeshBuilder] BattleTerrainSplat shader missing; existing output left unchanged.");
+            return;
+        }
+        if (style == null || style.grassTex == null || style.dirtTex == null || style.rockTex == null)
+        {
+            Debug.LogError($"[BattleMapMeshBuilder] {baseName} needs a valid 3D style with grass, dirt, and rock textures; existing output left unchanged.");
+            return;
+        }
         int W = srcAuth.width, H = srcAuth.height;
         int SKIRT = Mathf.Max(1, style.skirtCells);
         float HSTEP = style.heightStep;
@@ -164,8 +175,9 @@ public static class BattleMapMeshBuilder
                 dirtW = Mathf.Max(dirtW, Mathf.SmoothStep(0.78f, 0.9f, patch) * 0.3f * (1f - rockW));
                 float grassW = Mathf.Max(0f, 1f - rockW - dirtW);
                 float shade = 1f - Mathf.Clamp01(slope * 1.5f) * 0.32f;
+                float cavity = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((lap - 0.008f) / 0.075f));
                 cols.Add(new Color(grassW, dirtW, rockW, PathWeight(gx, gz)));
-                uv2s.Add(new Vector2(shade, 0f));
+                uv2s.Add(new Vector2(shade, cavity));
             }
         for (int iz = 0; iz < nz - 1; iz++)
             for (int ix = 0; ix < nx - 1; ix++)
@@ -231,10 +243,22 @@ public static class BattleMapMeshBuilder
             AssetDatabase.CreateFolder(MapsFolder, "Materials");
         string matPath = $"{MapsFolder}/Materials/{name3D}_Terrain.mat";
         var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
-        var shader = Shader.Find("InfernosCurse/BattleTerrainSplat");
-        if (shader == null) { Debug.LogError("[BattleMapMeshBuilder] BattleTerrainSplat shader missing."); return; }
-        if (mat == null) { mat = new Material(shader); AssetDatabase.CreateAsset(mat, matPath); }
-        mat.shader = shader;
+        var shader = terrainShader;
+        if (mat == null)
+        {
+            mat = new Material(shader);
+            AssetDatabase.CreateAsset(mat, matPath);
+        }
+        else
+        {
+            // Rebuild the serialized material layout whenever the shared shader
+            // gains properties. A real shader reassignment is required here:
+            // CopySerialized preserves stale native texture bindings. The asset
+            // object and GUID stay intact, so every prefab reference remains valid.
+            var resetShader = Shader.Find("Universal Render Pipeline/Lit");
+            if (resetShader != null && resetShader != shader) mat.shader = resetShader;
+            mat.shader = shader;
+        }
         mat.SetTexture("_GrassTex", style.grassTex);
         mat.SetTexture("_DirtTex", style.dirtTex);
         mat.SetTexture("_RockTex", style.rockTex);
@@ -242,9 +266,20 @@ public static class BattleMapMeshBuilder
         mat.SetColor("_DirtTint", style.dirtTint);
         mat.SetColor("_RockTint", style.rockTint);
         mat.SetFloat("_Tiling", style.tiling);
-        if (style.pathTex != null) mat.SetTexture("_PathTex", style.pathTex);
+        mat.SetTexture("_PathTex", style.pathTex != null ? style.pathTex : style.dirtTex);
         mat.SetColor("_PathTint", style.pathTint);
         mat.SetFloat("_WaterLevel", style.waterLevel);
+        mat.SetFloat("_BlendSoftness", style.transitionSoftness);
+        mat.SetFloat("_MacroScale", style.macroVariationScale);
+        mat.SetFloat("_MacroStrength", style.macroVariationStrength);
+        mat.SetColor("_ExposedTint", style.exposedTint);
+        mat.SetColor("_RecessTint", style.recessTint);
+        mat.SetFloat("_FoldStrength", style.foldStrength);
+        mat.SetFloat("_ElevationTintStrength", style.elevationTintStrength);
+        mat.SetFloat("_AmbientBoost", style.painterlyAmbientBoost);
+        mat.SetFloat("_WetDarkening", style.wetDarkening);
+        mat.SetFloat("_WetHighlight", style.wetHighlight);
+        mat.SetVector("_HeightMinMax", new Vector4(mesh.bounds.min.y, mesh.bounds.max.y, 0f, 0f));
         EditorUtility.SetDirty(mat);
 
         // ── prefab: terrain + copied authoring + baked heights + curse ───
@@ -256,8 +291,10 @@ public static class BattleMapMeshBuilder
         auth.tileHeight = srcAuth.tileHeight;
         auth.plateaus = srcAuth.plateaus
             .Select(p => new BattleMapAuthoring.Plateau { cells = p.cells, elevation = p.elevation }).ToList();
+        auth.pathCells = new List<Vector2Int>(srcAuth.pathCells);
         auth.partySpawns = new List<Vector2Int>(srcAuth.partySpawns);
         auth.enemySpawns = new List<Vector2Int>(srcAuth.enemySpawns);
+        auth.applyOnAwake = srcAuth.applyOnAwake;
 
         var terrain = new GameObject("Terrain");
         terrain.transform.SetParent(root.transform, false);

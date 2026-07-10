@@ -29,9 +29,11 @@ public static class RestSystem
         Heal(1f);
         AdvanceToMorning();
 
-        float mult = guilds != null ? guilds.GetRestCurseCostMultiplier() : 1f;
+        float mult = GameFeatures.CorruptionEnabled && guilds != null
+            ? guilds.GetRestCurseCostMultiplier()
+            : 0f;
         var hub = HubMap.Instance;
-        if (hub != null)
+        if (GameFeatures.CorruptionEnabled && hub != null)
         {
             hub.AddCurse(nodeId, InnRestCurseCost * mult);
             float cleanse = isGuildInn && guilds != null ? guilds.GetInnCleansePercent() : 0f;
@@ -53,7 +55,8 @@ public static class RestSystem
         AdvanceToMorning();
         // No guild discount — the Albergatori are the INNKEEPERS' guild; the
         // open night in a cursed city is always full exposure.
-        HubMap.Instance?.AddCurse(nodeId, CampRestCurseCost);
+        if (GameFeatures.CorruptionEnabled)
+            HubMap.Instance?.AddCurse(nodeId, CampRestCurseCost);
         Debug.Log($"[Rest] camped rough in {nodeId} — the night takes its toll");
     }
 

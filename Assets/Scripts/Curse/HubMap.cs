@@ -54,6 +54,7 @@ public class HubMap : MonoBehaviour
 
     void Update()
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         _timer += Time.deltaTime;
         if (_timer >= tickInterval)
         {
@@ -111,6 +112,7 @@ public class HubMap : MonoBehaviour
 
     void Tick()
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         if (activeCurse == null) return;
 
         // Double-buffer: compute new values, then apply
@@ -197,6 +199,7 @@ public class HubMap : MonoBehaviour
     // Called by clerics / player abilities (not yet wired)
     public void Cleanse(string nodeId, float amount)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         var node = GetNode(nodeId);
         if (node == null) return;
         node.curseLevel = Mathf.Max(0f, node.curseLevel - amount);
@@ -209,6 +212,7 @@ public class HubMap : MonoBehaviour
     // react through the same OnNodeChanged path.
     public void AddCurse(string nodeId, float amount)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         var node = GetNode(nodeId);
         if (node == null || amount <= 0f) return;
         node.curseLevel = Mathf.Min(1f, node.curseLevel + amount);
@@ -247,6 +251,7 @@ public class HubMap : MonoBehaviour
     // Called when a ritual is completed
     public void ActivateRitual(string nodeId)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         var node = GetNode(nodeId);
         if (node == null) return;
         node.isRitualSite = true;
@@ -260,6 +265,7 @@ public class HubMap : MonoBehaviour
     // calls this when the player walks away from someone in need.
     public void NudgeGlobalCurse(float delta, string reason)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         foreach (var n in _nodes)
         {
             if (n.kind == NodeKind.Waypoint) continue;
@@ -274,6 +280,7 @@ public class HubMap : MonoBehaviour
     // The zone's node falls fully corrupted AND all Florence pays the tithe.
     public void LoseZone(string nodeId, string reason)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         var node = GetNode(nodeId);
         if (node != null)
         {
@@ -288,6 +295,7 @@ public class HubMap : MonoBehaviour
     // would dilute the city's corruption average.
     public float GlobalCurseLevel()
     {
+        if (!GameFeatures.CorruptionEnabled) return 0f;
         float sum = 0f;
         int count = 0;
         foreach (var n in _nodes)
@@ -302,6 +310,7 @@ public class HubMap : MonoBehaviour
     // Seed a battle grid's curse density from this node's curseLevel
     public float GetBattleSeedCurse(string nodeId)
     {
+        if (!GameFeatures.CorruptionEnabled) return 0f;
         var node = GetNode(nodeId);
         return node?.curseLevel ?? 0f;
     }

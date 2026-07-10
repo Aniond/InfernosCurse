@@ -46,7 +46,7 @@ public class MapNodeView : MonoBehaviour, IPointerClickHandler, IPointerEnterHan
         Color tint;
         if (Node.isSanctuarySite)
             tint = Color.Lerp(Color.white, sanctuaryColor, 0.30f);
-        else if (Node.curseLevel >= 0.5f)
+        else if (GameFeatures.CorruptionEnabled && Node.curseLevel >= 0.5f)
             tint = Color.Lerp(Color.white, cursedColor, 0.22f);   // subtle, fixed
         else
             tint = Color.white;

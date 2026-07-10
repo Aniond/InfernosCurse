@@ -62,7 +62,7 @@ public class EncounterBootstrap : MonoBehaviour
         // Enemy set scales with the road's corruption; composition seeded so
         // the same day+node always produces the same ambush.
         var enemies = new List<CombatantData> { cursebearer, ashWretch };
-        if (_enc.encounterCurse >= highCurseThreshold)
+        if (GameFeatures.CorruptionEnabled && _enc.encounterCurse >= highCurseThreshold)
             enemies.Add((_enc.seed & 1) == 0 ? cursebearer : ashWretch);
 
         var playerSpawns = new List<Vector2Int> { new Vector2Int(3, 3), new Vector2Int(4, 2) };
@@ -216,7 +216,8 @@ public class EncounterBootstrap : MonoBehaviour
     void AcceptDefeat()
     {
         FlorinWallet.SetBalance(FlorinWallet.Balance - Mathf.FloorToInt(FlorinWallet.Balance * defeatFlorinLoss));
-        HubMap.Instance?.AddCurse(_enc.encounterNodeId, defeatCurseAmount);
+        if (GameFeatures.CorruptionEnabled)
+            HubMap.Instance?.AddCurse(_enc.encounterNodeId, defeatCurseAmount);
 
         var cal = GameCalendar.Instance;
         if (cal != null)

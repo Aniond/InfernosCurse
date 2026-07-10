@@ -86,9 +86,10 @@ public static class EncounterRoll
         if (node == null) return false;
         if (_resolved.Contains(DaySeed() + ":" + node.id)) return false;
 
-        float chance = Mathf.Clamp(
-            baseChance + node.curseLevel * curseScale + InsanityState.Current() * InsanityPull,
-            0f, maxChance);
+        float corruptionPull = GameFeatures.CorruptionEnabled
+            ? node.curseLevel * curseScale + InsanityState.Current() * InsanityPull
+            : 0f;
+        float chance = Mathf.Clamp(baseChance + corruptionPull, 0f, maxChance);
         var rng = new System.Random(DaySeed() ^ NodeSalt(node.id));
         return rng.NextDouble() < chance;
     }

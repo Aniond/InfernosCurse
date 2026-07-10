@@ -10,35 +10,35 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 194ca4f0ab8dc624e9c91297263b999d, type: 3}
-  m_Name: BattleMap_Plains_Style3D
+  m_Name: BattleMap_Field_Style3D
   m_EditorClassIdentifier: Assembly-CSharp::BattleMapStyle3D
   grassTex: {fileID: 2800000, guid: 5a622c0843344b54cade55d3ad1c26cc, type: 3}
   dirtTex: {fileID: 2800000, guid: 6ad35ffb8aa5a9c4fa2eec0051469398, type: 3}
   rockTex: {fileID: 2800000, guid: 3e2a3334592027f4ca71a6a1e11bbef2, type: 3}
-  grassTint: {r: 0.43, g: 0.57, b: 0.27, a: 1}
-  dirtTint: {r: 0.55, g: 0.39, b: 0.25, a: 1}
-  rockTint: {r: 0.5, g: 0.5, b: 0.46, a: 1}
-  tiling: 0.31
+  grassTint: {r: 0.46, g: 0.58, b: 0.25, a: 1}
+  dirtTint: {r: 0.58, g: 0.42, b: 0.26, a: 1}
+  rockTint: {r: 0.52, g: 0.5, b: 0.44, a: 1}
+  tiling: 0.3
   pathTex: {fileID: 2800000, guid: 6ad35ffb8aa5a9c4fa2eec0051469398, type: 3}
-  pathTint: {r: 0.66, g: 0.53, b: 0.36, a: 1}
-  transitionSoftness: 0.68
-  macroVariationScale: 0.072
-  macroVariationStrength: 0.1
-  exposedTint: {r: 1.07, g: 1.015, b: 0.9, a: 1}
-  recessTint: {r: 0.71, g: 0.8, b: 0.86, a: 1}
-  foldStrength: 0.32
-  elevationTintStrength: 0.11
+  pathTint: {r: 0.7, g: 0.56, b: 0.36, a: 1}
+  transitionSoftness: 0.7
+  macroVariationScale: 0.068
+  macroVariationStrength: 0.11
+  exposedTint: {r: 1.08, g: 1.02, b: 0.9, a: 1}
+  recessTint: {r: 0.72, g: 0.8, b: 0.84, a: 1}
+  foldStrength: 0.3
+  elevationTintStrength: 0.1
   painterlyAmbientBoost: 0.22
-  wetDarkening: 0.31
+  wetDarkening: 0.32
   wetHighlight: 0.09
   waterLevel: -100
   waterMaterial: {fileID: 0}
   heightStep: 0.5
   skirtCells: 4
   baseY: -3.2
-  sunColor: {r: 1, g: 0.98, b: 0.92, a: 1}
-  sunIntensity: 1.35
+  sunColor: {r: 1, g: 0.965, b: 0.88, a: 1}
+  sunIntensity: 1.38
   sunEuler: {x: 48, y: -35, z: 0}
-  ambientSky: {r: 0.42, g: 0.5, b: 0.62, a: 1}
-  ambientEquator: {r: 0.34, g: 0.35, b: 0.33, a: 1}
-  ambientGround: {r: 0.16, g: 0.15, b: 0.12, a: 1}
+  ambientSky: {r: 0.44, g: 0.5, b: 0.59, a: 1}
+  ambientEquator: {r: 0.35, g: 0.34, b: 0.3, a: 1}
+  ambientGround: {r: 0.17, g: 0.15, b: 0.11, a: 1}

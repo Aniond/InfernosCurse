@@ -16,6 +16,7 @@ public class BattleTerrainCurse : MonoBehaviour
 
     static readonly int CurseMaskId = Shader.PropertyToID("_CurseMask");
     static readonly int CurseRectId = Shader.PropertyToID("_CurseRect");
+    static readonly int CorruptionEnabledId = Shader.PropertyToID("_CorruptionEnabled");
 
     void Awake()
     {
@@ -32,11 +33,13 @@ public class BattleTerrainCurse : MonoBehaviour
 
         _terrain = GetComponentInChildren<Renderer>();
         _mpb = new MaterialPropertyBlock();
+        Shader.SetGlobalFloat(CorruptionEnabledId, GameFeatures.CorruptionEnabled ? 1f : 0f);
         Push();
     }
 
     public void SetDensity(Vector2Int cell, float density)
     {
+        if (!GameFeatures.CorruptionEnabled) return;
         if (_mask == null) return;
         if (cell.x < 0 || cell.x >= _w || cell.y < 0 || cell.y >= _h) return;
         _mask.SetPixel(cell.x, cell.y, new Color(Mathf.Clamp01(density), 0f, 0f, 1f));

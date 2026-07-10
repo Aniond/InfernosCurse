@@ -13,7 +13,7 @@ Shader "InfernosCurse/BattleTerrainSplat"
         _DirtTint ("Dirt Tint", Color) = (1,1,1,1)
         _RockTint ("Rock Tint", Color) = (1,1,1,1)
         _Tiling ("Tiling (texels per meter)", Float) = 0.35
-        _AmbientBoost ("Ambient Boost", Range(0, 1)) = 0.3
+        _AmbientBoost ("Ambient Boost", Range(0, 1)) = 0.22
         // Curse mask is fed per-battle by BattleTerrainCurse via property
         // block; black default = uncursed.
         _CurseMask ("Curse Mask", 2D) = "black" {}
@@ -24,6 +24,16 @@ Shader "InfernosCurse/BattleTerrainSplat"
         // moved to UV2.x. Shoreline wetness darkens below _WaterLevel+band.
         _PathTex ("Path", 2D) = "white" {}
         _PathTint ("Path Tint", Color) = (1, 1, 1, 1)
+        _BlendSoftness ("Material Blend Softness", Range(0, 1)) = 0.62
+        _MacroScale ("Macro Variation Scale", Float) = 0.055
+        _MacroStrength ("Macro Variation Strength", Range(0, 0.35)) = 0.11
+        _ExposedTint ("Exposed Surface Tint", Color) = (1.06, 1.01, 0.90, 1)
+        _RecessTint ("Recess Tint", Color) = (0.72, 0.82, 0.88, 1)
+        _FoldStrength ("Fold Strength", Range(0, 0.65)) = 0.28
+        _ElevationTintStrength ("Elevation Tint Strength", Range(0, 0.35)) = 0.10
+        _HeightMinMax ("Generated Height Min Max", Vector) = (-3.2, 2, 0, 0)
+        _WetDarkening ("Wet Darkening", Range(0, 0.65)) = 0.30
+        _WetHighlight ("Wet Highlight", Range(0, 0.35)) = 0.10
         _WaterLevel ("Water Level (world Y, -100 = off)", Float) = -100
         _WetColor ("Wet Tint", Color) = (0.45, 0.42, 0.34, 1)
     }
@@ -58,18 +68,31 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 half4 _CurseColor;
                 half4 _CurseGlow;
                 half4 _WetColor;
+                half4 _ExposedTint;
+                half4 _RecessTint;
                 float4 _CurseRect;
+                float4 _HeightMinMax;
                 float _Tiling;
                 float _AmbientBoost;
                 float _WaterLevel;
+                float _BlendSoftness;
+                float _MacroScale;
+                float _MacroStrength;
+                float _FoldStrength;
+                float _ElevationTintStrength;
+                float _WetDarkening;
+                float _WetHighlight;
             CBUFFER_END
+
+            float _GrassWetness;
+            float _CorruptionEnabled;
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS   : NORMAL;
                 float4 color      : COLOR;      // rgb = grass/dirt/rock, a = path
-                float2 uv2        : TEXCOORD1;  // x = slope shade
+                float2 uv2        : TEXCOORD1;  // x = slope shade, y = fold/cavity
             };
 
             struct Varyings
@@ -78,7 +101,7 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 float3 positionWS : TEXCOORD0;
                 float3 normalWS   : TEXCOORD1;
                 float4 color      : COLOR;
-                float shade       : TEXCOORD2;
+                float2 detail     : TEXCOORD2;  // x = shade, y = cavity
             };
 
             Varyings vert (Attributes v)
@@ -88,8 +111,25 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 o.positionCS = TransformWorldToHClip(o.positionWS);
                 o.normalWS   = TransformObjectToWorldNormal(v.normalOS);
                 o.color      = v.color;
-                o.shade      = v.uv2.x <= 0.001 ? 1.0 : v.uv2.x;  // old meshes: no uv2
+                o.detail.x   = v.uv2.x <= 0.001 ? 1.0 : v.uv2.x;  // old meshes: no uv2
+                o.detail.y   = saturate(v.uv2.y);
                 return o;
+            }
+
+            float Hash21(float2 p)
+            {
+                p = frac(p * float2(123.34, 456.21));
+                p += dot(p, p + 45.32);
+                return frac(p.x * p.y);
+            }
+
+            float ValueNoise(float2 p)
+            {
+                float2 i = floor(p);
+                float2 f = frac(p);
+                f = f * f * (3.0 - 2.0 * f);
+                return lerp(lerp(Hash21(i), Hash21(i + float2(1, 0)), f.x),
+                            lerp(Hash21(i + float2(0, 1)), Hash21(i + float2(1, 1)), f.x), f.y);
             }
 
             half4 frag (Varyings i) : SV_Target
@@ -114,20 +154,41 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 half3 rock  = (rockY * an.y + rockX * an.x + rockZ * an.z) / max(an.x + an.y + an.z, 1e-4) * _RockTint.rgb;
 
                 half3 path = SAMPLE_TEXTURE2D(_PathTex, sampler_PathTex, uvTop).rgb * _PathTint.rgb;
-                half pw = i.color.a;
-                half3 w = i.color.rgb * (1.0h - pw);
+                half exponent = lerp(2.2h, 0.72h, saturate(_BlendSoftness));
+                half pw = pow(saturate(i.color.a), exponent);
+                half3 w = pow(saturate(i.color.rgb), exponent) * (1.0h - pw);
                 half sum = w.r + w.g + w.b + pw;
-                half3 albedo = (grass * w.r + dirt * w.g + rock * w.b + path * pw) / max(sum, 1e-4);
-                albedo *= i.shade;     // slope/diorama darkening (from UV2)
+                w /= max(sum, 1e-4);
+                pw /= max(sum, 1e-4);
+                half3 albedo = grass * w.r + dirt * w.g + rock * w.b + path * pw;
+                albedo *= i.detail.x;     // slope/diorama darkening (from UV2)
+
+                // Broad painterly breakup is stable in world space and much
+                // larger than the material texture tiling.
+                half macro = ValueNoise(i.positionWS.xz * max(_MacroScale, 0.001));
+                albedo *= lerp(1.0h - _MacroStrength, 1.0h + _MacroStrength, macro);
+
+                half heightRange = max(_HeightMinMax.y - _HeightMinMax.x, 0.001);
+                half height01 = saturate((i.positionWS.y - _HeightMinMax.x) / heightRange);
+                half cavity = i.detail.y;
+                albedo = lerp(albedo, albedo * _ExposedTint.rgb,
+                              height01 * (1.0h - cavity) * _ElevationTintStrength);
+                albedo = lerp(albedo, albedo * _RecessTint.rgb,
+                              cavity * _FoldStrength);
+                albedo *= 1.0h - cavity * _FoldStrength * 0.35h;
 
                 // shoreline wetness: darken + tint just above the waterline
                 half wet = saturate((_WaterLevel + 0.35 - i.positionWS.y) / 0.35);
                 albedo = lerp(albedo, albedo * _WetColor.rgb * 1.6, wet * 0.8);
 
+                half materialWetResponse = w.r * 0.25h + w.g * 0.82h + w.b * 0.68h + pw * 0.92h;
+                half weatherWet = saturate(_GrassWetness) * materialWetResponse;
+                albedo *= 1.0h - weatherWet * _WetDarkening;
+
                 // Curse creep: mask texel per cell, softened by bilinear +
                 // veined by the dirt texture's own noise, breathing slowly.
                 float2 cuv = (i.positionWS.xz - _CurseRect.xy) / _CurseRect.zw;
-                half curse = SAMPLE_TEXTURE2D(_CurseMask, sampler_CurseMask, cuv).r;
+                half curse = SAMPLE_TEXTURE2D(_CurseMask, sampler_CurseMask, cuv).r * saturate(_CorruptionEnabled);
                 float2 edge = abs(cuv - 0.5) * 2.0;
                 curse *= saturate((1.0 - max(edge.x, edge.y)) * 8.0);   // don't smear past the field
                 if (curse > 0.001)
@@ -144,6 +205,11 @@ Shader "InfernosCurse/BattleTerrainSplat"
                 half3 direct  = mainLight.color * (ndl * mainLight.shadowAttenuation);
                 half3 ambient = SampleSH(n) + _AmbientBoost;
                 half3 lit = albedo * (direct + ambient);
+                half3 viewDir = GetWorldSpaceNormalizeViewDir(i.positionWS);
+                half3 halfDir = normalize(mainLight.direction + viewDir);
+                half wetSpec = pow(saturate(dot(n, halfDir)), 48.0h) * weatherWet *
+                               _WetHighlight * mainLight.shadowAttenuation;
+                lit += mainLight.color * wetSpec;
                 lit += _CurseGlow.rgb * (curse * curse * 0.12);          // faint unlit ember
                 return half4(lit, 1);
             }

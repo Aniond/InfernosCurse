@@ -124,5 +124,7 @@ public static class GugolUi
     // Review counts are hash-noise — except tainted places, which always sit at
     // 666. A vibe tell, not a gauge: the curse stays an unreadable hidden value.
     public static int ReviewCount(HubNode node)
-        => node.curseLevel >= 0.5f ? 666 : 100 + Mathf.Abs(StableHash(node.id + "r")) % 900;
+        => GameFeatures.CorruptionEnabled && node.curseLevel >= 0.5f
+            ? 666
+            : 100 + Mathf.Abs(StableHash(node.id + "r")) % 900;
 }

@@ -55,6 +55,13 @@ public class DailyCurseDrift : MonoBehaviour
 
     void Tick(GameCalendar cal)
     {
+        if (cal != null && !GameFeatures.CorruptionEnabled)
+        {
+            // Track the current day while parked so re-enabling never applies a
+            // backlog of corruption ticks.
+            AppliedDayKey = cal.Year + ":" + cal.DayOfYear;
+            return;
+        }
         var hub = HubMap.Instance;
         if (cal == null || hub == null || hub.activeCurse == null) return;
 
@@ -105,6 +112,11 @@ public class DailyCurseDrift : MonoBehaviour
     [ContextMenu("Simulate 60 Days")]
     void Simulate60Days()
     {
+        if (!GameFeatures.CorruptionEnabled)
+        {
+            Debug.Log("[DriftSim] Corruption is disabled in GameFeatureSettings.");
+            return;
+        }
         var hub = HubMap.Instance != null ? HubMap.Instance : FindAnyObjectByType<HubMap>();
         var curse = hub != null ? hub.activeCurse : null;
         if (hub == null || curse == null) { Debug.LogWarning("[DriftSim] HubMap/curse missing"); return; }

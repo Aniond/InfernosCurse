@@ -20,6 +20,7 @@ public static class InsanityState
     // Orb-carried insanity only (the beacon component).
     public static int Personal()
     {
+        if (!GameFeatures.CorruptionEnabled) return 0;
         if (DebugOverride >= 0) return DebugOverride;
         foreach (var m in RestSystem.PartyMembers)
             if (m != null && m.role == CombatantRole.Benidito)
@@ -30,6 +31,7 @@ public static class InsanityState
     // World corruption as a percent — Florence's Limbo rot, averaged.
     public static int WorldCorruption()
     {
+        if (!GameFeatures.CorruptionEnabled) return 0;
         var hub = HubMap.Instance;
         return hub != null ? Mathf.RoundToInt(hub.GlobalCurseLevel() * 100f) : 0;
     }
@@ -37,6 +39,7 @@ public static class InsanityState
     // What Ben actually experiences: personal + world, clamped to 100.
     public static int Total()
     {
+        if (!GameFeatures.CorruptionEnabled) return 0;
         if (DebugOverride >= 0) return DebugOverride;
         return Mathf.Clamp(Personal() + WorldCorruption(), 0, 100);
     }
@@ -96,6 +99,12 @@ public class InsanityPresenter : MonoBehaviour
 
     void Start()
     {
+        if (!GameFeatures.CorruptionEnabled)
+        {
+            InsanityState.DebugOverride = -1;
+            enabled = false;
+            return;
+        }
         BuildVignette();
         _whispers = gameObject.AddComponent<AudioSource>();
         _whispers.loop = true;

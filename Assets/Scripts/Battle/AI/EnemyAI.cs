@@ -134,16 +134,23 @@ public class EnemyAI : MonoBehaviour
     //   5-6  soldier:    + SpreadCurse (doctrine, trained behaviors)
     //   7-8  tactician:  + IsolatePlayer, SupportAnchor (reads the battlefield)
     //   9-10 strategist: everything, sharper (less noise) — Gemini's tier in AI mode
-    protected static bool IntentAllowed(AIIntent intent, int iq) => intent switch
+    protected static bool IntentAllowed(AIIntent intent, int iq)
     {
-        AIIntent.DirectAttack   => true,
-        AIIntent.Ambush         => iq >= 3,
-        AIIntent.RetreatAndLure => iq >= 3,
-        AIIntent.SpreadCurse    => iq >= 5,
-        AIIntent.IsolatePlayer  => iq >= 7,
-        AIIntent.SupportAnchor  => iq >= 7,
-        _                       => true,
-    };
+        if (!GameFeatures.CorruptionEnabled &&
+            (intent == AIIntent.SpreadCurse || intent == AIIntent.RetreatAndLure))
+            return false;
+
+        return intent switch
+        {
+            AIIntent.DirectAttack   => true,
+            AIIntent.Ambush         => iq >= 3,
+            AIIntent.RetreatAndLure => iq >= 3,
+            AIIntent.SpreadCurse    => iq >= 5,
+            AIIntent.IsolatePlayer  => iq >= 7,
+            AIIntent.SupportAnchor  => iq >= 7,
+            _                       => true,
+        };
+    }
 
     AIIntent ScoreIntents(BattleUnit unit, List<BattleUnit> allies)
     {
