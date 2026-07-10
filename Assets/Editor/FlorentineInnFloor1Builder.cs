@@ -12,6 +12,9 @@ public static class FlorentineInnFloor1Builder
     const string PlayerSourceScene = "Assets/Scenes/PonteVecchio.unity";
     const string CameraKitPath = "Assets/Prefabs/HD2D_CameraKit.prefab";
     const string MaterialDir = "Assets/Environment/FlorentineInnFloor1/Materials";
+    const string StructuralKitDir = "Assets/Environment/FlorentineInnFloor1/StructuralKit";
+    const string StructuralPrefabDir = StructuralKitDir + "/Prefabs";
+    const string StructuralMaterialDir = StructuralKitDir + "/Materials";
 
     const float Half = 11f;
     const float WallH = 3.6f;
@@ -29,6 +32,11 @@ public static class FlorentineInnFloor1Builder
     static Material _npc;
     static Material _serviceNpc;
     static Material _locked;
+    static Material _structPlaster;
+    static Material _structStone;
+    static Material _structPublicTile;
+    static Material _structServiceTerracotta;
+    static Material _structCourtyard;
 
     [MenuItem("InfernosCurse/Florentine Inn/1. Build Floor 1")]
     public static void Build()
@@ -70,19 +78,19 @@ public static class FlorentineInnFloor1Builder
         var floors = new GameObject("Floors").transform;
         floors.SetParent(parent, false);
 
-        Box(floors, "Floor_Base", new Vector3(0f, -0.24f, 0f), new Vector3(22.7f, 0.45f, 22.7f), _stone);
-        Box(floors, "Floor_StreetApron", new Vector3(0f, -0.18f, -12.25f), new Vector3(6f, 0.35f, 2.2f), _stone);
+        StructuralFloor(floors, "Floor_Base", new Vector3(0f, -0.19f, 0f), new Vector2(22.7f, 22.7f), _structStone, 0.45f);
+        StructuralFloor(floors, "Floor_StreetApron", new Vector3(0f, -0.13f, -12.25f), new Vector2(6f, 2.2f), _structStone, 0.35f);
 
-        Floor(floors, "Floor_Salon", new Vector3(-7.4f, 0f, -7.5f), new Vector2(7.2f, 7f), _tile);
-        Floor(floors, "Floor_Reception", new Vector3(0.35f, 0f, -7.5f), new Vector2(8.3f, 7f), _tile);
-        Floor(floors, "Floor_Office", new Vector3(7.75f, 0f, -7.5f), new Vector2(6.5f, 7f), _tile);
-        Floor(floors, "Floor_StairsWC", new Vector3(-7.4f, 0f, -2f), new Vector2(7.2f, 4f), _tile);
-        Floor(floors, "Floor_Dining", new Vector3(-7.4f, 0f, 5.5f), new Vector2(7.2f, 11f), _tile);
-        Floor(floors, "Floor_Courtyard", new Vector3(0.35f, 0f, -0.4f), new Vector2(8.3f, 7.2f), _courtyard);
-        Floor(floors, "Floor_Kitchen", new Vector3(1f, 0f, 7.1f), new Vector2(9.6f, 7.8f), _terracotta);
-        Floor(floors, "Floor_Storage", new Vector3(7.75f, 0f, -1f), new Vector2(6.5f, 6f), _terracotta);
-        Floor(floors, "Floor_Staff", new Vector3(8.4f, 0f, 4.5f), new Vector2(5.2f, 5f), _terracotta);
-        Floor(floors, "Floor_Pantry", new Vector3(8.4f, 0f, 9f), new Vector2(5.2f, 4f), _terracotta);
+        StructuralFloor(floors, "Floor_Salon", new Vector3(-7.4f, 0f, -7.5f), new Vector2(7.2f, 7f), _structPublicTile);
+        StructuralFloor(floors, "Floor_Reception", new Vector3(0.35f, 0f, -7.5f), new Vector2(8.3f, 7f), _structPublicTile);
+        StructuralFloor(floors, "Floor_Office", new Vector3(7.75f, 0f, -7.5f), new Vector2(6.5f, 7f), _structPublicTile);
+        StructuralFloor(floors, "Floor_StairsWC", new Vector3(-7.4f, 0f, -2f), new Vector2(7.2f, 4f), _structPublicTile);
+        StructuralFloor(floors, "Floor_Dining", new Vector3(-7.4f, 0f, 5.5f), new Vector2(7.2f, 11f), _structPublicTile);
+        StructuralFloor(floors, "Floor_Courtyard", new Vector3(0.35f, 0f, -0.4f), new Vector2(8.3f, 7.2f), _structCourtyard);
+        StructuralFloor(floors, "Floor_Kitchen", new Vector3(1f, 0f, 7.1f), new Vector2(9.6f, 7.8f), _structServiceTerracotta);
+        StructuralFloor(floors, "Floor_Storage", new Vector3(7.75f, 0f, -1f), new Vector2(6.5f, 6f), _structServiceTerracotta);
+        StructuralFloor(floors, "Floor_Staff", new Vector3(8.4f, 0f, 4.5f), new Vector2(5.2f, 5f), _structServiceTerracotta);
+        StructuralFloor(floors, "Floor_Pantry", new Vector3(8.4f, 0f, 9f), new Vector2(5.2f, 4f), _structServiceTerracotta);
     }
 
     static void BuildWalls(Transform parent)
@@ -137,20 +145,20 @@ public static class FlorentineInnFloor1Builder
 
         foreach (float x in new[] { -3.55f, 0.35f, 4.25f })
         {
-            Column(arcade, $"CourtyardColumn_S_{x:0.0}", new Vector3(x, 0f, -3.75f));
-            Column(arcade, $"CourtyardColumn_N_{x:0.0}", new Vector3(x, 0f, 2.95f));
+            StructuralColumn(arcade, $"CourtyardColumn_S_{x:0.0}", new Vector3(x, 0f, -3.75f));
+            StructuralColumn(arcade, $"CourtyardColumn_N_{x:0.0}", new Vector3(x, 0f, 2.95f));
         }
         foreach (float z in new[] { -1.2f, 1.25f })
         {
-            Column(arcade, $"CourtyardColumn_W_{z:0.0}", new Vector3(-3.55f, 0f, z));
-            Column(arcade, $"CourtyardColumn_E_{z:0.0}", new Vector3(4.25f, 0f, z));
+            StructuralColumn(arcade, $"CourtyardColumn_W_{z:0.0}", new Vector3(-3.55f, 0f, z));
+            StructuralColumn(arcade, $"CourtyardColumn_E_{z:0.0}", new Vector3(4.25f, 0f, z));
         }
 
         // High lintels read as arches without blocking the player path.
-        Box(arcade, "CourtyardLintel_S", new Vector3(0.35f, 3.05f, -3.75f), new Vector3(8.2f, 0.35f, 0.3f), _stone);
-        Box(arcade, "CourtyardLintel_N", new Vector3(0.35f, 3.05f, 2.95f), new Vector3(8.2f, 0.35f, 0.3f), _stone);
-        Box(arcade, "CourtyardLintel_W", new Vector3(-3.55f, 3.05f, -0.4f), new Vector3(0.3f, 0.35f, 6.4f), _stone);
-        Box(arcade, "CourtyardLintel_E", new Vector3(4.25f, 3.05f, -0.4f), new Vector3(0.3f, 0.35f, 6.4f), _stone);
+        StructuralLintel(arcade, "CourtyardLintel_S", new Vector3(0.35f, 0f, -3.75f), 8.2f, 0f);
+        StructuralLintel(arcade, "CourtyardLintel_N", new Vector3(0.35f, 0f, 2.95f), 8.2f, 0f);
+        StructuralLintel(arcade, "CourtyardLintel_W", new Vector3(-3.55f, 0f, -0.4f), 6.4f, 90f);
+        StructuralLintel(arcade, "CourtyardLintel_E", new Vector3(4.25f, 0f, -0.4f), 6.4f, 90f);
     }
 
     static void BuildStairs(Transform parent)
@@ -382,6 +390,18 @@ public static class FlorentineInnFloor1Builder
         _npc = MaterialAsset("Inn_NPC_Guest", new Color(0.52f, 0.20f, 0.16f), 0.1f);
         _serviceNpc = MaterialAsset("Inn_NPC_Staff", new Color(0.16f, 0.29f, 0.48f), 0.1f);
         _locked = MaterialAsset("Inn_Accent", new Color(0.52f, 0.36f, 0.11f), 0.25f);
+
+        _structPlaster = StructuralMaterial("Inn_LimePlaster", _plaster);
+        _structStone = StructuralMaterial("Inn_PietraSerena", _stone);
+        _structPublicTile = StructuralMaterial("Inn_PublicTile", _tile);
+        _structServiceTerracotta = StructuralMaterial("Inn_ServiceTerracotta", _terracotta);
+        _structCourtyard = StructuralMaterial("Inn_CourtyardPavers", _courtyard);
+    }
+
+    static Material StructuralMaterial(string name, Material fallback)
+    {
+        var material = AssetDatabase.LoadAssetAtPath<Material>($"{StructuralMaterialDir}/{name}.mat");
+        return material != null ? material : fallback;
     }
 
     static Material MaterialAsset(string name, Color color, float smoothness)
@@ -402,10 +422,71 @@ public static class FlorentineInnFloor1Builder
         Box(parent, name, new Vector3(center.x, -0.04f, center.z), new Vector3(size.x, 0.1f, size.y), material);
 
     static void WallX(Transform parent, string name, float x, float centerZ, float length) =>
-        Box(parent, name, new Vector3(x, WallH / 2f, centerZ), new Vector3(WallT, WallH, length), _plaster);
+        StructuralWall(parent, name, new Vector3(x, 0f, centerZ), length, 90f);
 
     static void WallZ(Transform parent, string name, float z, float centerX, float length) =>
-        Box(parent, name, new Vector3(centerX, WallH / 2f, z), new Vector3(length, WallH, WallT), _plaster);
+        StructuralWall(parent, name, new Vector3(centerX, 0f, z), length, 0f);
+
+    static void StructuralWall(Transform parent, string name, Vector3 position, float length, float yaw)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{StructuralPrefabDir}/InnWall_Straight_2m.prefab");
+        if (prefab == null)
+        {
+            Box(parent, name, position + Vector3.up * (WallH / 2f),
+                yaw == 0f ? new Vector3(length, WallH, WallT) : new Vector3(WallT, WallH, length), _structPlaster);
+            return;
+        }
+
+        var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+        instance.name = name;
+        instance.transform.SetParent(parent, false);
+        instance.transform.position = position;
+        instance.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        instance.transform.localScale = new Vector3(length / 2f, 1f, 1f);
+    }
+
+    static void StructuralFloor(Transform parent, string name, Vector3 center, Vector2 size, Material material, float thickness = 0.1f)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(parent, false);
+        go.transform.position = center + Vector3.down * (thickness / 2f);
+        go.transform.localScale = new Vector3(size.x, thickness, size.y);
+        go.GetComponent<Renderer>().sharedMaterial = material;
+    }
+
+    static void StructuralColumn(Transform parent, string name, Vector3 position)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{StructuralPrefabDir}/InnArcade_TuscanColumn.prefab");
+        if (prefab == null)
+        {
+            Column(parent, name, position);
+            return;
+        }
+
+        var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+        instance.name = name;
+        instance.transform.SetParent(parent, false);
+        instance.transform.position = position;
+    }
+
+    static void StructuralLintel(Transform parent, string name, Vector3 position, float length, float yaw)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{StructuralPrefabDir}/InnArcade_Lintel_2m.prefab");
+        if (prefab == null)
+        {
+            Box(parent, name, position + Vector3.up * 3.05f,
+                yaw == 0f ? new Vector3(length, 0.35f, 0.3f) : new Vector3(0.3f, 0.35f, length), _structStone);
+            return;
+        }
+
+        var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+        instance.name = name;
+        instance.transform.SetParent(parent, false);
+        instance.transform.position = position;
+        instance.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        instance.transform.localScale = new Vector3(length / 2.2f, 1f, 1f);
+    }
 
     static void Column(Transform parent, string name, Vector3 position)
     {

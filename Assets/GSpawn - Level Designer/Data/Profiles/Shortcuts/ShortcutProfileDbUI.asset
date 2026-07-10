@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e27222d292a6e941bf5d19338fcaeb3, type: 3}
+  m_Name: ShortcutProfileDbUI
+  m_EditorClassIdentifier: Assembly-CSharp::GSPAWN.ShortcutProfileDbUI
+  _categoryViewState: {fileID: -5626567078424231966, guid: 47545f60653467e47ba9fe1c5d258a12, type: 2}
+  _shortcutViewState: {fileID: 388180300968999934, guid: 47545f60653467e47ba9fe1c5d258a12, type: 2}
