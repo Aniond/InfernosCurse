@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 
 public enum CombatantRole { Benidito, PartyMember, Enemy, NPC }
+public enum CombatAIProfile { Default, LimboCrier }
 
 [Serializable]
 public class SkillSlots
@@ -86,6 +87,10 @@ public class CombatantData : ScriptableObject
     [Tooltip("Local X/Y position used with Battle Visual Scale. Ignored while automatic normalization is active.")]
     public Vector2 battleVisualOffset;
 
+    [Header("Reusable Humanoid Battle Visuals")]
+    [Tooltip("Optional reusable humanoid animation profile. Profile data wins; missing entries fall back to the inline fields below.")]
+    public HumanoidBattleVisualProfile humanoidVisualProfile;
+
     [Header("Battlefield Directional Animation")]
     [Tooltip("Optional cardinal idle sprites. Missing directions fall back to Battle Sprite.")]
     public Sprite battleIdleSouth;
@@ -102,8 +107,24 @@ public class CombatantData : ScriptableObject
     public BattleSkillAnimation[] battleSkillAnimations;
     public CombatantRole role;
 
+    [Header("Battle Traits")]
+    public CombatAIProfile combatAIProfile = CombatAIProfile.Default;
+    [Tooltip("Immune to Limbo Stain regardless of current battle side.")]
+    public bool isLimboAligned;
+    [Tooltip("Retains Dread's Faith penalty but ignores its CT recovery penalty.")]
+    public bool resistsDreadCtPenalty;
+    [Tooltip("Cannot be displaced by forced movement.")]
+    public bool immovable;
+    [Tooltip("Story/objective protection against forced movement.")]
+    public bool protectedFromForcedMovement;
+
     public Sprite GetBattleIdleSprite(FacingDir direction)
     {
+        var profiled = humanoidVisualProfile != null
+            ? humanoidVisualProfile.GetIdleSprite(direction)
+            : null;
+        if (profiled != null) return profiled;
+
         Sprite directional = direction switch
         {
             FacingDir.East  => battleIdleEast,
@@ -114,13 +135,27 @@ public class CombatantData : ScriptableObject
         return directional != null ? directional : battleSprite;
     }
 
-    public Sprite[] GetBattleWalkFrames(FacingDir direction) => direction switch
+    public Sprite[] GetBattleWalkFrames(FacingDir direction)
     {
-        FacingDir.East  => battleWalkEast,
-        FacingDir.North => battleWalkNorth,
-        FacingDir.West  => battleWalkWest,
-        _               => battleWalkSouth,
-    };
+        var profiled = humanoidVisualProfile != null
+            ? humanoidVisualProfile.walk?.GetFrames(direction)
+            : null;
+        if (profiled != null && profiled.Length > 0) return profiled;
+
+        return direction switch
+        {
+            FacingDir.East  => battleWalkEast,
+            FacingDir.North => battleWalkNorth,
+            FacingDir.West  => battleWalkWest,
+            _               => battleWalkSouth,
+        };
+    }
+
+    public float GetBattleWalkFps() =>
+        humanoidVisualProfile != null && humanoidVisualProfile.walk != null &&
+        humanoidVisualProfile.walk.HasAnyFrames
+            ? humanoidVisualProfile.walk.fps
+            : battleWalkFps;
 
     public BattleSkillAnimation GetBattleSkillAnimation(SkillDefinition skill)
     {
@@ -129,6 +164,36 @@ public class CombatantData : ScriptableObject
             if (animation != null && animation.skill == skill) return animation;
         return null;
     }
+
+    public Sprite[] GetBattleSkillFrames(SkillDefinition skill, FacingDir direction)
+    {
+        var profiled = humanoidVisualProfile != null
+            ? humanoidVisualProfile.GetSkillAnimation(skill)
+            : null;
+        var frames = profiled?.sequence?.GetFrames(direction);
+        if (frames != null && frames.Length > 0) return frames;
+        return GetBattleSkillAnimation(skill)?.GetFrames(direction);
+    }
+
+    public float GetBattleSkillFps(SkillDefinition skill)
+    {
+        var profiled = humanoidVisualProfile != null
+            ? humanoidVisualProfile.GetSkillAnimation(skill)
+            : null;
+        if (profiled?.sequence != null && profiled.sequence.HasAnyFrames)
+            return profiled.sequence.fps;
+        return GetBattleSkillAnimation(skill)?.fps ?? 12f;
+    }
+
+    public Sprite[] GetBattleHurtFrames(FacingDir direction) =>
+        humanoidVisualProfile?.hurt?.GetFrames(direction);
+
+    public float GetBattleHurtFps() => humanoidVisualProfile?.hurt?.fps ?? 12f;
+
+    public Sprite[] GetBattleDeathFrames(FacingDir direction) =>
+        humanoidVisualProfile?.death?.GetFrames(direction);
+
+    public float GetBattleDeathFps() => humanoidVisualProfile?.death?.fps ?? 12f;
 
     [Header("Base Stats (before job bonuses)")]
     public CharacterStats baseStats = new CharacterStats();
@@ -177,6 +242,21 @@ public class CombatantData : ScriptableObject
         if (helmet) yield return helmet;
         if (gloves) yield return gloves;
         if (boots) yield return boots;
+    }
+
+    public float GetDamageReceivedMultiplier(DamageType damageType)
+    {
+        float signedAdjustment = 0f;
+        foreach (var item in AllEquipment())
+        {
+            if (item == null || item.damageReceivedModifiers == null) continue;
+            foreach (var modifier in item.damageReceivedModifiers)
+            {
+                if (modifier != null && modifier.damageType == damageType)
+                    signedAdjustment += modifier.percentage;
+            }
+        }
+        return Mathf.Max(0f, 1f + signedAdjustment);
     }
 
     // ── Learnable skills (enemies / NPCs) ────────────────────────────────────

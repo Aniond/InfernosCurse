@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0e9a00d9356f7e41a282ef6a0088cce, type: 3}
+  m_Name: LimboCrier_Mercato_01
+  m_EditorClassIdentifier: Assembly-CSharp::WorldAgentDefinition
+  agentId: limbo_crier_mercato_01
+  districtId: mercato
+  startingSiteId: mercato_crier_sermon_fountain
+  availableSiteIds:
+  - mercato_crier_sermon_fountain
+  - mercato_crier_sermon_west_stalls
+  - mercato_crier_sermon_south_gate
+  startsDiscovered: 0
+  worldPrefab: {fileID: 1506679031529429949, guid: 4eba61116d6cc5347a2d37635f1c1be9, type: 3}

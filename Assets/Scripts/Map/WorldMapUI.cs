@@ -72,6 +72,7 @@ public class WorldMapUI : MonoBehaviour
 
         foreach (var node in _hub.AllNodes)
         {
+            if (!MapRouting.IsVisible(node)) continue;
             var go  = Instantiate(nodePrefab, mapImageRect);
             var pin = go.GetComponent<MapNodeView>();
             if (pin == null)

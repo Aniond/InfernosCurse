@@ -40,6 +40,11 @@ public class AssetRegistry : MonoBehaviour
         if (allSkills != null)
             foreach (var s in allSkills)
                 if (s != null && !_skills.ContainsKey(s.name)) _skills[s.name] = s;
+        // New content may live under Resources so it can be built without
+        // rewriting the shared GameSystems prefab. Explicit registry entries
+        // still win; resource-backed additions fill only missing names.
+        foreach (var s in Resources.LoadAll<SkillDefinition>("Skills"))
+            if (s != null && !_skills.ContainsKey(s.name)) _skills[s.name] = s;
         if (allJobs != null)
             foreach (var j in allJobs)
                 if (j != null && !_jobs.ContainsKey(j.name)) _jobs[j.name] = j;

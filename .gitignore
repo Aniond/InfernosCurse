@@ -123,6 +123,9 @@ Refrences/3dassets/*.glb
 Tools/asset-gen/.env
 Tools/asset-gen/output/
 
+# Recoverable PixelLab API staging (production copies live under Assets/)
+/GeneratedAssets/PixelLab/
+
 # Machine-local Claude settings
 .claude/settings.local.json
 

@@ -37,8 +37,14 @@ public class ZoneEncounterTrigger : MonoBehaviour
     bool[] _exploreRootStates = Array.Empty<bool>();
     bool[] _battleRootStates = Array.Empty<bool>();
     List<BattleUnit> _staged = new();
+    WorldAgentEncounterActor _activeWorldEncounter;
+    bool _restoreWorldEncounterActor;
+    bool _explorationCaptured;
     bool _battleRunning;
     float _poll;
+
+    public bool BattleRunning => _battleRunning;
+    public BattleManager ActiveBattleManager => _battleManager;
 
     void Start()
     {
@@ -71,8 +77,10 @@ public class ZoneEncounterTrigger : MonoBehaviour
 
         var player = _explorePlayer;
         if (player == null) return;
-        var playerCell = new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
-                                        Mathf.FloorToInt(player.transform.position.z));
+        var playerCell = _auth != null
+            ? _auth.WorldToCell(player.transform.position)
+            : new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
+                             Mathf.FloorToInt(player.transform.position.z));
 
         float insanityScent = GameFeatures.CorruptionEnabled
             ? 1f + InsanityState.Current() * 0.003f
@@ -129,10 +137,10 @@ public class ZoneEncounterTrigger : MonoBehaviour
 
             EnsureEventSystem();
             CaptureAndSuspendExploration();
-            ConfigureBattleCamera(playerCell);
+            ConfigureBattleCamera(playerCell, enemySpawns[0], grid);
 
-            _battleManager.OnVictory += EndEncounter;
-            _battleManager.OnDefeat += EndEncounter;
+            _battleManager.OnVictory += HandleVictory;
+            _battleManager.OnDefeat += HandleDefeat;
             _battleManager.StartBattle(party, enemies, playerSpawns, enemySpawns);
 
             foreach (var unit in _staged.Where(u => u != null)) Destroy(unit.gameObject);
@@ -158,7 +166,84 @@ public class ZoneEncounterTrigger : MonoBehaviour
         }
     }
 
-    bool ValidateStartup(out string message)
+    public bool TryStartWorldAgentEncounter(WorldAgentEncounterActor encounter, GameObject interactor)
+    {
+        if (_battleRunning || encounter == null) return false;
+        if (interactor != null) _explorePlayer = interactor;
+        if (!ValidateStartup(out string validationError, requireStagedEnemies: false))
+        {
+            Debug.LogError($"[ZoneEncounter] Cannot start world-agent encounter: {validationError}", this);
+            return false;
+        }
+
+        var enemies = encounter.BuildEnemyParty();
+        if (enemies.Count == 0 || enemies.Any(data => data == null))
+        {
+            Debug.LogError("[ZoneEncounter] World-agent encounter has an incomplete enemy composition.", encounter);
+            return false;
+        }
+
+        _battleRunning = true;
+        _activeWorldEncounter = encounter;
+        _restoreWorldEncounterActor = true;
+        try
+        {
+            _kitInstance = Instantiate(battleKitPrefab);
+            _battleManager = _kitInstance.GetComponentInChildren<BattleManager>(true);
+            var grid = _kitInstance.GetComponentInChildren<BattleGrid>(true);
+            if (_battleManager == null || grid == null)
+                throw new InvalidOperationException("BattleKit is missing BattleManager or BattleGrid");
+
+            _auth.Apply(grid);
+            PartyRoster.EnsureInitialized();
+            var party = new List<CombatantData>(RestSystem.PartyMembers);
+            if (party.Count == 0) throw new InvalidOperationException("party roster is empty");
+
+            var player = _explorePlayer != null ? _explorePlayer : GameObject.FindWithTag("Player");
+            if (player == null) throw new InvalidOperationException("active Player-tagged exploration actor is missing");
+            Vector2Int playerCell = ClampCell(_auth.WorldToCell(player.transform.position), grid);
+            var playerSpawns = SpawnsAround(playerCell, party.Count, grid);
+            if (playerSpawns.Count < party.Count)
+                throw new InvalidOperationException($"only {playerSpawns.Count}/{party.Count} valid party spawn cells near {playerCell}");
+
+            Vector2Int enemyAnchor = ClampCell(_auth.WorldToCell(encounter.transform.position), grid);
+            var enemySpawns = BuildWorldEnemyFormation(
+                enemyAnchor, playerCell, enemies.Count, grid, playerSpawns);
+            if (enemySpawns.Count < enemies.Count)
+                throw new InvalidOperationException($"only {enemySpawns.Count}/{enemies.Count} valid enemy spawn cells near {enemyAnchor}");
+
+            EnsureEventSystem();
+            CaptureAndSuspendExploration();
+            encounter.gameObject.SetActive(false);
+            ConfigureBattleCamera(playerCell, enemySpawns[0], grid);
+
+            _battleManager.OnVictory += HandleVictory;
+            _battleManager.OnDefeat += HandleDefeat;
+            _battleManager.StartBattle(party, enemies, playerSpawns, enemySpawns);
+
+            if (EnemyAI.WorldState != null)
+                foreach (var unit in UnityEngine.Object.FindObjectsByType<BattleUnit>(FindObjectsSortMode.None))
+                    if (unit.IsPlayer) EnemyAI.WorldState.playerBelief.Update(unit);
+
+            var fog = GetComponent<ZoneFogOfWar>();
+            if (fog != null && ambushRevealSeconds > 0f)
+                foreach (var spawn in enemySpawns)
+                    for (int dx = -1; dx <= 1; dx++)
+                        for (int dz = -1; dz <= 1; dz++)
+                            fog.RevealCell(spawn + new Vector2Int(dx, dz), ambushRevealSeconds);
+
+            Debug.Log($"[ZoneEncounter] Persistent agent '{encounter.AgentId}' confronted; battle begins in place.");
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError($"[ZoneEncounter] World-agent startup failed; exploration restored. {exception.Message}", this);
+            RestoreExploration(clearBattleUnits: true);
+            return false;
+        }
+    }
+
+    bool ValidateStartup(out string message, bool requireStagedEnemies = true)
     {
         _zone ??= GetComponent<ZoneBattleAuthoring>();
         _auth ??= GetComponent<BattleMapAuthoring>();
@@ -170,7 +255,7 @@ public class ZoneEncounterTrigger : MonoBehaviour
         if (battleKitPrefab.GetComponentInChildren<BattleManager>(true) == null ||
             battleKitPrefab.GetComponentInChildren<BattleGrid>(true) == null)
         { message = "BattleKit prefab is incomplete"; return false; }
-        if (_staged.Count == 0 || _staged.All(unit => unit == null))
+        if (requireStagedEnemies && (_staged.Count == 0 || _staged.All(unit => unit == null)))
         { message = "no staged enemies remain"; return false; }
         var player = _explorePlayer;
         if (player == null) _explorePlayer = player = GameObject.FindWithTag("Player");
@@ -202,10 +287,11 @@ public class ZoneEncounterTrigger : MonoBehaviour
         foreach (var root in _zone.battleOnlyRoots)
             if (root != null) root.SetActive(true);
 
+        _explorationCaptured = true;
         _explorePlayer.SetActive(false);
     }
 
-    void ConfigureBattleCamera(Vector2Int playerCell)
+    void ConfigureBattleCamera(Vector2Int playerCell, Vector2Int enemyCell, BattleGrid grid)
     {
         var camera = Camera.main;
         _cineBrain = camera.GetComponent<CinemachineBrain>();
@@ -216,10 +302,9 @@ public class ZoneEncounterTrigger : MonoBehaviour
         _ownsBattleRig = _battleRig == null;
         if (_battleRig == null) _battleRig = camera.gameObject.AddComponent<BattleCameraRig>();
 
-        var firstEnemy = _staged.First(unit => unit != null);
-        Vector2 midpoint = Vector2.Lerp(playerCell, firstEnemy.gridPosition, 0.5f);
-        float pivotHeight = _heights != null ? _heights.HeightAt(playerCell) : 1f;
-        _battleRig.pivot = new Vector3(midpoint.x, pivotHeight, midpoint.y);
+        Vector3 playerWorld = grid.GridToWorld(playerCell);
+        Vector3 enemyWorld = grid.GridToWorld(enemyCell);
+        _battleRig.pivot = Vector3.Lerp(playerWorld, enemyWorld, 0.5f) + Vector3.up * 0.65f;
         camera.transform.position = _battleRig.pivot + new Vector3(0.55f, 0.6f, -1f).normalized * 15f;
         camera.transform.LookAt(_battleRig.pivot);
     }
@@ -233,7 +318,8 @@ public class ZoneEncounterTrigger : MonoBehaviour
     List<Vector2Int> SpawnsAround(Vector2Int center, int count, BattleGrid grid)
     {
         var spawns = new List<Vector2Int>();
-        for (int ring = 0; ring <= 3 && spawns.Count < count; ring++)
+        int maxRing = Mathf.Max(grid.width, grid.height);
+        for (int ring = 0; ring <= maxRing && spawns.Count < count; ring++)
             for (int dx = -ring; dx <= ring && spawns.Count < count; dx++)
                 for (int dz = -ring; dz <= ring && spawns.Count < count; dz++)
                 {
@@ -245,14 +331,86 @@ public class ZoneEncounterTrigger : MonoBehaviour
         return spawns;
     }
 
-    void EndEncounter() => RestoreExploration(clearBattleUnits: true);
+    List<Vector2Int> BuildWorldEnemyFormation(
+        Vector2Int anchor,
+        Vector2Int playerCell,
+        int count,
+        BattleGrid grid,
+        List<Vector2Int> playerSpawns)
+    {
+        var result = new List<Vector2Int>();
+        var excluded = new HashSet<Vector2Int>(playerSpawns);
+        Vector2Int towardPlayer = DominantDirection(playerCell - anchor);
+        Vector2Int perpendicular = new Vector2Int(-towardPlayer.y, towardPlayer.x);
+        var preferred = new[]
+        {
+            anchor,
+            anchor + towardPlayer + perpendicular,
+            anchor + towardPlayer - perpendicular,
+            anchor + towardPlayer,
+            anchor - towardPlayer + perpendicular,
+            anchor - towardPlayer - perpendicular,
+        };
+
+        foreach (Vector2Int position in preferred)
+        {
+            if (result.Count >= count) break;
+            AddSpawnIfValid(position, grid, excluded, result);
+        }
+
+        int maxRing = Mathf.Max(grid.width, grid.height);
+        for (int ring = 1; ring <= maxRing && result.Count < count; ring++)
+            for (int dx = -ring; dx <= ring && result.Count < count; dx++)
+                for (int dz = -ring; dz <= ring && result.Count < count; dz++)
+                    AddSpawnIfValid(anchor + new Vector2Int(dx, dz), grid, excluded, result);
+        return result;
+    }
+
+    static void AddSpawnIfValid(
+        Vector2Int position,
+        BattleGrid grid,
+        HashSet<Vector2Int> excluded,
+        List<Vector2Int> result)
+    {
+        GridCell cell = grid.GetCell(position);
+        if (cell == null || !cell.walkable || excluded.Contains(position) || result.Contains(position)) return;
+        result.Add(position);
+    }
+
+    static Vector2Int DominantDirection(Vector2Int delta)
+    {
+        if (Mathf.Abs(delta.x) >= Mathf.Abs(delta.y))
+            return new Vector2Int(delta.x >= 0 ? 1 : -1, 0);
+        return new Vector2Int(0, delta.y >= 0 ? 1 : -1);
+    }
+
+    static Vector2Int ClampCell(Vector2Int position, BattleGrid grid) =>
+        new Vector2Int(
+            Mathf.Clamp(position.x, 0, grid.width - 1),
+            Mathf.Clamp(position.y, 0, grid.height - 1));
+
+    void HandleVictory()
+    {
+        if (_activeWorldEncounter != null)
+        {
+            _activeWorldEncounter.ResolveVictory();
+            _restoreWorldEncounterActor = false;
+        }
+        RestoreExploration(clearBattleUnits: true);
+    }
+
+    void HandleDefeat()
+    {
+        _activeWorldEncounter?.ResolveDefeat();
+        RestoreExploration(clearBattleUnits: true);
+    }
 
     void RestoreExploration(bool clearBattleUnits)
     {
         if (_battleManager != null)
         {
-            _battleManager.OnVictory -= EndEncounter;
-            _battleManager.OnDefeat -= EndEncounter;
+            _battleManager.OnVictory -= HandleVictory;
+            _battleManager.OnDefeat -= HandleDefeat;
         }
 
         if (clearBattleUnits)
@@ -264,18 +422,23 @@ public class ZoneEncounterTrigger : MonoBehaviour
         if (_cineBrain != null) _cineBrain.enabled = _brainWasEnabled;
         if (_createdEventSystem != null) Destroy(_createdEventSystem);
 
-        RestoreModeObjects();
-        if (_explorePlayer != null)
+        if (_explorationCaptured) RestoreModeObjects();
+        if (_explorationCaptured && _explorePlayer != null)
         {
             _explorePlayer.transform.SetPositionAndRotation(_explorePlayerPosition, _explorePlayerRotation);
             _explorePlayer.SetActive(_playerWasActive);
         }
+        if (_restoreWorldEncounterActor && _activeWorldEncounter != null)
+            _activeWorldEncounter.gameObject.SetActive(true);
 
         _battleManager = null;
         _kitInstance = null;
         _battleRig = null;
         _cineBrain = null;
         _createdEventSystem = null;
+        _activeWorldEncounter = null;
+        _restoreWorldEncounterActor = false;
+        _explorationCaptured = false;
         _ownsBattleRig = false;
         _battleRunning = false;
         Debug.Log("[ZoneEncounter] Battle over — exploration restored.");
@@ -296,8 +459,8 @@ public class ZoneEncounterTrigger : MonoBehaviour
     {
         if (_battleManager != null)
         {
-            _battleManager.OnVictory -= EndEncounter;
-            _battleManager.OnDefeat -= EndEncounter;
+            _battleManager.OnVictory -= HandleVictory;
+            _battleManager.OnDefeat -= HandleDefeat;
         }
     }
 }

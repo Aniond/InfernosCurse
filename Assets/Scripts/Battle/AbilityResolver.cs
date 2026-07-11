@@ -1,19 +1,19 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class AbilityResolver
 {
-    // Main entry point — resolves a skill use from user onto a target position.
-    // absorbedInstance is set only when the cast came from Benidito's absorbed
-    // slots; it supplies the level/refine-scaled power in place of
-    // skill.basePower (skill here is already EffectiveDefinition — holy swap
-    // if refined — see BattleManager.PlayerSelectAbsorbedSkill).
-    public static void Resolve(BattleUnit user, SkillDefinition skill, Vector2Int targetPos, AbsorbedSkillInstance absorbedInstance = null)
+    public static void Resolve(
+        BattleUnit user,
+        SkillDefinition skill,
+        Vector2Int targetPos,
+        AbsorbedSkillInstance absorbedInstance = null)
     {
-        if (skill == null) return;
+        if (user == null || !user.IsAlive || skill == null) return;
 
-        // Spend SP — absorbed orbs cost more as they level (+1 SP per level-up)
-        int spCost = absorbedInstance != null ? absorbedInstance.GetEffectiveSPCost() : skill.spCost;
+        int spCost = absorbedInstance != null
+            ? absorbedInstance.GetEffectiveSPCost()
+            : skill.spCost;
         if (spCost > 0)
         {
             if (!user.HasSP(spCost))
@@ -24,79 +24,85 @@ public static class AbilityResolver
             user.SpendSP(spCost);
         }
 
-        float powerOverride = absorbedInstance != null ? absorbedInstance.GetEffectivePower() : -1f;
+        float powerOverride = absorbedInstance != null
+            ? absorbedInstance.GetEffectivePower()
+            : -1f;
+        Vector2Int resolvedCenter = skill.centerOnCaster ? user.gridPosition : targetPos;
 
-        // Gather targets
-        var targets = GatherTargets(user, skill, targetPos);
-
-        foreach (var target in targets)
-            ApplySkill(user, target, skill, powerOverride);
+        foreach (BattleUnit target in GatherTargets(user, skill, resolvedCenter))
+            ApplySkill(user, target, skill, powerOverride, absorbedInstance);
     }
 
-    static List<BattleUnit> GatherTargets(BattleUnit user, SkillDefinition skill, Vector2Int targetPos)
+    public static bool TargetsAllies(SkillDefinition skill)
+    {
+        if (skill == null) return false;
+        if (skill.targetSide == SkillTargetSide.Allied) return true;
+        if (skill.targetSide == SkillTargetSide.Hostile) return false;
+        return skill.isHealing;
+    }
+
+    public static bool IsLegalTarget(
+        BattleUnit user,
+        BattleUnit target,
+        SkillDefinition skill)
+    {
+        if (user == null || target == null || skill == null || !target.IsAlive) return false;
+        if (target == user && !skill.allowSelfTarget) return false;
+        bool allied = target.IsPlayer == user.IsPlayer;
+        return TargetsAllies(skill) ? allied : !allied;
+    }
+
+    static List<BattleUnit> GatherTargets(
+        BattleUnit user,
+        SkillDefinition skill,
+        Vector2Int targetPos)
     {
         var result = new List<BattleUnit>();
-        var grid   = BattleManager.Instance?.Grid;
+        BattleGrid grid = BattleManager.Instance?.Grid;
         if (grid == null) return result;
 
         if (skill.areaOfEffect <= 0)
         {
-            // Single target
-            var cell = grid.GetCell(targetPos);
-            if (cell?.occupant != null) result.Add(cell.occupant);
-        }
-        else
-        {
-            // AOE
-            var cells = grid.GetAOECells(targetPos, skill.areaOfEffect);
-            foreach (var cell in cells)
-                if (cell.occupant != null && cell.occupant.IsAlive)
-                    result.Add(cell.occupant);
+            BattleUnit target = grid.GetCell(targetPos)?.occupant;
+            if (IsLegalTarget(user, target, skill)) result.Add(target);
+            return result;
         }
 
+        foreach (GridCell cell in grid.GetAOECells(targetPos, skill.areaOfEffect))
+        {
+            BattleUnit target = cell.occupant;
+            if (IsLegalTarget(user, target, skill)) result.Add(target);
+        }
         return result;
     }
 
-    static void ApplySkill(BattleUnit user, BattleUnit target, SkillDefinition skill, float powerOverride = -1f)
+    static void ApplySkill(
+        BattleUnit user,
+        BattleUnit target,
+        SkillDefinition skill,
+        float powerOverride,
+        AbsorbedSkillInstance absorbedInstance)
     {
-        if (!target.IsAlive) return;
+        if (target == null || !target.IsAlive || skill.skillType != SkillType.Active) return;
 
-        switch (skill.skillType)
-        {
-            case SkillType.Active:
-                ApplyActive(user, target, skill, powerOverride);
-                break;
-
-            case SkillType.Passive:
-            case SkillType.Reaction:
-            case SkillType.Movement:
-                // Handled by passive system, not direct resolution
-                break;
-        }
-    }
-
-    static void ApplyActive(BattleUnit user, BattleUnit target, SkillDefinition skill, float powerOverride = -1f)
-    {
-        // Healing skills
         if (skill.isHealing)
         {
             int heal = BattleFormulas.CalcHeal(user, skill, powerOverride);
             target.Heal(heal);
+            ApplySpecialEffect(user, target, skill);
             Debug.Log($"{user.Data.displayName} heals {target.Data.displayName} for {heal}.");
             return;
         }
 
-        // Non-damaging utility / buff (damageType None but not flagged healing).
-        // Tile/status effects still apply; no damage roll.
-        if (skill.damageType == DamageType.None)
+        if (skill.damageType == DamageType.None && !skill.usesEquippedWeapon)
         {
             ApplyTileEffect(user, target);
-            ApplySkillStatus(user, target, skill);
+            ApplySpecialEffect(user, target, skill);
+            ApplySkillStatus(user, target, skill, absorbedInstance);
             Debug.Log($"{user.Data.displayName} uses {skill.skillName} on {target.Data.displayName}.");
             return;
         }
 
-        // Hit check
         if (!BattleFormulas.RollHit(user, target, skill))
         {
             Debug.Log($"{user.Data.displayName}'s {skill.skillName} missed {target.Data.displayName}!");
@@ -104,54 +110,92 @@ public static class AbilityResolver
             return;
         }
 
-        // Damage
-        int dmg  = BattleFormulas.CalcDamage(user, target, skill, powerOverride);
-        bool crit = BattleFormulas.RollCrit(user);
-        if (crit)
+        int damage = BattleFormulas.CalcDamage(user, target, skill, powerOverride);
+        bool critical = BattleFormulas.RollCrit(user);
+        if (critical)
         {
-            dmg = Mathf.RoundToInt(dmg * 1.5f);
-            Debug.Log($"Critical hit!");
+            damage = Mathf.RoundToInt(damage * 1.5f);
+            Debug.Log("Critical hit!");
         }
 
-        target.TakeDamage(dmg, skill.damageType, user, crit);
-        Debug.Log($"{user.Data.displayName} uses {skill.skillName} on {target.Data.displayName} for {dmg} {skill.damageType} damage.");
+        DamageType effectiveType = BattleFormulas.GetEffectiveDamageType(user, skill);
+        target.TakeDamage(damage, effectiveType, user, critical);
+        Debug.Log($"{user.Data.displayName} uses {skill.skillName} on {target.Data.displayName} for {damage} {effectiveType} damage.");
 
-        // Status effect from tile
-        ApplyTileEffect(user, target);
+        if (target.IsAlive)
+        {
+            ApplyTileEffect(user, target);
+            ApplySkillStatus(user, target, skill, absorbedInstance);
+            ApplySpecialEffect(user, target, skill);
+        }
 
-        // Status effect carried by the skill itself (e.g. ergot poison, oven burn)
-        ApplySkillStatus(user, target, skill);
-
-        // Post-kill absorb (Benidito only)
         if (!target.IsAlive)
         {
-            var absorbed = user.TryAbsorb(target);
-            if (absorbed != null)
-                BattleManager.Instance?.NotifyAbsorb(user, absorbed);
-
-            // Award AP/XP to all party members
+            AbsorbedSkillInstance absorbed = user.TryAbsorb(target);
+            if (absorbed != null) BattleManager.Instance?.NotifyAbsorb(user, absorbed);
             BattleManager.Instance?.AwardPostKill(user, target);
         }
     }
 
-    // Applies a status carried by the skill definition itself, independent of the
-    // target's tile. Rolls statusChance; call only after a hit has landed.
-    static void ApplySkillStatus(BattleUnit source, BattleUnit target, SkillDefinition skill)
+    static void ApplySkillStatus(
+        BattleUnit source,
+        BattleUnit target,
+        SkillDefinition skill,
+        AbsorbedSkillInstance absorbedInstance)
     {
-        if (skill == null || !skill.appliesStatus || target == null || !target.IsAlive) return;
+        if (!skill.appliesStatus || target == null || !target.IsAlive) return;
         if (skill.statusChance < 1f && Random.value > skill.statusChance) return;
 
+        float magnitude = skill.statusMagnitude;
+        if (skill.statusType == StatusEffectType.Dread)
+        {
+            int level = absorbedInstance?.level ?? 1;
+            magnitude = level >= 5 ? 5f : level >= 3 ? 4f : 3f;
+        }
+
         target.ApplyStatus(new StatusEffect(
-            skill.statusType, skill.statusDuration, skill.statusMagnitude, source));
-        Debug.Log($"{target.Data.displayName} is afflicted with {skill.statusType} " +
-                  $"from {skill.skillName}.");
+            skill.statusType,
+            Mathf.Max(1, skill.statusDuration),
+            magnitude,
+            source));
+        Debug.Log($"{target.Data.displayName} is afflicted with {skill.statusType} from {skill.skillName}.");
+    }
+
+    static void ApplySpecialEffect(
+        BattleUnit source,
+        BattleUnit target,
+        SkillDefinition skill)
+    {
+        switch (skill.specialEffect)
+        {
+            case SkillSpecialEffect.PullTargetTowardCaster:
+                if (!ForcedMovementService.TryPullOneCell(
+                        BattleManager.Instance?.Grid,
+                        target,
+                        source.gridPosition,
+                        out ForcedMovementFailure pullFailure))
+                    Debug.Log($"[ForcedMovement] {skill.skillName} dealt damage but could not pull {target.Data.displayName}: {pullFailure}.");
+                break;
+
+            case SkillSpecialEffect.RemoveDread:
+                target.RemoveStatus(StatusEffectType.Dread);
+                break;
+
+            case SkillSpecialEffect.PullAllyTowardCasterAndProtect:
+                ForcedMovementService.TryPullOneCell(
+                    BattleManager.Instance?.Grid,
+                    target,
+                    source.gridPosition,
+                    out _);
+                target.ApplyStatus(new StatusEffect(StatusEffectType.Protect, 1, 0.25f, source));
+                break;
+        }
     }
 
     static void ApplyTileEffect(BattleUnit source, BattleUnit target)
     {
-        var grid = BattleManager.Instance?.Grid;
-        if (grid == null) return;
-        var cell = grid.GetCell(target.gridPosition);
+        BattleGrid grid = BattleManager.Instance?.Grid;
+        GridCell cell = grid?.GetCell(target.gridPosition);
         if (cell == null) return;
 
         switch (cell.tileType)
@@ -164,9 +208,6 @@ public static class AbilityResolver
                 break;
             case TileType.Ice:
                 target.ApplyStatus(new StatusEffect(StatusEffectType.Frozen, 2, 0.1f, source));
-                break;
-            case TileType.Holy:
-                // Holy tiles heal friendlies, burn undead — handled by damage type check above
                 break;
         }
     }

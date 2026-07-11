@@ -1,0 +1,116 @@
+﻿{
+    "provider":  "PixelLab",
+    "character_id":  "7a07c91f-65dc-4501-a80f-a154619092bc",
+    "creation_job_id":  "",
+    "seed":  12650710,
+    "view":  "high top-down",
+    "requested_frame_size":  {
+                                 "height":  128,
+                                 "width":  128
+                             },
+    "prompt":  "Common humanoid cultist and public doomsayer from late-medieval Florence, a mortal servant of Limbo. Full-body game character with a readable adult human silhouette. Soot-black hood and charcoal penitential robe over a patched brown quilted gambeson, dull iron half-mask hiding the upper face, narrow visible tired mouth, dried-blood red stitching and sash. Carries one distinctive iron-shod bell-hook staff: shepherd\u0027s hook polearm with a small cracked handbell hanging below the hook. Wears a counterfeit old-parchment reliquary at the chest containing a restrained dim violet sliver. Worn leather boots and gloves. Menacing but common low-level agitator, not an ornate priest, knight, wizard, or boss. Hard near-black pixel outline, crisp three-tone pixel clusters, muted palette of charcoal #29262b, soot brown #49372e, dull iron #697176, old parchment #c8b896, dried blood #7b3034, restrained violet #6d3f68, no gradients, no bloom. Keep the mask, robe, staff, cracked bell, and reliquary identical in every direction. Transparent background, no scenery, no text, no UI, no extra weapons, no modern details.",
+    "animations":  [
+                       {
+                           "key":  "walking",
+                           "animation_group_id":  "dfcbfcaa-f9c3-4947-9fca-3de7644818b4",
+                           "expected_frames_per_direction":  6,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "A cautious slow walk while carrying the bell-hook staff upright; robe hems shift subtly; complete seamless locomotion cycle; feet remain grounded.",
+                           "seed":  12650711
+                       },
+                       {
+                           "key":  "bell_hook_jab",
+                           "animation_group_id":  "ea628a84-f234-4ac2-a783-fb63277adf53",
+                           "expected_frames_per_direction":  9,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "A short adjacent jab with the iron-shod bell-hook staff, one controlled thrust and return to the exact starting guard; do not swing overhead.",
+                           "seed":  12650712
+                       },
+                       {
+                           "key":  "knell_of_dread",
+                           "animation_group_id":  "2944cf54-6f5e-487d-bd28-fe60fb2c0747",
+                           "expected_frames_per_direction":  9,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "Raise the cracked handbell on the hook, ring it once with a restrained violet pulse, then return to the exact starting stance; no large magic explosion.",
+                           "seed":  12650713
+                       },
+                       {
+                           "key":  "crooked_benediction",
+                           "animation_group_id":  "71fc0181-cef3-47df-abef-bd1a151e94f6",
+                           "expected_frames_per_direction":  9,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "Point the false reliquary and crooked staff toward an ally in a blasphemous blessing, a brief crooked halo gesture, then return to the exact starting stance.",
+                           "seed":  12650714
+                       },
+                       {
+                           "key":  "pilgrims_hook",
+                           "animation_group_id":  "6bd2b42f-36e4-4369-b9df-d8e64f47bce1",
+                           "expected_frames_per_direction":  9,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "Extend the hooked staff two steps forward, catch and pull backward one strong beat, then return to the exact starting stance; keep both hands on the same staff.",
+                           "seed":  12650715
+                       },
+                       {
+                           "key":  "hurt",
+                           "animation_group_id":  "d311bb03-39a3-4bf5-a495-fb5b257add8f",
+                           "expected_frames_per_direction":  4,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "A restrained hit reaction: recoil from one impact, robe and bell jolt, regain balance; no attack and no falling.",
+                           "seed":  12650716
+                       },
+                       {
+                           "key":  "death",
+                           "animation_group_id":  "1acad434-ce6b-4b24-aac2-ca94ae9df144",
+                           "expected_frames_per_direction":  9,
+                           "directions":  [
+                                              "south",
+                                              "east",
+                                              "north",
+                                              "west"
+                                          ],
+                           "action_prompt":  "A complete defeated fall: knees fail, bell-hook staff slips with the body, collapse onto the ground and remain still in the final frame; no gore and no recovery.",
+                           "seed":  12650717
+                       }
+                   ],
+    "support_art":  {
+                        "portrait_seed":  12650721,
+                        "icon_seeds":  {
+                                           "item_criers_jack":  12650725,
+                                           "status_dread":  12650722,
+                                           "status_false_zeal":  12650723,
+                                           "limbo_stain":  12650728,
+                                           "item_bell_hook_staff":  12650724,
+                                           "item_false_reliquary":  12650726
+                                       }
+                    }
+}

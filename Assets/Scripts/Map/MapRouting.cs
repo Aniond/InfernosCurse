@@ -69,6 +69,7 @@ public static class MapRouting
     // Same availability rule FastTravelMenu applies to its district list.
     public static bool IsUnlocked(HubNode node)
         => node != null
+        && node.IsDiscoveryVisible
         && !string.IsNullOrEmpty(node.sceneName)
         && Application.CanStreamedLevelBeLoaded(node.sceneName);
 
@@ -88,7 +89,7 @@ public static class MapRouting
     // place it connects to is visible.
     public static bool IsVisible(HubNode node)
     {
-        if (node == null) return false;
+        if (node == null || !node.IsDiscoveryVisible) return false;
         switch (node.kind)
         {
             case NodeKind.City:

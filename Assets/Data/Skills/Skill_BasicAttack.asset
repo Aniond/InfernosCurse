@@ -18,10 +18,16 @@ MonoBehaviour:
   skillType: 0
   damageType: 0
   isHealing: 0
+  targetSide: 0
+  centerOnCaster: 0
+  allowSelfTarget: 0
+  usesEquippedWeapon: 1
+  specialEffect: 0
   apCost: 0
   primaryStat: 0
   scalingMultiplier: 1
   basePower: 12
+  baseHit: 0.85
   minRange: 1
   range: 1
   areaOfEffect: 0
@@ -37,3 +43,6 @@ MonoBehaviour:
   maxLevel: 1
   refinable: 0
   holyVersion: {fileID: 0}
+  bonusStat: 7
+  bonusStatPerLevel: 1
+  insanityCost: 1

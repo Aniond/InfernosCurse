@@ -22,24 +22,27 @@ public static class BattleFormulas
     // AbsorbedSkillInstance.GetEffectivePower) for the definition's basePower.
     static float CalcDamageCore(BattleUnit attacker, BattleUnit defender, SkillDefinition skill, float powerOverride = -1f)
     {
-        var atkStats = attacker.Data.GetTotalStats();
-        var defStats = defender.Data.GetTotalStats();
+        var atkStats = attacker.GetEffectiveStats();
+        var defStats = defender.GetEffectiveStats();
+        DamageType damageType = GetEffectiveDamageType(attacker, skill);
 
         float power       = powerOverride >= 0f ? powerOverride : skill.basePower;
+        if (skill.usesEquippedWeapon && attacker.Data.weapon != null)
+            power += attacker.Data.weapon.attackPowerBonus;
         float scalingStat = GetScalingStat(atkStats, skill.primaryStat);
         float baseDmg     = power + scalingStat * skill.scalingMultiplier;
 
         // Defense reduction based on damage type
-        float defense = GetDefenseStat(defStats, skill.damageType);
+        float defense = GetDefenseStat(defStats, damageType);
 
         // Cursed: the target's spiritual guard is broken — magic defense suffers
-        if (!IsPhysical(skill.damageType) && defender.Status.Has(StatusEffectType.Cursed))
+        if (!IsPhysical(damageType) && defender.Status.Has(StatusEffectType.Cursed))
             defense *= 0.6f;
 
         float dmg = Mathf.Max(1f, baseDmg - defense * 0.5f);
 
         // Status effect reductions
-        if (IsPhysical(skill.damageType))
+        if (IsPhysical(damageType))
             dmg *= 1f - defender.Status.CombinedPhysicalReduction();
         else
             dmg *= 1f - defender.Status.CombinedMagicReduction();
@@ -48,12 +51,17 @@ public static class BattleFormulas
         if (attacker.Status.Has(StatusEffectType.Inspired))
             dmg *= 1.15f;
 
+        dmg *= attacker.Status.CombinedOutgoingDamageMultiplier();
+
         // Facing multiplier (FFT-style)
         dmg *= GetFacingMultiplier(attacker, defender);
 
         // Elevation bonus — attacker higher than defender
         int elevDiff = attacker.Elevation - defender.Elevation;
         if (elevDiff > 0) dmg *= 1f + elevDiff * 0.1f;
+
+        dmg *= defender.Data.GetDamageReceivedMultiplier(damageType);
+        dmg *= defender.Status.CombinedDamageReceivedMultiplier(damageType);
 
         return dmg;
     }
@@ -72,8 +80,8 @@ public static class BattleFormulas
     public static float PreviewHitChance(BattleUnit attacker, BattleUnit defender, SkillDefinition skill)
     {
         if (skill.damageType == DamageType.None) return 1f;  // utility path skips the roll
-        var atkStats = attacker.Data.GetTotalStats();
-        var defStats = defender.Data.GetTotalStats();
+        var atkStats = attacker.GetEffectiveStats();
+        var defStats = defender.GetEffectiveStats();
 
         float baseHit   = skill.baseHit;   // per-skill accuracy (David's hierarchy)
         float percBonus = (atkStats.perception - defStats.perception) * 0.02f;
@@ -87,7 +95,7 @@ public static class BattleFormulas
 
     public static int CalcHeal(BattleUnit healer, SkillDefinition skill, float powerOverride = -1f)
     {
-        var stats   = healer.Data.GetTotalStats();
+        var stats   = healer.GetEffectiveStats();
         float faith = stats.faith;
         float cre   = stats.creativity;
         float power = powerOverride >= 0f ? powerOverride : skill.basePower;
@@ -124,8 +132,8 @@ public static class BattleFormulas
     // CT gain per tick — Speed drives how quickly a unit reaches 100
     public static float CTGainPerTick(BattleUnit unit)
     {
-        var stats = unit.Data.GetTotalStats();
-        return stats.speed * unit.Status.CombinedSpeedMultiplier();
+        var stats = unit.GetEffectiveStats();
+        return stats.speed * unit.Status.CombinedSpeedMultiplier(unit);
     }
 
     // Charge ticks before a queued action fires
@@ -182,6 +190,14 @@ public static class BattleFormulas
 
     static bool IsPhysical(DamageType dt) =>
         dt == DamageType.Physical;
+
+    public static DamageType GetEffectiveDamageType(BattleUnit attacker, SkillDefinition skill)
+    {
+        if (skill == null) return DamageType.None;
+        if (skill.usesEquippedWeapon && attacker?.Data?.weapon != null)
+            return attacker.Data.weapon.damageType;
+        return skill.damageType;
+    }
 
     static float GetFacingMultiplier(BattleUnit attacker, BattleUnit defender)
     {

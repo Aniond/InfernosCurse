@@ -60,6 +60,13 @@ public class BattleUnit : MonoBehaviour
 
     public bool IsAlive => state != UnitState.Dead;
 
+    public CharacterStats GetEffectiveStats()
+    {
+        CharacterStats stats = Data.GetTotalStats();
+        stats.faith = Mathf.Max(0, stats.faith - Mathf.RoundToInt(Status.CombinedFaithPenalty()));
+        return stats;
+    }
+
     public void TakeDamage(int amount, DamageType type, BattleUnit source, bool isCrit = false)
     {
         if (!IsAlive) return;
@@ -75,6 +82,7 @@ public class BattleUnit : MonoBehaviour
 
         OnDamaged?.Invoke(amount, type, isCrit);
         if (Data.currentHP <= 0) Die();
+        else PlayHurtAnimation();
     }
 
     public void Heal(int amount)
@@ -110,6 +118,7 @@ public class BattleUnit : MonoBehaviour
 
     public void EndTurn()
     {
+        Status.EndTurn();
         ct = 0f;
         // A unit that just queued a charged action must KEEP its Charging state —
         // stomping it to Idle here silently killed every charged skill (the CT
@@ -123,6 +132,7 @@ public class BattleUnit : MonoBehaviour
 
     private Coroutine _walkRoutine;
     private Coroutine _skillRoutine;
+    private Coroutine _reactionRoutine;
     private SpriteRenderer _spriteRenderer;
 
     public void AnimateWalk(System.Collections.Generic.List<Vector2Int> path, BattleGrid grid)
@@ -163,7 +173,7 @@ public class BattleUnit : MonoBehaviour
                 if (_spriteRenderer != null && walkFrames != null && walkFrames.Length > 0)
                 {
                     frameClock += Time.deltaTime;
-                    float fps = Data != null ? Mathf.Max(1f, Data.battleWalkFps) : 10f;
+                    float fps = Data != null ? Mathf.Max(1f, Data.GetBattleWalkFps()) : 10f;
                     int frame = Mathf.FloorToInt(frameClock * fps) % walkFrames.Length;
                     if (walkFrames[frame] != null) _spriteRenderer.sprite = walkFrames[frame];
                 }
@@ -204,24 +214,24 @@ public class BattleUnit : MonoBehaviour
 
     public void PlaySkillAnimation(SkillDefinition skill)
     {
-        var animation = Data?.GetBattleSkillAnimation(skill);
-        if (animation == null) return;
+        var frames = Data?.GetBattleSkillFrames(skill, facing);
+        if (frames == null || frames.Length == 0) return;
 
         if (_skillRoutine != null) StopCoroutine(_skillRoutine);
-        _skillRoutine = StartCoroutine(SkillAnimationRoutine(animation));
+        _skillRoutine = StartCoroutine(SkillAnimationRoutine(skill));
     }
 
-    System.Collections.IEnumerator SkillAnimationRoutine(BattleSkillAnimation animation)
+    System.Collections.IEnumerator SkillAnimationRoutine(SkillDefinition skill)
     {
         // AI movement updates the grid immediately while the billboard catches
         // up visually. Finish that walk before this coroutine owns the sprite.
         while (_walkRoutine != null) yield return null;
 
         _spriteRenderer ??= GetComponentInChildren<SpriteRenderer>();
-        var frames = animation.GetFrames(facing);
+        var frames = Data?.GetBattleSkillFrames(skill, facing);
         if (_spriteRenderer != null && frames != null && frames.Length > 0)
         {
-            float delay = 1f / Mathf.Max(1f, animation.fps);
+            float delay = 1f / Mathf.Max(1f, Data.GetBattleSkillFps(skill));
             foreach (var frame in frames)
             {
                 if (frame != null) _spriteRenderer.sprite = frame;
@@ -229,8 +239,34 @@ public class BattleUnit : MonoBehaviour
             }
         }
 
-        ApplyIdleSprite();
+        if (IsAlive) ApplyIdleSprite();
         _skillRoutine = null;
+    }
+
+    void PlayHurtAnimation()
+    {
+        var frames = Data?.GetBattleHurtFrames(facing);
+        if (frames == null || frames.Length == 0) return;
+        if (_reactionRoutine != null) StopCoroutine(_reactionRoutine);
+        _reactionRoutine = StartCoroutine(ReactionRoutine(frames, Data.GetBattleHurtFps(), deactivateAfter: false));
+    }
+
+    System.Collections.IEnumerator ReactionRoutine(Sprite[] frames, float fps, bool deactivateAfter)
+    {
+        _spriteRenderer ??= GetComponentInChildren<SpriteRenderer>();
+        float delay = 1f / Mathf.Max(1f, fps);
+        if (_spriteRenderer != null)
+        {
+            foreach (var frame in frames)
+            {
+                if (frame != null) _spriteRenderer.sprite = frame;
+                yield return new WaitForSeconds(delay);
+            }
+        }
+
+        _reactionRoutine = null;
+        if (deactivateAfter) gameObject.SetActive(false);
+        else if (IsAlive) ApplyIdleSprite();
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -318,7 +354,17 @@ public class BattleUnit : MonoBehaviour
         ct    = 0f;
         OnDied?.Invoke();
         BattleManager.Instance?.Grid?.RemoveUnit(this);
-        gameObject.SetActive(false);
+
+        if (_walkRoutine != null) { StopCoroutine(_walkRoutine); _walkRoutine = null; }
+        if (_skillRoutine != null) { StopCoroutine(_skillRoutine); _skillRoutine = null; }
+        if (_reactionRoutine != null) StopCoroutine(_reactionRoutine);
+
+        var deathFrames = Data?.GetBattleDeathFrames(facing);
+        if (deathFrames != null && deathFrames.Length > 0)
+            _reactionRoutine = StartCoroutine(ReactionRoutine(
+                deathFrames, Data.GetBattleDeathFps(), deactivateAfter: true));
+        else
+            gameObject.SetActive(false);
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────

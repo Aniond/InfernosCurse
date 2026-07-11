@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59cc00b94e1df734f91162304df16aae, type: 3}
+  m_Name: Item_FalseReliquary
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentDefinition
+  itemName: False Reliquary
+  description: A counterfeit holy container holding a sliver of Limbo-corrupted material.
+  icon: {fileID: 21300000, guid: 5283575c1b4bc034c834cbc2da555437, type: 3}
+  slot: 2
+  bonuses:
+    characterName:
+    characterClass:
+    level: 0
+    hp: 0
+    hpMax: 0
+    sp: 0
+    spMax: 0
+    xp: 0
+    xpNext: 0
+    strength: 0
+    dexterity: 0
+    constitution: 0
+    creativity: 1
+    faith: 1
+    perception: 0
+    speed: 0
+  damageType: 0
+  attackPowerBonus: 0
+  damageReceivedModifiers:
+  - damageType: 4
+    percentage: 0.1
+  valueFlorins: 58

@@ -38,11 +38,23 @@ public static class GeminiClient
     // Fire a prompt; onDone(text) with the model's reply, onFail(reason) on
     // any error. Run via StartCoroutine from any MonoBehaviour.
     public static IEnumerator Generate(string prompt, Action<string> onDone, Action<string> onFail)
+        => GenerateInternal(prompt, false, onDone, onFail);
+
+    public static IEnumerator GenerateJson(string prompt, Action<string> onDone, Action<string> onFail)
+        => GenerateInternal(prompt, true, onDone, onFail);
+
+    static IEnumerator GenerateInternal(
+        string prompt,
+        bool requestJson,
+        Action<string> onDone,
+        Action<string> onFail)
     {
         if (!Available) { onFail?.Invoke("no api key"); yield break; }
 
         string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + _key;
-        string body = "{\"contents\":[{\"parts\":[{\"text\":\"" + Escape(prompt) + "\"}]}]}";
+        string body = "{\"contents\":[{\"parts\":[{\"text\":\"" + Escape(prompt) + "\"}]}]" +
+                      (requestJson ? ",\"generationConfig\":{\"responseMimeType\":\"application/json\"}" : "") +
+                      "}";
 
         using var req = new UnityWebRequest(url, "POST");
         req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));

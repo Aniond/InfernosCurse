@@ -75,11 +75,18 @@ public class BattleManager : MonoBehaviour
         Instance = this;
     }
 
+    void OnDestroy()
+    {
+        if (Grid != null) TemporaryTerrainService.RestoreAll(Grid);
+        if (Instance == this) Instance = null;
+    }
+
     // ── Battle start ──────────────────────────────────────────────────────────
 
     public void StartBattle(List<CombatantData> playerParty, List<CombatantData> enemyParty,
                             List<Vector2Int> playerSpawns, List<Vector2Int> enemySpawns)
     {
+        if (Grid != null) TemporaryTerrainService.RestoreAll(Grid);
         if (playerParty == null || enemyParty == null || playerSpawns == null || enemySpawns == null)
         {
             Debug.LogError("[BattleManager] StartBattle called with a null list.");
@@ -93,6 +100,10 @@ public class BattleManager : MonoBehaviour
 
         _allUnits.Clear(); _players.Clear(); _enemies.Clear();
         _ctQueue.Clear();
+
+        var terrainPresenter = GetComponent<TemporaryTerrainPresenter>();
+        if (terrainPresenter == null) terrainPresenter = gameObject.AddComponent<TemporaryTerrainPresenter>();
+        terrainPresenter.Initialize(Grid);
 
         Time.timeScale = 1f;
 
@@ -144,7 +155,12 @@ public class BattleManager : MonoBehaviour
         // sheet; specialized brains (CarrierAI/AnchorAI/InterpreterAI) can be
         // pre-attached to authored prefabs and are respected here.
         if (!isPlayer && go.GetComponent<EnemyAI>() == null)
-            go.AddComponent<EnemyAI>();
+        {
+            if (unit.Data != null && unit.Data.combatAIProfile == CombatAIProfile.LimboCrier)
+                go.AddComponent<LimboCrierAI>();
+            else
+                go.AddComponent<EnemyAI>();
+        }
 
         // per-unit battlefield sprite + tint from the SHEET (survives cloning —
         // the Rosekin must look like a rose monster, not a fourth Benidito)
@@ -280,7 +296,7 @@ public class BattleManager : MonoBehaviour
         {
             Debug.Log($"{unit.Data.displayName} can't act (stopped/frozen).");
             yield return new WaitForSeconds(0.35f);
-            unit.EndTurn();
+            FinalizeUnitTurn(unit);
             if (GameFeatures.CorruptionEnabled && CurseAutomata != null) CurseAutomata.Step(_worldState);
             if (!IsBattleOver()) SetState(BattleState.TickCT);
             yield break;
@@ -311,7 +327,7 @@ public class BattleManager : MonoBehaviour
                 yield return null;
         }
 
-        if (unit.IsAlive) unit.EndTurn();
+        if (unit.IsAlive) FinalizeUnitTurn(unit);
 
         // Step curse automata between turns
         if (GameFeatures.CorruptionEnabled && CurseAutomata != null)
@@ -379,9 +395,7 @@ public class BattleManager : MonoBehaviour
         // AoE stays free-aim: its splash is the point.
         if (_selectedSkill.areaOfEffect <= 0)
         {
-            bool legal = target != null && target.IsAlive &&
-                         (_selectedSkill.isHealing ? target.IsPlayer == _activeUnit.IsPlayer
-                                                   : target.IsPlayer != _activeUnit.IsPlayer);
+            bool legal = AbilityResolver.IsLegalTarget(_activeUnit, target, _selectedSkill);
             if (!legal) return;
         }
 
@@ -496,6 +510,22 @@ public class BattleManager : MonoBehaviour
         unit.SetFacingToward(unit.QueuedTargetPos);
         unit.PlaySkillAnimation(unit.QueuedSkill);
         AbilityResolver.Resolve(unit, unit.QueuedSkill, unit.QueuedTargetPos, unit.QueuedAbsorbedInstance);
+
+        if (!IsBattleOver() && unit.IsAlive && unit.Status.Has(StatusEffectType.FalseZeal))
+        {
+            BattleUnit stainSource = unit.Status.SourceOf(StatusEffectType.FalseZeal) ?? unit;
+            int durationTurns = Mathf.Max(1, _allUnits.FindAll(candidate => candidate.IsAlive).Count);
+            if (!TemporaryTerrainService.TryApplyLimboStain(
+                    Grid, unit.gridPosition, stainSource, durationTurns,
+                    out TemporaryTerrainFailure terrainFailure) &&
+                terrainFailure != TemporaryTerrainFailure.ProtectedTerrain &&
+                terrainFailure != TemporaryTerrainFailure.Objective &&
+                terrainFailure != TemporaryTerrainFailure.StrongerAuthoredCorruption)
+            {
+                Debug.LogWarning($"[TemporaryTerrain] Limbo Stain was suppressed at {unit.gridPosition}: {terrainFailure}.");
+            }
+        }
+
         unit.QueuedSkill             = null;
         unit.QueuedTarget            = null;
         unit.QueuedAbsorbedInstance  = null;
@@ -537,6 +567,14 @@ public class BattleManager : MonoBehaviour
             SetState(BattleState.TickCT);
     }
 
+    void FinalizeUnitTurn(BattleUnit unit)
+    {
+        if (unit == null) return;
+        if (unit.IsAlive) unit.EndTurn();
+        if (unit.IsAlive) TemporaryTerrainService.ResolveEndTurn(Grid, unit);
+        TemporaryTerrainService.TickTurn(Grid);
+    }
+
     void HandleUnitDeath(BattleUnit unit)
     {
         _ctQueue.Unregister(unit);
@@ -544,6 +582,7 @@ public class BattleManager : MonoBehaviour
 
         if (!_enemies.Exists(u => u.IsAlive))
         {
+            TemporaryTerrainService.RestoreAll(Grid);
             SetState(BattleState.BattleVictory);
             OnVictory?.Invoke();
             return;
@@ -551,6 +590,7 @@ public class BattleManager : MonoBehaviour
 
         if (!_players.Exists(u => u.IsAlive))
         {
+            TemporaryTerrainService.RestoreAll(Grid);
             SetState(BattleState.BattleDefeat);
             OnDefeat?.Invoke();
         }
@@ -609,8 +649,7 @@ public class BattleManager : MonoBehaviour
         {
             var occ = c.occupant;
             if (occ == null || !occ.IsAlive) continue;
-            if (skill.isHealing) { if (occ.IsPlayer == user.IsPlayer) return true; }
-            else if (occ.IsPlayer != user.IsPlayer) return true;
+            if (AbilityResolver.IsLegalTarget(user, occ, skill)) return true;
         }
         return false;
     }

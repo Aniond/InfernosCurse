@@ -10,6 +10,8 @@ public class BattleTerrainHeights : MonoBehaviour
 {
     public int width;
     public int height;
+    [Tooltip("World-space XZ coordinate of sample (0,0). Matches BattleMapAuthoring.worldOriginXZ.")]
+    public Vector2 worldOriginXZ = Vector2.zero;
     [Tooltip("Surface Y at each cell center, index = x + y * width")]
     public float[] cellY;
 
@@ -31,8 +33,8 @@ public class BattleTerrainHeights : MonoBehaviour
     {
         if (surfY == null || surfY.Length == 0) return 0f;
         int nx = width * res + 1;
-        float gx = Mathf.Clamp(wx, 0f, width) * res;
-        float gz = Mathf.Clamp(wz, 0f, height) * res;
+        float gx = Mathf.Clamp(wx - worldOriginXZ.x, 0f, width) * res;
+        float gz = Mathf.Clamp(wz - worldOriginXZ.y, 0f, height) * res;
         int x0 = Mathf.Min((int)gx, width * res - 1);
         int z0 = Mathf.Min((int)gz, height * res - 1);
         float fx = gx - x0, fz = gz - z0;

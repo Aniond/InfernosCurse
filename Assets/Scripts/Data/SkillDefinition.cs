@@ -4,6 +4,20 @@ public enum SkillType { Active, Passive, Reaction, Movement }
 public enum DamageType { Physical, Fire, Ice, Lightning, Holy, Dark, Poison, None }
 public enum StatScaling { Strength, Dexterity, Constitution, Creativity, Faith, Perception, Speed, None }
 
+// Automatic preserves every legacy skill: heals target allies, everything else
+// targets hostiles. New utility skills can opt into an explicit side.
+public enum SkillTargetSide { Automatic, Hostile, Allied }
+
+// Narrow, append-only hooks for effects that cannot be represented by ordinary
+// damage/status fields. This is deliberately not a general scripting language.
+public enum SkillSpecialEffect
+{
+    None,
+    PullTargetTowardCaster,
+    RemoveDread,
+    PullAllyTowardCasterAndProtect,
+}
+
 [CreateAssetMenu(fileName = "Skill_New", menuName = "InfernosCurse/Skill Definition")]
 public class SkillDefinition : ScriptableObject
 {
@@ -19,6 +33,18 @@ public class SkillDefinition : ScriptableObject
              "skill with damageType None is treated as a non-damaging utility/buff " +
              "rather than a heal.")]
     public bool isHealing = false;
+
+    [Header("Targeting")]
+    public SkillTargetSide targetSide = SkillTargetSide.Automatic;
+    [Tooltip("Centers the area on the caster regardless of the selected cell.")]
+    public bool centerOnCaster;
+    [Tooltip("Allows the caster to be included when the resolved target side is Allied.")]
+    public bool allowSelfTarget;
+
+    [Header("Weapon & Special Effect")]
+    [Tooltip("Uses the equipped weapon's damage type and attack-power bonus.")]
+    public bool usesEquippedWeapon;
+    public SkillSpecialEffect specialEffect = SkillSpecialEffect.None;
 
     [Header("AP Cost")]
     public int apCost = 100;
@@ -54,9 +80,8 @@ public class SkillDefinition : ScriptableObject
     public StatusEffectType statusType;
     [Tooltip("Duration in target-turns (status ticks on the afflicted unit's turn start).")]
     public int statusDuration = 3;
-    [Tooltip("DoT fraction (0-1 of HP per tick) for Poison/Burn/Regen, or reduction " +
-             "amount (0-1) for Blind/Protect/Shell.")]
-    [Range(0f, 1f)] public float statusMagnitude = 0.05f;
+    [Tooltip("Effect magnitude. Usually a 0-1 fraction; Dread stores its flat Faith penalty.")]
+    [Min(0f)] public float statusMagnitude = 0.05f;
     [Tooltip("Chance (0-1) the status procs on a successful hit.")]
     [Range(0f, 1f)] public float statusChance = 1f;
 

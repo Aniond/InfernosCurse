@@ -10,6 +10,8 @@ public class BattleGrid : MonoBehaviour
     [Header("Tile Size (world units)")]
     public float tileWidth  = 1f;
     public float tileHeight = 0.5f;
+    [Tooltip("World-space XZ coordinate of the 3D grid's southwest corner. Legacy isometric maps ignore this.")]
+    public Vector2 worldOriginXZ = Vector2.zero;
 
     [Header("Jump Tolerance")]
     [Tooltip("Max elevation difference a unit can move across without Jump stat.")]
@@ -78,9 +80,9 @@ public class BattleGrid : MonoBehaviour
         {
             // XZ grid, cell centers at +0.5; Y from the baked mesh surface
             // (already includes plateau elevation and micro-relief).
-            return new Vector3((gridPos.x + 0.5f) * tileWidth,
+            return new Vector3(worldOriginXZ.x + (gridPos.x + 0.5f) * tileWidth,
                                t.HeightAt(gridPos),
-                               (gridPos.y + 0.5f) * tileWidth);
+                               worldOriginXZ.y + (gridPos.y + 0.5f) * tileWidth);
         }
         float wx = (gridPos.x - gridPos.y) * tileWidth  * 0.5f;
         float wy = (gridPos.x + gridPos.y) * tileHeight * 0.5f + elevation * tileHeight * 0.5f;
@@ -89,6 +91,11 @@ public class BattleGrid : MonoBehaviour
 
     public Vector2Int WorldToGrid(Vector3 worldPos)
     {
+        if (TerrainHeights != null)
+            return new Vector2Int(
+                Mathf.FloorToInt((worldPos.x - worldOriginXZ.x) / tileWidth),
+                Mathf.FloorToInt((worldPos.z - worldOriginXZ.y) / tileWidth));
+
         float gx = (worldPos.x / (tileWidth * 0.5f) + worldPos.y / (tileHeight * 0.5f)) * 0.5f;
         float gy = (worldPos.y / (tileHeight * 0.5f) - worldPos.x / (tileWidth * 0.5f)) * 0.5f;
         return new Vector2Int(Mathf.RoundToInt(gx), Mathf.RoundToInt(gy));

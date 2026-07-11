@@ -134,7 +134,7 @@ public class FastTravelMenu : MonoBehaviour
             {
                 if (node == null || string.IsNullOrEmpty(node.sceneName)) continue;
                 if (node.sceneName == currentScene) continue;          // already here
-                if (!Application.CanStreamedLevelBeLoaded(node.sceneName)) continue; // not built yet
+                if (!MapRouting.IsUnlocked(node)) continue;
 
                 if (!headerAdded) { AddHeader("Districts"); headerAdded = true; }
                 var captured = node;

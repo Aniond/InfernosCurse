@@ -1,0 +1,321 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 135688e8328337a45b8a1fcc4cf0d9ea, type: 3}
+  m_Name: HumanoidVisual_LimboCrier
+  m_EditorClassIdentifier: Assembly-CSharp::HumanoidBattleVisualProfile
+  south: {fileID: 21300000, guid: 703c580814b3cb34998f93041106cdc3, type: 3}
+  southEast: {fileID: 21300000, guid: d3b0adae009623649a87bd101b135057, type: 3}
+  east: {fileID: 21300000, guid: 002b03ac2917243409746ac742ae64ff, type: 3}
+  northEast: {fileID: 21300000, guid: bb6fc306da82cdf4fac04b057c391611, type: 3}
+  north: {fileID: 21300000, guid: ad4e902154c33ca409a83838ef61afbb, type: 3}
+  northWest: {fileID: 21300000, guid: 1266f0afe6c1777498705cd6f08e05e3, type: 3}
+  west: {fileID: 21300000, guid: 3d26f8c2a57fb8e4fbfc38ac50da4582, type: 3}
+  southWest: {fileID: 21300000, guid: 71f272f75e19ab0448e40da3f297c8e0, type: 3}
+  walk:
+    south:
+    - {fileID: 21300000, guid: 7cd8e1e1f4a2c184d9cdc0e731b2ba1d, type: 3}
+    - {fileID: 21300000, guid: cc2d2a9963a7b534784f08e4aeafaf62, type: 3}
+    - {fileID: 21300000, guid: bdef97752be78ff4489b0de279e39de1, type: 3}
+    - {fileID: 21300000, guid: c77b0afa4807f644a9bb6b7549b0f475, type: 3}
+    - {fileID: 21300000, guid: db9b8a3b19f24d149ac66c11c199b633, type: 3}
+    - {fileID: 21300000, guid: 357ddb69a0d9d744f98664458e84bd0a, type: 3}
+    east:
+    - {fileID: 21300000, guid: f0c5e5d3116fff249af3327f96a08726, type: 3}
+    - {fileID: 21300000, guid: d3777f0c602cd254aa7834336949a748, type: 3}
+    - {fileID: 21300000, guid: eefddfd427700a24391884dc33e38880, type: 3}
+    - {fileID: 21300000, guid: 2f5304154f6dca84d97f7852859f72f3, type: 3}
+    - {fileID: 21300000, guid: 3a92481065af7c345a1a25db705d0cd0, type: 3}
+    - {fileID: 21300000, guid: d6970910f5eb8a1458d8d789987ff981, type: 3}
+    north:
+    - {fileID: 21300000, guid: 8e98e9bd143b10c458cb30cae8b955cf, type: 3}
+    - {fileID: 21300000, guid: c4117d95bccb8f64ab0a3fd7db6c705e, type: 3}
+    - {fileID: 21300000, guid: d3d124369134f8746823c3372dd1930c, type: 3}
+    - {fileID: 21300000, guid: ff8030099ec20504290a78fe50896768, type: 3}
+    - {fileID: 21300000, guid: f8300fd79e6efe744a3db8ec4ec47db3, type: 3}
+    - {fileID: 21300000, guid: c2e3d40452d19504fbaab4516bc70e1a, type: 3}
+    west:
+    - {fileID: 21300000, guid: 8a412d343a928c442bd57dfd312da8c8, type: 3}
+    - {fileID: 21300000, guid: 1eb4f468949395c4a9651f8552573502, type: 3}
+    - {fileID: 21300000, guid: 8f7a95d7e3380a448926662ffaa23d47, type: 3}
+    - {fileID: 21300000, guid: 15dd1ef641d7d6948b073aa9a4c85b11, type: 3}
+    - {fileID: 21300000, guid: 181b0637d10eb4e4e926ea95d1971c94, type: 3}
+    - {fileID: 21300000, guid: d42617ebc29d01d4f8735831880af788, type: 3}
+    fps: 10
+    expectedFramesPerDirection: 6
+  hurt:
+    south:
+    - {fileID: 21300000, guid: 7f6d88d12f5e56e4b8f903e21d046585, type: 3}
+    - {fileID: 21300000, guid: beef73464315838448571f78146bb1aa, type: 3}
+    - {fileID: 21300000, guid: 304c1126f09007347ba391debe22014f, type: 3}
+    - {fileID: 21300000, guid: 4da2ca16ced0edb4bac0cf106575aaf0, type: 3}
+    east:
+    - {fileID: 21300000, guid: fc624e51c9512de44a4e2c0d7b2d3cf9, type: 3}
+    - {fileID: 21300000, guid: ab48929abc7b20e4582e762fac74a12f, type: 3}
+    - {fileID: 21300000, guid: abcdf3ccebd1c494587bc54ca566ba9b, type: 3}
+    - {fileID: 21300000, guid: 4f89a68d1ea59e642a44ad38e5370f4c, type: 3}
+    north:
+    - {fileID: 21300000, guid: 2d788c8fbe241db47843beb67fc42f94, type: 3}
+    - {fileID: 21300000, guid: 94cf9ca403fc90448b70cab3c7e4211c, type: 3}
+    - {fileID: 21300000, guid: 169f5a4ea2ddde84790409e23ff85bf7, type: 3}
+    - {fileID: 21300000, guid: 68e9bfcbad7e8904db1c5cb0ac2c33f4, type: 3}
+    west:
+    - {fileID: 21300000, guid: a14ebc4ef5618034dbfcbe3f698820ff, type: 3}
+    - {fileID: 21300000, guid: 7e8ade1e9b473944b8856f31906c26a0, type: 3}
+    - {fileID: 21300000, guid: 21fa2fef18ead9648b3992572dba7822, type: 3}
+    - {fileID: 21300000, guid: 0c06793b0b101f34ca11cae1420e2dfc, type: 3}
+    fps: 12
+    expectedFramesPerDirection: 4
+  death:
+    south:
+    - {fileID: 21300000, guid: 559478ee954fdb84a83b46230ed20534, type: 3}
+    - {fileID: 21300000, guid: df291a26f268b844f8823190d8b0b838, type: 3}
+    - {fileID: 21300000, guid: d308b605ef86ea4478e5df0123d7639e, type: 3}
+    - {fileID: 21300000, guid: 48f31bf9256a0ad449f95828ed348eb9, type: 3}
+    - {fileID: 21300000, guid: 779466ee8f8e70742bbf52ddb99d1565, type: 3}
+    - {fileID: 21300000, guid: d0cfe099c6ca64b44afaef659470f33f, type: 3}
+    - {fileID: 21300000, guid: 30c7b5a904ff8ef4f82fda32b813343c, type: 3}
+    - {fileID: 21300000, guid: 37b786b026bde1143bc9613109308edd, type: 3}
+    - {fileID: 21300000, guid: 5d11ffcf7a41e7048873b151e45a85da, type: 3}
+    east:
+    - {fileID: 21300000, guid: 7dca22c684a618e49a203402edf424cd, type: 3}
+    - {fileID: 21300000, guid: 53773e73205c3934c8d2eed80d94ee7c, type: 3}
+    - {fileID: 21300000, guid: 14c26ab370f336d4ab5350567f28a697, type: 3}
+    - {fileID: 21300000, guid: 4105ee34ad4de3a4e92b16a31c1acb93, type: 3}
+    - {fileID: 21300000, guid: 5387ee7b1d7f23c43813ddb517b81b68, type: 3}
+    - {fileID: 21300000, guid: 2d20f2fb01754be4dbff5b31acffd438, type: 3}
+    - {fileID: 21300000, guid: 4849f9d5d8cf9544f8a37bc3c9948e0e, type: 3}
+    - {fileID: 21300000, guid: c39d5b8112ebc9347af9065c8775aac2, type: 3}
+    - {fileID: 21300000, guid: f8240b4592ba8cf418e09dbbd85ae1ef, type: 3}
+    north:
+    - {fileID: 21300000, guid: b961a83fdb416404e90fd6891fd18e8b, type: 3}
+    - {fileID: 21300000, guid: 1390e4306eeeb004f95b99894b499800, type: 3}
+    - {fileID: 21300000, guid: 95336125a0838a64a97e5776c5c6bbe7, type: 3}
+    - {fileID: 21300000, guid: a962fb0676d4e2d49a85cd8e1ddf0134, type: 3}
+    - {fileID: 21300000, guid: 71b63a62a3560d24b9533d2b8b88cb1c, type: 3}
+    - {fileID: 21300000, guid: e422f588c2e6e8242a5694452aa28723, type: 3}
+    - {fileID: 21300000, guid: de90754e500d0a44096925fe93028377, type: 3}
+    - {fileID: 21300000, guid: b6bd181d0d524054dae95827e6b9dacb, type: 3}
+    - {fileID: 21300000, guid: 076f41c4e5de3754a9c5efc41fee1966, type: 3}
+    west:
+    - {fileID: 21300000, guid: c5bd805d0fc32a745b66d14eba536e4f, type: 3}
+    - {fileID: 21300000, guid: f2c36973170172543996908d4594c5ab, type: 3}
+    - {fileID: 21300000, guid: 81b031fa82092444da852d112d20d2dc, type: 3}
+    - {fileID: 21300000, guid: 4fc0c5c0340bb7342ba8e83b2a207b9c, type: 3}
+    - {fileID: 21300000, guid: 8093035a16ed47c418d4bd4908d68ac5, type: 3}
+    - {fileID: 21300000, guid: e93f2ba5188f31c4b9e8de1ccf6cf350, type: 3}
+    - {fileID: 21300000, guid: f4bb0dc690b67444b8a62e786665fb40, type: 3}
+    - {fileID: 21300000, guid: 794d80e6e359de8489462427f829b14f, type: 3}
+    - {fileID: 21300000, guid: 8182b0aa53c61114fb13fba7e62fd82f, type: 3}
+    fps: 12
+    expectedFramesPerDirection: 9
+  skills:
+  - skill: {fileID: 11400000, guid: 6cc386f43e3678343b6cedd88a4d8236, type: 2}
+    sequence:
+      south:
+      - {fileID: 21300000, guid: ce1b9157acf56d3468718a6f116ed604, type: 3}
+      - {fileID: 21300000, guid: 8fa972519e22e2042872d268bbf889db, type: 3}
+      - {fileID: 21300000, guid: 750ba7486e6c70443890366cdbbd6510, type: 3}
+      - {fileID: 21300000, guid: a72403a4c87497a4aaaa6f45ef484ce2, type: 3}
+      - {fileID: 21300000, guid: afe1eaccdbd79254bb2e16ae33cf424c, type: 3}
+      - {fileID: 21300000, guid: 3888f1e037ca25c4f90ff24c9e71ebdd, type: 3}
+      - {fileID: 21300000, guid: aebbf02d63ca15e4084dd19abc0085d3, type: 3}
+      - {fileID: 21300000, guid: 92a69fdf9f64d124a87dcedf708c8491, type: 3}
+      - {fileID: 21300000, guid: cdf8f48d10f34c14daa66584c0424123, type: 3}
+      east:
+      - {fileID: 21300000, guid: 9d173831d5708ad4e9c0a2405a733b42, type: 3}
+      - {fileID: 21300000, guid: d16fa33c947d2f143a79ebae6093319b, type: 3}
+      - {fileID: 21300000, guid: b341ac533dd7ecb4c868066f63b7737e, type: 3}
+      - {fileID: 21300000, guid: 566935f6a12cf34429aaa21caddb8eb6, type: 3}
+      - {fileID: 21300000, guid: 459e4ca97cf63cc4b8b6b34c986f6ea8, type: 3}
+      - {fileID: 21300000, guid: dc072670748e38c4ebb61078aa22a7d4, type: 3}
+      - {fileID: 21300000, guid: b8f4eb407bd5fa3498f0eb910750f6c2, type: 3}
+      - {fileID: 21300000, guid: d130fa611ac904a4089b34f97c3397f0, type: 3}
+      - {fileID: 21300000, guid: 5d83442d0782cd645b0f18465a5bcde3, type: 3}
+      north:
+      - {fileID: 21300000, guid: ef88bcdb562e0714e8ee2d459278d08d, type: 3}
+      - {fileID: 21300000, guid: e28f0bd56e3311d4189729aba1886f0a, type: 3}
+      - {fileID: 21300000, guid: 5405626d6f4e92d4d91c080d5a84aa47, type: 3}
+      - {fileID: 21300000, guid: 7d752cbc1e7dbd744a24a26b1231db51, type: 3}
+      - {fileID: 21300000, guid: 0b2c2cd535e94724aa1cec9b7789a0c0, type: 3}
+      - {fileID: 21300000, guid: af89cc482d8093c468da1aa725398f85, type: 3}
+      - {fileID: 21300000, guid: cf14e792cf5db734fa10f4460512d961, type: 3}
+      - {fileID: 21300000, guid: 424889a84eadc5047be8b76f18167acc, type: 3}
+      - {fileID: 21300000, guid: dc2aa80f6a2fb2e4180dc98138c05899, type: 3}
+      west:
+      - {fileID: 21300000, guid: 89761127bf11b784dac86b483fb306e2, type: 3}
+      - {fileID: 21300000, guid: 893770dc6edd2a6408f198a069e495d8, type: 3}
+      - {fileID: 21300000, guid: f42ae2697fb3abd4f95ccea30d22c41c, type: 3}
+      - {fileID: 21300000, guid: 6269e57060d0fb647ae322dfcef0fc5a, type: 3}
+      - {fileID: 21300000, guid: 493dd6ec33e8f9946bdf38d5dde0b06b, type: 3}
+      - {fileID: 21300000, guid: c9c0e254d7733eb47b799528ce387c21, type: 3}
+      - {fileID: 21300000, guid: c3561c42ddb96a84d95351c0d263a466, type: 3}
+      - {fileID: 21300000, guid: 0629d3101ae307848b6de39d6cdbe1e4, type: 3}
+      - {fileID: 21300000, guid: a28d6ecd4194a784d87f80ce6e1546e2, type: 3}
+      fps: 12
+      expectedFramesPerDirection: 9
+    sourceAnimationGroupId: ea628a84-f234-4ac2-a783-fb63277adf53
+    generationPrompt: A short adjacent jab with the iron-shod bell-hook staff, one
+      controlled thrust and return to the exact starting guard; do not swing overhead.
+  - skill: {fileID: 11400000, guid: 2d3888b0f09661f4c863f16136edffff, type: 2}
+    sequence:
+      south:
+      - {fileID: 21300000, guid: 5071ede411adcd04f9bdd137bf9e73be, type: 3}
+      - {fileID: 21300000, guid: 99ce78936975e8e4f8ef80cd2d5a142b, type: 3}
+      - {fileID: 21300000, guid: d5dbe162c81443f4a979ef58860ef0d3, type: 3}
+      - {fileID: 21300000, guid: 0d89ed2fbed1cc840bfa327267587427, type: 3}
+      - {fileID: 21300000, guid: c141eb2dc85476f419d56303ea489117, type: 3}
+      - {fileID: 21300000, guid: ad1f8173ff551834887134fa206c76fd, type: 3}
+      - {fileID: 21300000, guid: 3057f8ea18ee716438ff1fa1828126a0, type: 3}
+      - {fileID: 21300000, guid: 002673a0d420e694e86960dba6b8629d, type: 3}
+      - {fileID: 21300000, guid: 6d31812332134d34e9ee60e9d70a4285, type: 3}
+      east:
+      - {fileID: 21300000, guid: ddf7d601a40e8754ba7a97e8a1a258f2, type: 3}
+      - {fileID: 21300000, guid: ab28a853a60f29e4ab7a807f77d75ee8, type: 3}
+      - {fileID: 21300000, guid: b7b2c261a3296864d830321186b87c8a, type: 3}
+      - {fileID: 21300000, guid: 2485ad8c71b4944419df907bf0d99b89, type: 3}
+      - {fileID: 21300000, guid: 4164147450049574dbe9b046564242d5, type: 3}
+      - {fileID: 21300000, guid: a6bb31db37aacb94183b8f57113d87c5, type: 3}
+      - {fileID: 21300000, guid: 62a1e6640b30e1247adeb86da51b4fd5, type: 3}
+      - {fileID: 21300000, guid: 645ad64b9df32b148b26c8a7b0188391, type: 3}
+      - {fileID: 21300000, guid: 8c061d288992e7d44a443bbfafa7ccec, type: 3}
+      north:
+      - {fileID: 21300000, guid: 43ee778f8d6645d45ac611b4c4c18372, type: 3}
+      - {fileID: 21300000, guid: 9a61fe9d3ea73144c9ff15e7203bfdda, type: 3}
+      - {fileID: 21300000, guid: b8e2695c5dea2ec4d89d35f1401eb808, type: 3}
+      - {fileID: 21300000, guid: 5885cc043639a5b4e97e3b29e081c0bb, type: 3}
+      - {fileID: 21300000, guid: ca75a25d0410ba845940a2928a01bcdc, type: 3}
+      - {fileID: 21300000, guid: b6346a805b8388c47b01e0bb2f420d1d, type: 3}
+      - {fileID: 21300000, guid: d56d241bb5c62c94fb0d1091f525e3ab, type: 3}
+      - {fileID: 21300000, guid: cf25bd819d342fe42ab5b16046c7b845, type: 3}
+      - {fileID: 21300000, guid: 030a83367ed0ab84d91eb2b34853b229, type: 3}
+      west:
+      - {fileID: 21300000, guid: f9c58fb6dc702ff45bd4f4b40da8bdbf, type: 3}
+      - {fileID: 21300000, guid: 0fe2c6f61788ff7448764f64a7cb917c, type: 3}
+      - {fileID: 21300000, guid: 9f48a21a97a2f3f49b534f0b53092013, type: 3}
+      - {fileID: 21300000, guid: fda56f3bad141cf4081b966d4f54e26b, type: 3}
+      - {fileID: 21300000, guid: 45de6be3c4fc8384abc1042957d1559d, type: 3}
+      - {fileID: 21300000, guid: 975a57d3c25030f4ba7aafb1b27bb625, type: 3}
+      - {fileID: 21300000, guid: 975d4bfdd98898244821103269cb6ec4, type: 3}
+      - {fileID: 21300000, guid: b90002447d0b33c4c905a932852f1e67, type: 3}
+      - {fileID: 21300000, guid: 4cd35b2ac6224fb45898a2541f421562, type: 3}
+      fps: 12
+      expectedFramesPerDirection: 9
+    sourceAnimationGroupId: 2944cf54-6f5e-487d-bd28-fe60fb2c0747
+    generationPrompt: Raise the cracked handbell on the hook, ring it once with a
+      restrained violet pulse, then return to the exact starting stance; no large
+      magic explosion.
+  - skill: {fileID: 11400000, guid: 7441df738611891409255629ba9acf99, type: 2}
+    sequence:
+      south:
+      - {fileID: 21300000, guid: 119dffca51f19864183737e3c58b1212, type: 3}
+      - {fileID: 21300000, guid: 2b1ae5c827a518a449fcc5e3ac9408d5, type: 3}
+      - {fileID: 21300000, guid: 6b3207b5dbe97e249bb7bd249511f39d, type: 3}
+      - {fileID: 21300000, guid: 4c0ab60e0b36ee3458665b6e136f923a, type: 3}
+      - {fileID: 21300000, guid: 662040d815f97524eab934586b17b813, type: 3}
+      - {fileID: 21300000, guid: 8efee4eecd328b14f8ff9abb665b2d07, type: 3}
+      - {fileID: 21300000, guid: ee0b4f4213813634c83e5d1900dbfc44, type: 3}
+      - {fileID: 21300000, guid: 67e0e36ef49f15940b9eb9c78bd589e6, type: 3}
+      - {fileID: 21300000, guid: 2d1c3f193f427d34cbde27f0bd92177d, type: 3}
+      east:
+      - {fileID: 21300000, guid: 1fe04392c9570854d9aae8f10e3e4723, type: 3}
+      - {fileID: 21300000, guid: f654470d7ab5e5a4581ff6a67b32abf3, type: 3}
+      - {fileID: 21300000, guid: 0c833cae9b5bb304099317d043616bdc, type: 3}
+      - {fileID: 21300000, guid: 4b078f199a2cf804c9f4dff6d975dad5, type: 3}
+      - {fileID: 21300000, guid: 7354d3f23ed7e7943aa574a6025f5810, type: 3}
+      - {fileID: 21300000, guid: 153f9949f23d27844b9029803e6f8330, type: 3}
+      - {fileID: 21300000, guid: fa62a358cadf0c8438e10af9654642b5, type: 3}
+      - {fileID: 21300000, guid: cdba6103a316af54492e40b68353babd, type: 3}
+      - {fileID: 21300000, guid: 7715ce5f84a96ce4cab2d2c0a34e214c, type: 3}
+      north:
+      - {fileID: 21300000, guid: 5df6ea465401e434ea33fc54a68be945, type: 3}
+      - {fileID: 21300000, guid: 2c235c617960ccc4a8572626297edb9a, type: 3}
+      - {fileID: 21300000, guid: 09094ec4d9fa8a94788ce25b3db1f8e9, type: 3}
+      - {fileID: 21300000, guid: 9c437b6dd21de0944a04e5d9a19460e0, type: 3}
+      - {fileID: 21300000, guid: ac9595facd9733e4aa83d6f46f9a6ca2, type: 3}
+      - {fileID: 21300000, guid: 07fe27dd8f15f644eb524d2b5fa38ad6, type: 3}
+      - {fileID: 21300000, guid: 18e9556be0ef7294ca799c1ea1c3b664, type: 3}
+      - {fileID: 21300000, guid: 8f4cc83694ed5c34b8a3c47c45306d7a, type: 3}
+      - {fileID: 21300000, guid: af81dc2dd8b2f504797505777de3629b, type: 3}
+      west:
+      - {fileID: 21300000, guid: f8703e45208121b43ba16e72e6d1163c, type: 3}
+      - {fileID: 21300000, guid: 58c6b38723f1aa44fafc46c91cd0473e, type: 3}
+      - {fileID: 21300000, guid: 56b18f61ee6bcb64f8926dae8a569333, type: 3}
+      - {fileID: 21300000, guid: 873771189aaa9a942b89c0961f120c1f, type: 3}
+      - {fileID: 21300000, guid: f39b46a9eaa6cf640a2c051c1f1c0b57, type: 3}
+      - {fileID: 21300000, guid: 205e9bd9dfbb9a8498c571f7fc007485, type: 3}
+      - {fileID: 21300000, guid: 3f2f9ea3f6de0c74c85c326a985bead6, type: 3}
+      - {fileID: 21300000, guid: 17e0ed5c5d95b4e49b0e77ce1118ffba, type: 3}
+      - {fileID: 21300000, guid: a82038cdaeb6f704e8bba08ff3f92231, type: 3}
+      fps: 12
+      expectedFramesPerDirection: 9
+    sourceAnimationGroupId: 71fc0181-cef3-47df-abef-bd1a151e94f6
+    generationPrompt: Point the false reliquary and crooked staff toward an ally
+      in a blasphemous blessing, a brief crooked halo gesture, then return to the
+      exact starting stance.
+  - skill: {fileID: 11400000, guid: e3d5ce5e9efcfe849bdeed67fa63b811, type: 2}
+    sequence:
+      south:
+      - {fileID: 21300000, guid: 7db5e90651c95e84a8e27df7b013bbcd, type: 3}
+      - {fileID: 21300000, guid: 57ef67da94c8b9f4b9e9b4df216f7f45, type: 3}
+      - {fileID: 21300000, guid: d38e0d5803b98494ea701754ba8f6fce, type: 3}
+      - {fileID: 21300000, guid: 932cf8c1a21122d43b1debe103a16fb0, type: 3}
+      - {fileID: 21300000, guid: 262d9a602e152c74d855ad8de9bf7d8b, type: 3}
+      - {fileID: 21300000, guid: d3674ddfdcfbb694a80d9ad30271f61f, type: 3}
+      - {fileID: 21300000, guid: dad170c57a13731428788b9d7edc1f94, type: 3}
+      - {fileID: 21300000, guid: ed00e46b479050f4e95a1e7713807f26, type: 3}
+      - {fileID: 21300000, guid: 9cd434f5fb95fb945904321369011045, type: 3}
+      east:
+      - {fileID: 21300000, guid: 47b8523d4cb78804dba28ec722049921, type: 3}
+      - {fileID: 21300000, guid: 25c741e4c3b4b1a409658d5ec4744ff0, type: 3}
+      - {fileID: 21300000, guid: f72d7528c40857044b256e11755b6cf8, type: 3}
+      - {fileID: 21300000, guid: e12b62cee9b7afc44b797ad390f193af, type: 3}
+      - {fileID: 21300000, guid: 4cff39f2043e9114cac218167288cf80, type: 3}
+      - {fileID: 21300000, guid: 2c5f698d20eefce40a848cae357a6c73, type: 3}
+      - {fileID: 21300000, guid: a4178137a528b9641bd288e4520e3e0e, type: 3}
+      - {fileID: 21300000, guid: ecd67db5b603d344ab3418ed84cf458a, type: 3}
+      - {fileID: 21300000, guid: ff214bbf048f5a244909cd9c93d6984c, type: 3}
+      north:
+      - {fileID: 21300000, guid: ee014e0e550c4d042894a4a95a0177e6, type: 3}
+      - {fileID: 21300000, guid: c27f18733728e8d46837d21ca81f1cd9, type: 3}
+      - {fileID: 21300000, guid: 86bf87fef86251547b0a2153009485f6, type: 3}
+      - {fileID: 21300000, guid: a1677e7b23e8a0744933fc7c0fe30749, type: 3}
+      - {fileID: 21300000, guid: 46e5ac68831399a4db307a2076b5e1bd, type: 3}
+      - {fileID: 21300000, guid: 08b8f38827644554c82ca5f94b5e2d98, type: 3}
+      - {fileID: 21300000, guid: ac47a41b7999f2249a3e8a2b1cfe4fdc, type: 3}
+      - {fileID: 21300000, guid: a96b648afe9d13e4bb98763483dd11ac, type: 3}
+      - {fileID: 21300000, guid: a25eb0d5b5001274cbe4e0eba75f408d, type: 3}
+      west:
+      - {fileID: 21300000, guid: 8e1f25606431db4488acdc9317d5a7aa, type: 3}
+      - {fileID: 21300000, guid: a06fc9db2008a05428145bb852a34b79, type: 3}
+      - {fileID: 21300000, guid: c46916e7b94b72246adfbb93ddf2de51, type: 3}
+      - {fileID: 21300000, guid: 96edbf2d95d6d3b418282b305d05f99c, type: 3}
+      - {fileID: 21300000, guid: 2bfcb6e881e96ed46954d5cc52baf9c9, type: 3}
+      - {fileID: 21300000, guid: 1b57dd41278aed44cb5eccef049bd82c, type: 3}
+      - {fileID: 21300000, guid: b2a9afecc05177942a954cdeef74ea17, type: 3}
+      - {fileID: 21300000, guid: 6fa58e4bf5d0cf54cb68d896d637d872, type: 3}
+      - {fileID: 21300000, guid: df27fb708dc3b66458a7e0dafaaf04cb, type: 3}
+      fps: 12
+      expectedFramesPerDirection: 9
+    sourceAnimationGroupId: 6bd2b42f-36e4-4369-b9df-d8e64f47bce1
+    generationPrompt: Extend the hooked staff two steps forward, catch and pull backward
+      one strong beat, then return to the exact starting stance; keep both hands
+      on the same staff.
+  provider: PixelLab
+  sourceCharacterId: 7a07c91f-65dc-4501-a80f-a154619092bc
+  sourceModelId: pro
+  identityPrompt: Common Florentine Limbo doomsayer in a soot-dark penitential robe
+    and patched jack, iron half-mask, cracked bell-hook staff, false reliquary, restrained
+    violet corruption light, hard dark HD-2D pixel outline.
+  rotationsGroupId: 7a07c91f-65dc-4501-a80f-a154619092bc
+  walkGroupId: dfcbfcaa-f9c3-4947-9fca-3de7644818b4
+  hurtGroupId: d311bb03-39a3-4bf5-a495-fb5b257add8f
+  deathGroupId: 1acad434-ce6b-4b24-aac2-ca94ae9df144

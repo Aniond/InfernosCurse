@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f3a74fb2d1cfdc4e8747a48e4eac63f, type: 3}
+  m_Name: Npc_Agnolo_Neighbor
+  m_EditorClassIdentifier: Assembly-CSharp::NpcMemoryDefinition
+  npcId: npc_agnolo_neighbor
+  homeDistrictId: mercato
+  susceptibility: 1.1
+  originalScheduleId: schedule_agnolo_home_market
+  originalRelationshipId: relationship_agnolo_lifelong_neighbor
+  overlappingPreachingSiteIds:
+  - mercato_crier_sermon_fountain
+  - mercato_crier_sermon_south_gate
+  essentialService: 0
+  questCritical: 0

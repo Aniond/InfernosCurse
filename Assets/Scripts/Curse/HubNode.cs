@@ -35,8 +35,11 @@ public class HubNode
     public MicroClimate microClimate = MicroClimate.Default;
     public NodeKind kind = NodeKind.District;
     public MapLevel mapLevel = MapLevel.City;
+    public string discoveryId;
+    public DiscoveryStage minimumDiscoveryStage = DiscoveryStage.Discovered;
 
-    [Range(0f, 1f)] public float curseLevel   = 0f;   // 0 = clean, 1 = fully corrupted
+    public CircleId nativeCircle = CircleId.Limbo;
+    public List<CircleInfluenceState> circleInfluence = new();
     [Range(0f, 1f)] public float sanctity     = 0f;   // holy resistance to spread
     [Range(0f, 1f)] public float population   = 1f;   // scales how fast curse spreads (dense = faster)
 
@@ -46,6 +49,31 @@ public class HubNode
     // Runtime — set by HubMap
     [System.NonSerialized] public List<HubNode> neighbors = new();
 
-    public bool IsCorrupted  => curseLevel >= 0.8f;
-    public bool IsCleansed   => curseLevel <= 0.05f && sanctity >= 0.5f;
+    // Compatibility bridge while existing Florence callers move from the old
+    // single curse value to explicit Circle influence. In Florence the legacy
+    // value means Limbo, never whichever Circle happens to be dominant.
+    public float curseLevel
+    {
+        get => GetInfluence(CircleId.Limbo);
+        set => SetInfluence(CircleId.Limbo, value);
+    }
+
+    public float GetInfluence(CircleId circle) =>
+        CircleInfluenceLedger.Get(circleInfluence, circle);
+
+    public bool SetInfluence(CircleId circle, float value) =>
+        CircleInfluenceLedger.Set(circleInfluence, circle, value);
+
+    public bool AddInfluence(CircleId circle, float delta) =>
+        CircleInfluenceLedger.Add(circleInfluence, circle, delta);
+
+    public CircleId DominantCircle =>
+        CircleInfluenceLedger.Dominant(circleInfluence, nativeCircle);
+
+    public float DominantInfluence => GetInfluence(DominantCircle);
+
+    public bool IsCorrupted  => DominantInfluence >= 0.8f;
+    public bool IsCleansed   => DominantInfluence <= 0.05f && sanctity >= 0.5f;
+    public bool IsDiscoveryVisible =>
+        ExplorationDiscoveryLedger.IsVisible(discoveryId, minimumDiscoveryStage);
 }

@@ -1,9 +1,9 @@
 using System.Text;
 using UnityEngine;
 
-// The corruption tide: once per in-game DAY, every district's curse grows a
-// little. This — not HubMap's dormant real-time diffusion — is the hub-curse
-// driver, so time itself is the resource the player spends by resting.
+// The dated Circle-influence director. A day transition evaluates explicit
+// sources (such as active ritual sites) and high-pressure route bleed. A day
+// with no source is inert, so free exploration is never its own punishment.
 //
 // Ticks via GameCalendar.OnDayChanged — which fires once per AdvanceDay — so a
 // multi-day jump (road travel, rest chains) charges EVERY day it burns, not
@@ -12,15 +12,8 @@ using UnityEngine;
 // The first key ever seen is recorded WITHOUT ticking (baseline day); the key
 // persists through saves so loading never double-ticks.
 //
-// Guild perks deliberately have no hook here: guilds bend REST costs and
-// enable cleansing — the tide itself is untouchable (design rule: perks
-// reduce/redirect, never zero, the daily increment).
 public class DailyCurseDrift : MonoBehaviour
 {
-    [Tooltip("Nodes that touch the Arno — they take the flood spike on " +
-             "flood-risk days.")]
-    public string[] riverNodeIds = { "pontevecchio", "oltrarno" };
-
     /// <summary>Last day-key applied (persisted by SaveSystem).</summary>
     public string AppliedDayKey { get; private set; } = "";
 
@@ -63,7 +56,7 @@ public class DailyCurseDrift : MonoBehaviour
             return;
         }
         var hub = HubMap.Instance;
-        if (cal == null || hub == null || hub.activeCurse == null) return;
+        if (cal == null || hub == null) return;
 
         string key = cal.Year + ":" + cal.DayOfYear;
         if (key == AppliedDayKey) return;
@@ -72,37 +65,69 @@ public class DailyCurseDrift : MonoBehaviour
         AppliedDayKey = key;
         if (firstSight) return; // baseline day — record, don't tick
 
-        ApplyDrift(hub, hub.activeCurse, cal);
+        ApplyDatedSources(hub);
+        ApplyCrossLocationBleed(hub);
     }
 
-    void ApplyDrift(HubMap hub, CurseDefinition curse, GameCalendar cal)
+    void ApplyDatedSources(HubMap hub)
     {
-        // Per-day flood check: the cached FloodRiskToday static goes stale
-        // across AdvanceDay×N loops (it reflects the last ApplyToday only).
-        var fw = FlorenceWeather.Instance;
-        bool flood = fw != null
-            ? fw.ComputeFloodRisk(cal.Year, cal.DayOfYear)
-            : FlorenceWeather.FloodRiskToday;
         foreach (var node in hub.AllNodes)
         {
-            float delta = curse.dailyGrowthBase;
-            if (node.isRitualSite) delta += curse.dailyRitualBonus;
-            if (node.isSanctuarySite) delta -= curse.dailySanctuaryRelief;
-            delta *= 1f - node.sanctity * curse.sanctityResistance;
-            if (flood && IsRiverNode(node.id)) delta += curse.dailyFloodSpike;
-
-            if (delta > 0f) hub.AddCurse(node.id, delta);
-            // negative delta (deep sanctuary) = the site holds the line; it
-            // does not passively cleanse — cleansing is earned (guild/ritual).
+            if (!node.isRitualSite) continue;
+            var definition = hub.GetCircleDefinition(node.nativeCircle);
+            if (definition == null || definition.dailyRitualBonus <= 0f) continue;
+            float block = 1f - node.sanctity * definition.sanctityResistance;
+            hub.AddInfluence(node.id, definition.circleId,
+                definition.dailyRitualBonus * Mathf.Clamp01(block));
         }
-        Debug.Log($"[DailyCurseDrift] day tick{(flood ? " (ARNO FLOOD-HIGH)" : "")} — global {hub.GlobalCurseLevel():F3}");
+        Debug.Log($"[CircleInfluence] dated sources evaluated — Limbo {hub.GlobalInfluence(CircleId.Limbo):F3}");
     }
 
-    bool IsRiverNode(string id)
+    void ApplyCrossLocationBleed(HubMap hub)
     {
-        if (riverNodeIds == null) return false;
-        foreach (var r in riverNodeIds) if (r == id) return true;
-        return false;
+        var definitions = new System.Collections.Generic.List<CurseDefinition>();
+        if (hub.circleDefinitions != null)
+            foreach (var definition in hub.circleDefinitions)
+                if (definition != null && !definitions.Contains(definition)) definitions.Add(definition);
+        if (hub.activeCurse != null && !definitions.Contains(hub.activeCurse))
+            definitions.Add(hub.activeCurse);
+
+        foreach (var definition in definitions)
+        {
+            var incoming = new System.Collections.Generic.Dictionary<HubNode, float>();
+            foreach (var source in hub.AllNodes)
+            {
+                float sourceValue = source.GetInfluence(definition.circleId);
+                if (sourceValue <= definition.bleedThreshold) continue;
+
+                foreach (var target in source.neighbors)
+                {
+                    float targetValue = target.GetInfluence(definition.circleId);
+                    float delta = CalculateBleed(definition, sourceValue, targetValue, target.sanctity, 1f);
+                    if (delta <= 0f) continue;
+                    incoming[target] = incoming.TryGetValue(target, out float prior) ? prior + delta : delta;
+                }
+            }
+
+            foreach (var pair in incoming)
+                hub.AddInfluence(pair.Key.id, definition.circleId,
+                    Mathf.Min(pair.Value, definition.targetDailyBleedCap));
+        }
+    }
+
+    public static float CalculateBleed(
+        CurseDefinition definition,
+        float sourceInfluence,
+        float targetInfluence,
+        float targetSanctity,
+        float routeStrength)
+    {
+        if (definition == null || sourceInfluence <= definition.bleedThreshold) return 0f;
+        float pressure = Mathf.InverseLerp(definition.bleedThreshold, 1f, sourceInfluence);
+        float gradient = Mathf.Clamp01((sourceInfluence - targetInfluence) / 0.25f);
+        float block = 1f - Mathf.Clamp01(targetSanctity) * definition.sanctityResistance;
+        return definition.maxDailyBleed * pressure * gradient *
+               Mathf.Clamp01(routeStrength) * Mathf.Clamp01(block);
     }
 
     // ── Out-of-Unity-style economy sim, runnable from the inspector ─────────
@@ -151,9 +176,9 @@ public class DailyCurseDrift : MonoBehaviour
                 for (int i = 0; i < n; i++)
                 {
                     var node = hub.AllNodes[i];
-                    float delta = curse.dailyGrowthBase;
-                    if (node.isRitualSite) delta += curse.dailyRitualBonus;
-                    if (node.isSanctuarySite) delta -= curse.dailySanctuaryRelief;
+                    float delta = node.isRitualSite && node.nativeCircle == curse.circleId
+                        ? curse.dailyRitualBonus
+                        : 0f;
                     delta *= 1f - sa[p][i] * curse.sanctityResistance;
                     if (delta > 0f) lv[p][i] = Mathf.Min(1f, lv[p][i] + delta);
                 }

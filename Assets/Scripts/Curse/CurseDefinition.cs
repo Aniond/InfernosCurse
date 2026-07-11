@@ -5,6 +5,8 @@ using UnityEngine;
 public class CurseDefinition : ScriptableObject
 {
     [Header("Identity")]
+    [Tooltip("Circle represented by this definition. APPEND ONLY in CircleId.")]
+    public CircleId circleId = CircleId.Limbo;
     public string curseName   = "Unnamed Curse";
     [TextArea] public string description;
     public Sprite icon;
@@ -35,16 +37,22 @@ public class CurseDefinition : ScriptableObject
     [Tooltip("Player stat penalty when standing on a cursed tile.")]
     public float playerDebuffOnCursedTile = 0.90f;
 
-    [Header("Daily Drift")]
-    // The corruption tide: every in-game day each district grows by base,
-    // modified below. Gentle + linear by design — drama comes from thresholds.
-    [Tooltip("Curse added to every node per in-game day.")]
+    // Retained so existing ScriptableObjects deserialize without data loss.
+    // Universal time growth, passive sanctuary relief, and flood growth are
+    // deliberately retired: only concrete sources/events may alter influence.
+    [HideInInspector]
     [Range(0f, 0.2f)] public float dailyGrowthBase = 0.02f;
-    [Tooltip("Extra daily growth on ritual-site nodes (permanent sources).")]
+
+    [Header("Dated Sources")]
+    [Tooltip("Daily influence from an active ritual site native to this Circle.")]
     [Range(0f, 0.2f)] public float dailyRitualBonus = 0.02f;
-    [Tooltip("Daily growth relief on sanctuary nodes.")]
+    [HideInInspector]
     [Range(0f, 0.2f)] public float dailySanctuaryRelief = 0.015f;
-    [Tooltip("Extra daily growth on river nodes when the Arno runs flood-high " +
-             "(FlorenceWeather.FloodRiskToday).")]
+    [HideInInspector]
     [Range(0f, 0.3f)] public float dailyFloodSpike = 0.05f;
+
+    [Header("Cross-Location Influence")]
+    [Range(0f, 1f)] public float bleedThreshold = 0.70f;
+    [Range(0f, 0.05f)] public float maxDailyBleed = 0.012f;
+    [Range(0f, 0.1f)] public float targetDailyBleedCap = 0.015f;
 }

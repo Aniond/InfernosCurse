@@ -21,12 +21,17 @@ public class BattleMapAuthoring : MonoBehaviour
     public int height = 12;
     public float tileWidth = 1f;
     public float tileHeight = 0.5f;
+    [Tooltip("World-space XZ coordinate of the 3D grid's southwest corner. Leave zero for legacy maps.")]
+    public Vector2 worldOriginXZ = Vector2.zero;
 
     [Header("Terrain")]
     public List<Plateau> plateaus = new();
 
     [Tooltip("Cells painted with the path/cobble splat layer on 3D maps (visual only).")]
     public List<Vector2Int> pathCells = new();
+
+    [Tooltip("Compact blocked-cell authoring for large hybrid zones. Child BattleObstacle components remain supported.")]
+    public List<Vector2Int> blockedCells = new();
 
     // Suggested spawns for future encounter tables — callers still pass
     // their own lists to StartBattle.
@@ -53,6 +58,9 @@ public class BattleMapAuthoring : MonoBehaviour
     {
         grid.tileWidth = tileWidth;
         grid.tileHeight = tileHeight;
+        grid.worldOriginXZ = worldOriginXZ;
+        var terrainHeights = GetComponent<BattleTerrainHeights>();
+        if (terrainHeights != null) terrainHeights.worldOriginXZ = worldOriginXZ;
         grid.Initialize(width, height);
 
         foreach (var p in plateaus)
@@ -64,6 +72,13 @@ public class BattleMapAuthoring : MonoBehaviour
                 }
 
         int blocked = 0;
+        foreach (Vector2Int position in blockedCells)
+        {
+            var cell = grid.GetCell(position);
+            if (cell == null || !cell.walkable) continue;
+            cell.walkable = false;
+            blocked++;
+        }
         foreach (var ob in GetComponentsInChildren<BattleObstacle>(true))
         {
             var c = grid.GetCell(ob.cell);
@@ -82,12 +97,26 @@ public class BattleMapAuthoring : MonoBehaviour
     {
         var t = GetComponent<BattleTerrainHeights>();
         if (t != null)
-            return new Vector3((cell.x + 0.5f) * tileWidth,
+            return new Vector3(worldOriginXZ.x + (cell.x + 0.5f) * tileWidth,
                                t.HeightAt(cell),
-                               (cell.y + 0.5f) * tileWidth);
+                               worldOriginXZ.y + (cell.y + 0.5f) * tileWidth);
         float wx = (cell.x - cell.y) * tileWidth * 0.5f;
         float wy = (cell.x + cell.y) * tileHeight * 0.5f + elevation * tileHeight * 0.5f;
         return new Vector3(wx, wy, 0f);
+    }
+
+    public Vector2Int WorldToCell(Vector3 worldPosition)
+    {
+        if (GetComponent<BattleTerrainHeights>() != null)
+            return new Vector2Int(
+                Mathf.FloorToInt((worldPosition.x - worldOriginXZ.x) / tileWidth),
+                Mathf.FloorToInt((worldPosition.z - worldOriginXZ.y) / tileWidth));
+
+        float gx = (worldPosition.x / (tileWidth * 0.5f) +
+                    worldPosition.y / (tileHeight * 0.5f)) * 0.5f;
+        float gy = (worldPosition.y / (tileHeight * 0.5f) -
+                    worldPosition.x / (tileWidth * 0.5f)) * 0.5f;
+        return new Vector2Int(Mathf.RoundToInt(gx), Mathf.RoundToInt(gy));
     }
 
     public int ElevationAt(Vector2Int cell)

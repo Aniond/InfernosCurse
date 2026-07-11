@@ -27,6 +27,24 @@ public class SaveData
     public float[] curseLevels;
     public float[] curseSanctity;
 
+    // v3: independent per-location Circle influence. The three arrays are a
+    // JsonUtility-compatible table and must always have identical lengths.
+    public string[] influenceLocationIds;
+    public int[] influenceCircleIds;
+    public float[] influenceValues;
+
+    // v4: ordinary slots point at, but do not own, the separately stored
+    // Campaign Chronicle. The full canonical event ledger remains in the slot.
+    public string campaignId;
+    public long chronicleSequence;
+    public WorldEventRecord[] worldEvents;
+
+    // v5: unloaded world simulation and monotonic exploration discovery.
+    public string worldSimulationDayKey;
+    public PersistentWorldAgentRecord[] worldAgents;
+    public NpcMemoryRecord[] npcMemory;
+    public ExplorationDiscoveryRecord[] discoveries;
+
     // ── v2 (2026-07-05): the combat-progression layer. Old saves have
     // saveVersion 0 and null arrays — all guarded. Parallel arrays indexed by
     // roster order (PartyRoster order is fixed). Nested data (unlocked skills,
@@ -47,7 +65,7 @@ public class SaveData
 public static class SaveSystem
 {
     public const int SLOT_COUNT = 3;
-    public const int CURRENT_VERSION = 2;
+    public const int CURRENT_VERSION = 5;
 
     // Mid-battle saves capture a scene with none of its encounter state —
     // loading one lands in the arena with no battle and no exit. Forbidden.
@@ -76,11 +94,31 @@ public static class SaveSystem
             return;
         }
 
+        if (!CampaignChronicle.TryGetCurrentDocument(out var chronicle, out string chronicleError))
+        {
+            Debug.LogError("[SaveSystem] Save blocked: " + chronicleError);
+            return;
+        }
+        if (!WorldEventLedger.TryReconcile(
+                chronicle, 0, out long incorporatedSequence, out string reconciliationError))
+        {
+            Debug.LogError("[SaveSystem] Save blocked because permanent history could not be reconciled: " + reconciliationError);
+            return;
+        }
+
         var data = new SaveData();
         data.saveVersion = CURRENT_VERSION;
         data.slotName    = $"Slot {slot}";
         data.sceneName   = SceneManager.GetActiveScene().name;
         data.savedAt     = DateTime.UtcNow.Ticks;
+        data.campaignId = chronicle.campaignId;
+        data.chronicleSequence = incorporatedSequence;
+        data.worldEvents = WorldEventLedger.Export();
+        data.worldAgents = PersistentLimboWorldState.ExportAgents();
+        data.npcMemory = PersistentLimboWorldState.ExportNpcs();
+        data.discoveries = ExplorationDiscoveryLedger.Export();
+        var worldSimulation = UnityEngine.Object.FindAnyObjectByType<LimboWorldSimulationDirector>();
+        if (worldSimulation != null) data.worldSimulationDayKey = worldSimulation.AppliedDayKey;
 
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -110,7 +148,15 @@ public static class SaveSystem
         if (GuildSystem.Instance != null)
             GuildSystem.Instance.ExportTo(out data.guildIds, out data.guildReps);
         if (HubMap.Instance != null)
+        {
+            // Keep the legacy Limbo arrays during migration so older tools can
+            // still inspect a save, while v3 loads prefer the Circle table.
             HubMap.Instance.ExportNodeStates(out data.curseNodeIds, out data.curseLevels, out data.curseSanctity);
+            HubMap.Instance.ExportInfluenceStates(
+                out data.influenceLocationIds,
+                out data.influenceCircleIds,
+                out data.influenceValues);
+        }
 
         ExportParty(data);
 
@@ -129,7 +175,13 @@ public static class SaveSystem
         if (!File.Exists(path)) return null;
         try
         {
-            return JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+            var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+            if (!TryValidateCampaignEnvelope(data, out string error))
+            {
+                Debug.LogError($"[SaveSystem] Slot {slot} cannot be loaded: {error}");
+                return null;
+            }
+            return data;
         }
         catch (Exception e)
         {
@@ -149,6 +201,11 @@ public static class SaveSystem
     public static void LoadAndApply(SaveData data)
     {
         if (data == null) return;
+        if (!TryValidateCampaignEnvelope(data, out string validationError))
+        {
+            Debug.LogError("[SaveSystem] Load blocked before scene change: " + validationError);
+            return;
+        }
 
         string active = SceneManager.GetActiveScene().name;
         if (!string.IsNullOrEmpty(data.sceneName) && data.sceneName != active)
@@ -179,6 +236,48 @@ public static class SaveSystem
 
     public static void ApplySave(SaveData data)
     {
+        if (data == null)
+        {
+            Debug.LogError("[SaveSystem] Load blocked before state apply: save data is empty.");
+            return;
+        }
+        if (!TryValidateCampaignEnvelope(data, out string validationError))
+        {
+            Debug.LogError("[SaveSystem] Load blocked before state apply: " + validationError);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(data.campaignId))
+        {
+            if (!CampaignChronicle.TryAdoptLegacySave(out data.campaignId, out string adoptionError))
+            {
+                Debug.LogError("[SaveSystem] Legacy save could not be assigned a safe campaign: " + adoptionError);
+                return;
+            }
+            data.chronicleSequence = 0;
+        }
+        else if (!CampaignChronicle.TryActivate(data.campaignId, data.chronicleSequence, out string activationError))
+        {
+            Debug.LogError("[SaveSystem] Campaign Chronicle could not be activated: " + activationError);
+            return;
+        }
+
+        if (!WorldEventLedger.Import(data.worldEvents, out string ledgerError))
+        {
+            Debug.LogError("[SaveSystem] World event ledger is invalid: " + ledgerError);
+            return;
+        }
+        if (!PersistentLimboWorldState.Import(data.worldAgents, data.npcMemory, out string worldStateError))
+        {
+            Debug.LogError("[SaveSystem] Persistent Limbo world state is invalid: " + worldStateError);
+            return;
+        }
+        if (!ExplorationDiscoveryLedger.Import(data.discoveries, out string discoveryError))
+        {
+            Debug.LogError("[SaveSystem] Exploration discovery state is invalid: " + discoveryError);
+            return;
+        }
+
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
@@ -212,16 +311,115 @@ public static class SaveSystem
         if (GuildSystem.Instance != null)
             GuildSystem.Instance.ImportFrom(data.guildIds, data.guildReps);
         if (HubMap.Instance != null)
-            HubMap.Instance.ImportNodeStates(data.curseNodeIds, data.curseLevels, data.curseSanctity);
+        {
+            bool hasCircleTable = data.influenceLocationIds != null &&
+                                  data.influenceCircleIds != null &&
+                                  data.influenceValues != null;
+            bool imported = hasCircleTable && HubMap.Instance.ImportInfluenceStates(
+                data.influenceLocationIds,
+                data.influenceCircleIds,
+                data.influenceValues);
+
+            if (imported)
+                HubMap.Instance.ImportSanctityStates(data.curseNodeIds, data.curseSanctity);
+            else
+                HubMap.Instance.ImportNodeStates(data.curseNodeIds, data.curseLevels, data.curseSanctity);
+        }
 
         var drift = UnityEngine.Object.FindAnyObjectByType<DailyCurseDrift>();
         if (drift != null && !string.IsNullOrEmpty(data.driftDayKey))
             drift.RestoreDayKey(data.driftDayKey);
+        var worldSimulation = UnityEngine.Object.FindAnyObjectByType<LimboWorldSimulationDirector>();
+        if (worldSimulation != null && !string.IsNullOrEmpty(data.worldSimulationDayKey))
+            worldSimulation.RestoreDayKey(data.worldSimulationDayKey);
 
         if (!string.IsNullOrEmpty(data.weatherType) && FlorenceWeather.Instance != null)
             FlorenceWeather.Instance.Apply(data.weatherType);
 
         ImportParty(data);
+
+        if (!CampaignChronicle.TryGetCurrentDocument(out var chronicle, out string chronicleError))
+        {
+            Debug.LogError("[SaveSystem] Permanent-history reconciliation failed: " + chronicleError);
+            return;
+        }
+        if (!WorldEventLedger.TryReconcile(
+                chronicle, data.chronicleSequence, out long incorporatedSequence, out string reconcileError))
+        {
+            Debug.LogError("[SaveSystem] Permanent-history reconciliation failed: " + reconcileError);
+            return;
+        }
+        data.chronicleSequence = incorporatedSequence;
+        data.worldEvents = WorldEventLedger.Export();
+    }
+
+    /// <summary>
+    /// New Game entry point for the future title flow. Slot files are left
+    /// untouched; only an explicit New Game creates an independent Chronicle.
+    /// </summary>
+    public static bool StartNewCampaign()
+    {
+        if (CampaignChronicle.StartNewCampaign(out string error))
+        {
+            PersistentLimboWorldState.Reset();
+            ExplorationDiscoveryLedger.Reset();
+            var director = UnityEngine.Object.FindAnyObjectByType<LimboWorldSimulationDirector>();
+            if (director != null) director.RestoreDayKey(string.Empty);
+            if (!FlorenceOpeningBaseline.Apply(out string baselineError))
+                Debug.LogWarning("[SaveSystem] New campaign created, but Florence baseline is pending: " + baselineError);
+            return true;
+        }
+        Debug.LogError("[SaveSystem] New campaign could not be created: " + error);
+        return false;
+    }
+
+    static bool TryValidateCampaignEnvelope(SaveData data, out string error)
+    {
+        error = null;
+        if (data == null)
+        {
+            error = "save data is empty.";
+            return false;
+        }
+        if (data.chronicleSequence < 0)
+        {
+            error = "Chronicle sequence is negative.";
+            return false;
+        }
+        if (string.IsNullOrEmpty(data.campaignId) && data.chronicleSequence != 0)
+        {
+            error = "Save has a Chronicle sequence but no campaign ID.";
+            return false;
+        }
+        if (!WorldEventLedger.TryValidateRecords(data.worldEvents, out error)) return false;
+        if (!PersistentLimboWorldState.TryValidate(data.worldAgents, data.npcMemory, out error)) return false;
+        if (!ExplorationDiscoveryLedger.TryValidateRecords(data.discoveries, out error)) return false;
+
+        if (data.worldEvents != null)
+        {
+            foreach (var record in data.worldEvents)
+            {
+                if (record == null || !record.campaignPermanent) continue;
+                if (string.IsNullOrEmpty(data.campaignId) ||
+                    !string.Equals(record.campaignId, data.campaignId, StringComparison.Ordinal) ||
+                    record.chronicleSequence > data.chronicleSequence)
+                {
+                    error = $"Permanent event '{record.eventInstanceId}' falls outside this save's Chronicle envelope.";
+                    return false;
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(data.campaignId))
+        {
+            if (!CampaignChronicle.TryReadReference(
+                    data.campaignId, data.chronicleSequence, out var chronicle, out error))
+                return false;
+            if (!WorldEventLedger.TryValidateChronicleCoverage(
+                    data.worldEvents, chronicle, data.chronicleSequence, out error))
+                return false;
+        }
+        return true;
     }
 
     // ── Party progression (v2) ─────────────────────────────────────────────────

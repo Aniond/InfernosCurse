@@ -14,6 +14,7 @@ public class BattleUnitInfoUI : MonoBehaviour
     Image         _portrait;
     TMP_Text      _nameLabel;
     TMP_Text      _jobLabel;
+    readonly Image[] _statusIcons = new Image[6];
 
     struct StatRow
     {
@@ -81,6 +82,23 @@ public class BattleUnitInfoUI : MonoBehaviour
         jrt.pivot = new Vector2(1f, 1f);
         jrt.anchoredPosition = new Vector2(-14f, -48f);
         jrt.sizeDelta = new Vector2(170f, 26f);
+
+        for (int i = 0; i < _statusIcons.Length; i++)
+        {
+            var iconGo = new GameObject($"StatusIcon_{i}");
+            iconGo.transform.SetParent(face, false);
+            var icon = iconGo.AddComponent<Image>();
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            var rt = icon.rectTransform;
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-14f - i * 27f, -80f);
+            rt.sizeDelta = new Vector2(24f, 24f);
+            icon.enabled = false;
+            _statusIcons[i] = icon;
+        }
 
         _panel.SetActive(false);
     }
@@ -156,6 +174,23 @@ public class BattleUnitInfoUI : MonoBehaviour
         var sprite = data.portrait != null ? data.portrait : data.battleSprite;
         _portrait.sprite = sprite;
         _portrait.enabled = sprite != null;
+
+        var catalog = StatusEffectPresentationCatalog.Instance;
+        int statusIndex = 0;
+        foreach (var effect in unit.Status.All)
+        {
+            if (statusIndex >= _statusIcons.Length) break;
+            Sprite icon = catalog?.GetIcon(effect.type);
+            if (icon == null) continue;
+            _statusIcons[statusIndex].sprite = icon;
+            _statusIcons[statusIndex].enabled = true;
+            statusIndex++;
+        }
+        for (int i = statusIndex; i < _statusIcons.Length; i++)
+        {
+            _statusIcons[i].sprite = null;
+            _statusIcons[i].enabled = false;
+        }
     }
 
     void SetRow(StatRow row, int cur, int max, bool hpColors)
