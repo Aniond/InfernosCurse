@@ -1131,5 +1131,16 @@
     "model": null,
     "taskId": null,
     "error": null
+  },
+  {
+    "id": "florentine-inn-octagonal-lion-spout-fountain",
+    "name": "Florentine Inn Octagonal Lion-Spout Fountain",
+    "prompt": "A single isolated medieval Florentine courtyard fountain, entire object fully visible, centered, three-quarter orthographic game-asset view. Low 3.2 metre wide octagonal pietra serena basin with a broad thick beveled rim, a deep open basin interior, a sturdy faceted central pedestal, and a compact carved octagonal capital bearing four readable weathered lion-mask water spouts facing outward on the cardinal sides. Restrained thirteenth-century Tuscan craftsmanship, strong chunky silhouette for an HD-2D isometric exploration camera, hand-chiseled stone variation, subtly uneven carving, softened corners, a few small chips, faint mineral staining, and sparse moss only in the lowest seams. No statue, no human figure, no Baroque ornament, no stacked circular bowls, no cylindrical tier silhouette, no water, no liquid, no splash, no environment, no courtyard, no floor slab, no presentation plinth, no loose parts. Game-ready prop concept, stylized realism, physically plausible construction. Plain pure white background, soft even studio lighting, no cast shadow. No text, symbols, labels, logo, signature, or watermark anywhere in the image.",
+    "extraPrompt": "",
+    "status": "approved",
+    "hasImage": true,
+    "model": "done",
+    "taskId": "cc44b999-d678-47d5-b846-bdde2af9961f",
+    "error": null
   }
 ]

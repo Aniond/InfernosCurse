@@ -53,6 +53,7 @@ public static class FlorentineInnFloor1Builder
     public static void Build()
     {
         WeatherSurfaceStandardBuilder.EnsureSharedStandard();
+        FlorentineInnPropKitBuilder.EnsurePropKit();
         EnsureMaterials();
 
         var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -299,31 +300,35 @@ public static class FlorentineInnFloor1Builder
     static void BuildReception(Transform parent)
     {
         var root = RoomRoot(parent, "Reception");
-        var counter = Box(root, "ReceptionCounter_Main", new Vector3(0.2f, 0.55f, -6.1f), new Vector3(5.8f, 1.1f, 0.8f), _darkWood);
+        var counter = Prop(root, "ReceptionCounter", "ReceptionCounter", new Vector3(0.2f, 0f, -6.1f));
         var innInteraction = counter.AddComponent<InnCounterInteraction>();
         innInteraction.innName = "Albergo Fiorentino";
         innInteraction.innPrice = 10;
         innInteraction.isGuildInn = true;
         innInteraction.prompt = "Speak to Innkeeper";
-        Box(root, "ReceptionCounter_W", new Vector3(-2.35f, 0.55f, -5.45f), new Vector3(0.7f, 1.1f, 1.4f), _darkWood);
-        Box(root, "ReceptionCounter_E", new Vector3(2.75f, 0.55f, -5.45f), new Vector3(0.7f, 1.1f, 1.4f), _darkWood);
-        Box(root, "KeyCubbies", new Vector3(0.2f, 1.45f, -4.35f), new Vector3(4.2f, 2.3f, 0.3f), _wood);
+        Prop(root, "KeyCubbies", "ReceptionKeys", new Vector3(0.2f, 0.28f, -4.28f), 180f);
+        Prop(root, "LedgerQuill", "ReceptionLedger", new Vector3(-0.45f, 1.18f, -6.1f), -8f);
+        Prop(root, "Candle", "ReceptionCandle", new Vector3(1.45f, 1.18f, -6.05f));
         // Keep the central entrance axis clear from spawn to the reception desk.
-        Box(root, "LobbyBench", new Vector3(2.45f, 0.35f, -9.15f), new Vector3(2.2f, 0.7f, 0.7f), _wood);
-        Plant(root, "ReceptionPlant_W", new Vector3(-3f, 0f, -9.4f));
-        Plant(root, "ReceptionPlant_E", new Vector3(3.6f, 0f, -9.4f));
+        Prop(root, "LobbyBench", "LobbyBench", new Vector3(2.45f, 0f, -9.15f), 180f);
+        Prop(root, "Luggage", "LobbyLuggage", new Vector3(3.45f, 0f, -8.75f), -12f);
+        Prop(root, "PottedPlant", "ReceptionPlant_W", new Vector3(-3f, 0f, -9.4f));
+        Prop(root, "PottedPlant", "ReceptionPlant_E", new Vector3(3.6f, 0f, -9.4f));
     }
 
     static void BuildSalon(Transform parent)
     {
         var root = RoomRoot(parent, "Salon");
-        Box(root, "SalonRug", new Vector3(-7.4f, 0.08f, -7.4f), new Vector3(4.8f, 0.08f, 3.8f), _locked, collider: false);
-        Table(root, "SalonTeaTable", new Vector3(-7.4f, 0f, -7.3f), new Vector2(1.4f, 1.1f));
-        Chair(root, "SalonChair_NW", new Vector3(-8.8f, 0f, -6.3f), 135f);
-        Chair(root, "SalonChair_NE", new Vector3(-6f, 0f, -6.3f), 225f);
-        Chair(root, "SalonChair_S", new Vector3(-7.4f, 0f, -8.7f), 0f);
-        Box(root, "SalonBookcase", new Vector3(-10.55f, 1.2f, -7.5f), new Vector3(0.4f, 2.4f, 4f), _darkWood);
-        Plant(root, "SalonPlant", new Vector3(-10f, 0f, -10f));
+        Prop(root, "SalonRug", "SalonRug", new Vector3(-7.4f, 0.02f, -7.4f));
+        Prop(root, "TeaTable", "SalonTeaTable", new Vector3(-7.4f, 0f, -7.3f));
+        Prop(root, "PeriodChair", "SalonChair_NW", new Vector3(-8.8f, 0f, -6.3f), 135f);
+        Prop(root, "PeriodChair", "SalonChair_NE", new Vector3(-6f, 0f, -6.3f), 225f);
+        Prop(root, "PeriodChair", "SalonChair_S", new Vector3(-7.4f, 0f, -8.7f));
+        Prop(root, "Bookcase", "SalonBookcase", new Vector3(-10.55f, 0f, -7.5f), 90f, new Vector3(1.65f, 1f, 1f));
+        Prop(root, "PlaceSetting", "SalonTeaService", new Vector3(-7.4f, 0.68f, -7.3f));
+        Prop(root, "Pitcher", "SalonPitcher", new Vector3(-7.05f, 0.68f, -7.2f));
+        Prop(root, "Candle", "SalonCandle", new Vector3(-7.75f, 0.68f, -7.2f));
+        Prop(root, "PottedPlant", "SalonPlant", new Vector3(-10f, 0f, -10f));
     }
 
     static void BuildDining(Transform parent)
@@ -334,52 +339,71 @@ public static class FlorentineInnFloor1Builder
             foreach (float x in new[] { -9f, -5.8f })
             {
                 n++;
-                Table(root, $"DiningTable_{n:00}", new Vector3(x, 0f, z), new Vector2(1.8f, 1.2f));
-                Chair(root, $"DiningChair_{n:00}_N", new Vector3(x, 0f, z + 1f), 180f);
-                Chair(root, $"DiningChair_{n:00}_S", new Vector3(x, 0f, z - 1f), 0f);
+                Prop(root, "DiningTable", $"DiningTable_{n:00}", new Vector3(x, 0f, z));
+                Prop(root, "PeriodChair", $"DiningChair_{n:00}_N", new Vector3(x, 0f, z + 1f), 180f);
+                Prop(root, "PeriodChair", $"DiningChair_{n:00}_S", new Vector3(x, 0f, z - 1f));
+                Prop(root, "PlaceSetting", $"DiningSetting_{n:00}_N", new Vector3(x, 0.9f, z + 0.28f), 180f);
+                Prop(root, "PlaceSetting", $"DiningSetting_{n:00}_S", new Vector3(x, 0.9f, z - 0.28f));
+                if (n % 2 == 0)
+                    Prop(root, "Candle", $"DiningCandle_{n:00}", new Vector3(x, 0.9f, z));
+                else
+                    Prop(root, "BreadBoard", $"DiningBread_{n:00}", new Vector3(x, 0.88f, z));
             }
-        Box(root, "DiningSideboard", new Vector3(-10.5f, 0.65f, 5.4f), new Vector3(0.55f, 1.3f, 4.2f), _darkWood);
+        Prop(root, "Sideboard", "DiningSideboard", new Vector3(-10.5f, 0f, 5.4f), 90f, new Vector3(2.15f, 1f, 1f));
+        Prop(root, "Pitcher", "DiningSideboardPitcher", new Vector3(-10.15f, 1.25f, 4.8f), 90f);
+        Prop(root, "PlaceSetting", "DiningSideboardCeramics", new Vector3(-10.15f, 1.25f, 5.45f), 90f);
     }
 
     static void BuildKitchenAndService(Transform parent)
     {
         var kitchen = RoomRoot(parent, "Kitchen");
-        Box(kitchen, "KitchenCounter_N", new Vector3(1f, 0.55f, 10.3f), new Vector3(8.5f, 1.1f, 0.75f), _stone);
-        Box(kitchen, "KitchenCounter_W", new Vector3(-2.9f, 0.55f, 7.3f), new Vector3(0.75f, 1.1f, 4.8f), _stone);
-        Table(kitchen, "KitchenIsland", new Vector3(1.2f, 0f, 7.3f), new Vector2(3.6f, 1.5f));
-        Box(kitchen, "KitchenHearth", new Vector3(4.7f, 1f, 10.25f), new Vector3(1.8f, 2f, 0.85f), _darkWood);
+        Prop(kitchen, "Sideboard", "KitchenCounter_N", new Vector3(0.9f, 0f, 10.35f), 180f, new Vector3(4.25f, 1f, 1.15f));
+        Prop(kitchen, "Sideboard", "KitchenCounter_W", new Vector3(-2.92f, 0f, 7.35f), 90f, new Vector3(2.45f, 1f, 1.15f));
+        Prop(kitchen, "KitchenIsland", "KitchenIsland", new Vector3(1.2f, 0f, 7.3f));
+        Prop(kitchen, "Hearth", "KitchenHearth", new Vector3(4.7f, 0f, 10.25f), 180f);
+        Prop(kitchen, "Cookware", "KitchenCookware", new Vector3(0.5f, 1f, 7.3f));
+        Prop(kitchen, "BreadBoard", "KitchenBreadBoard", new Vector3(1.45f, 1f, 7.3f));
+        Prop(kitchen, "Pitcher", "KitchenPitcher", new Vector3(2.15f, 1f, 7.3f));
+        Prop(kitchen, "PantryGoods", "KitchenIngredients", new Vector3(-2.55f, 1.25f, 7.6f), 90f);
 
         var service = RoomRoot(parent, "Service");
-        Table(service, "StaffWorkTable", new Vector3(8.3f, 0f, 4.5f), new Vector2(2.2f, 1.1f));
-        Box(service, "PantryShelves_E", new Vector3(10.5f, 1.25f, 9f), new Vector3(0.45f, 2.5f, 3.2f), _wood);
-        Box(service, "PantryShelves_N", new Vector3(8.3f, 1.25f, 10.55f), new Vector3(3.2f, 2.5f, 0.45f), _wood);
+        Prop(service, "WorkTable", "StaffWorkTable", new Vector3(8.3f, 0f, 4.5f));
+        Prop(service, "PantryShelves", "PantryShelves_E", new Vector3(10.5f, 0f, 9f), 90f, new Vector3(1.28f, 1f, 1f));
+        Prop(service, "PantryShelves", "PantryShelves_N", new Vector3(8.3f, 0f, 10.55f), 180f, new Vector3(1.28f, 1f, 1f));
+        for (int i = 0; i < 4; i++)
+            Prop(service, "PantryGoods", $"PantryGoods_{i + 1:00}", new Vector3(7.35f + i * 0.62f, 0.8f + (i % 2) * 0.78f, 10.25f), 180f);
         for (int i = 0; i < 5; i++)
-            Barrel(service, $"StorageBarrel_{i + 1:00}", new Vector3(6.7f + (i % 2) * 1.2f, 0f, -2.7f + (i / 2) * 1.15f));
-        Box(service, "StorageCrates", new Vector3(10f, 0.55f, -1.2f), new Vector3(1.5f, 1.1f, 2.5f), _wood);
+            Prop(service, "Barrel", $"StorageBarrel_{i + 1:00}", new Vector3(6.7f + (i % 2) * 1.2f, 0f, -2.7f + (i / 2) * 1.15f), i * 13f);
+        Prop(service, "CrateStack", "StorageCrates", new Vector3(10f, 0f, -1.2f), -8f);
     }
 
     static void BuildOffice(Transform parent)
     {
         var root = RoomRoot(parent, "Office");
-        Table(root, "OfficeDesk", new Vector3(7.5f, 0f, -7.2f), new Vector2(2.7f, 1.3f));
-        Chair(root, "OfficeChair", new Vector3(7.5f, 0f, -5.9f), 180f);
-        Box(root, "OfficeBookcase_E", new Vector3(10.5f, 1.35f, -7.5f), new Vector3(0.45f, 2.7f, 4.2f), _darkWood);
-        Box(root, "OfficeChest", new Vector3(6.6f, 0.45f, -9.9f), new Vector3(1.8f, 0.9f, 0.9f), _wood);
+        Prop(root, "WorkTable", "OfficeDesk", new Vector3(7.5f, 0f, -7.2f), 0f, new Vector3(1.23f, 1f, 1.18f));
+        Prop(root, "PeriodChair", "OfficeChair", new Vector3(7.5f, 0f, -5.9f), 180f);
+        Prop(root, "Bookcase", "OfficeBookcase_E", new Vector3(10.5f, 0f, -7.5f), 90f, new Vector3(1.7f, 1.12f, 1f));
+        Prop(root, "StorageChest", "OfficeChest", new Vector3(6.6f, 0f, -9.9f));
+        Prop(root, "LedgerQuill", "OfficeLedger", new Vector3(7.25f, 0.95f, -7.2f), 12f);
+        Prop(root, "DocumentBundle", "OfficeDocuments", new Vector3(8.15f, 0.95f, -7.2f), -8f);
+        Prop(root, "Candle", "OfficeCandle", new Vector3(6.65f, 0.95f, -7.2f));
     }
 
     static void BuildCourtyard(Transform parent)
     {
         var root = RoomRoot(parent, "Courtyard");
-        Cylinder(root, "CourtyardFountain_Basin", new Vector3(0.35f, 0.22f, -0.4f), new Vector3(2.4f, 0.22f, 2.4f), _stone);
-        var water = Cylinder(root, "CourtyardFountain_Water", new Vector3(0.35f, 0.47f, -0.4f), new Vector3(1.9f, 0.06f, 1.9f), _water, collider: false);
-        WeatherSurfaceStandardBuilder.ConfigureWater(
-            water, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Indoor);
-        Cylinder(root, "CourtyardFountain_Pedestal", new Vector3(0.35f, 0.8f, -0.4f), new Vector3(0.45f, 0.8f, 0.45f), _stone);
+        var fountain = Prop(root, "CourtyardFountain", "CourtyardFountain", new Vector3(0.35f, 0f, -0.4f));
+        var water = fountain.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "WaterSurface");
+        if (water != null)
+            WeatherSurfaceStandardBuilder.ConfigureWater(water.gameObject, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Indoor);
+        Prop(root, "CourtyardBench", "CourtyardBench_W", new Vector3(-2.75f, 0f, 0f), 90f);
+        Prop(root, "CourtyardBench", "CourtyardBench_E", new Vector3(3.45f, 0f, 0f), -90f);
+        Prop(root, "Bucket", "CourtyardBucket", new Vector3(2.25f, 0f, 2.2f), 18f);
         foreach (var pos in new[]
         {
             new Vector3(-2.7f, 0f, -2.8f), new Vector3(3.4f, 0f, -2.8f),
             new Vector3(-2.7f, 0f, 2f), new Vector3(3.4f, 0f, 2f),
-        }) Plant(root, "CourtyardPlant", pos);
+        }) Prop(root, "PottedPlant", "CourtyardPlant", pos);
     }
 
     static void BuildNpcMarkers()
@@ -425,7 +449,14 @@ public static class FlorentineInnFloor1Builder
     {
         var root = new GameObject("[Lighting]").transform;
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.34f, 0.30f, 0.25f);
+        RenderSettings.ambientLight = new Color(0.20f, 0.18f, 0.15f);
+        RenderSettings.ambientIntensity = 1f;
+        RenderSettings.reflectionIntensity = 0.45f;
+
+        var ambientGuard = root.gameObject.AddComponent<IndoorWeatherLightingGuard>();
+        ambientGuard.AmbientColor = new Color(0.20f, 0.18f, 0.15f);
+        ambientGuard.AmbientIntensity = 1f;
+        ambientGuard.ReflectionIntensity = 0.45f;
 
         var sun = new GameObject("Courtyard Sun");
         sun.transform.SetParent(root, false);
@@ -438,11 +469,11 @@ public static class FlorentineInnFloor1Builder
 
         var lamps = new[]
         {
-            Point(root, "Reception Lamp", new Vector3(0.2f, 2.8f, -7.2f), 5.5f, 7f),
-            Point(root, "Salon Lamp", new Vector3(-7.4f, 2.8f, -7.3f), 4.5f, 6f),
-            Point(root, "Dining Lamp", new Vector3(-7.4f, 2.8f, 5.3f), 5.5f, 7f),
-            Point(root, "Kitchen Lamp", new Vector3(1f, 2.8f, 7.3f), 5f, 6f),
-            Point(root, "Office Lamp", new Vector3(7.5f, 2.8f, -7.2f), 4f, 5f)
+            Point(root, "Reception Lamp", new Vector3(0.2f, 2.8f, -7.2f), 3.2f, 4.6f),
+            Point(root, "Salon Lamp", new Vector3(-7.4f, 2.8f, -7.3f), 2.8f, 4.2f),
+            Point(root, "Dining Lamp", new Vector3(-7.4f, 2.8f, 5.3f), 3.4f, 4.8f),
+            Point(root, "Kitchen Lamp", new Vector3(1f, 2.8f, 7.3f), 3.2f, 4.3f),
+            Point(root, "Office Lamp", new Vector3(7.5f, 2.8f, -7.2f), 2.6f, 3.8f)
         };
 
         var environment = root.gameObject.AddComponent<WorldWindowEnvironment>();
@@ -454,7 +485,7 @@ public static class FlorentineInnFloor1Builder
             emissionMultiplier = 2.2f,
             lightningMultiplier = 4f
         }).ToArray();
-        environment.LocalLights = lamps.Select(l => new WorldWindowEnvironment.DrivenLight
+        var drivenLights = lamps.Select(l => new WorldWindowEnvironment.DrivenLight
         {
             light = l,
             daylightIntensity = l.intensity * 0.10f,
@@ -463,6 +494,16 @@ public static class FlorentineInnFloor1Builder
             nightColor = new Color(1f, 0.62f, 0.28f),
             lightningIntensity = 4.5f
         }).ToArray();
+        environment.LocalLights = drivenLights;
+
+        // The component is configured after AddComponent invokes OnEnable in the
+        // editor. Seed the safe daytime state explicitly so play-mode settings
+        // without a scene reload cannot begin at full night intensity.
+        foreach (var driven in drivenLights)
+        {
+            driven.light.intensity = driven.daylightIntensity;
+            driven.light.color = driven.daylightColor;
+        }
         environment.ExteriorWeatherObjects = windows.SelectMany(w => new[]
         {
             new WorldWindowEnvironment.WeatherObject
@@ -684,6 +725,25 @@ public static class FlorentineInnFloor1Builder
         return root;
     }
 
+    static GameObject Prop(Transform parent, string prefabName, string instanceName, Vector3 position,
+        float yaw = 0f, Vector3 scale = default)
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(FlorentineInnPropKitBuilder.PrefabPath(prefabName));
+        if (prefab == null)
+        {
+            Debug.LogError($"[FlorentineInnFloor1Builder] Missing prop prefab '{prefabName}'.");
+            return new GameObject(instanceName);
+        }
+
+        var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+        instance.name = instanceName;
+        instance.transform.SetParent(parent, false);
+        instance.transform.position = position;
+        instance.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        instance.transform.localScale = scale == default ? Vector3.one : scale;
+        return instance;
+    }
+
     static void Table(Transform parent, string name, Vector3 position, Vector2 top)
     {
         Box(parent, name + "_Top", position + Vector3.up * 0.75f, new Vector3(top.x, 0.16f, top.y), _wood);
@@ -731,7 +791,11 @@ public static class FlorentineInnFloor1Builder
         light.color = new Color(1f, 0.72f, 0.42f);
         light.intensity = intensity;
         light.range = range;
-        light.shadows = LightShadows.None;
+        light.shadows = LightShadows.Soft;
+        light.shadowStrength = 0.82f;
+        light.shadowBias = 0.05f;
+        light.shadowNormalBias = 0.20f;
+        light.shadowNearPlane = 0.20f;
         return light;
     }
 

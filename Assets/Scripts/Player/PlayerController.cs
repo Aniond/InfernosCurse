@@ -157,6 +157,15 @@ public class PlayerController : MonoBehaviour
         // _anim is guaranteed by [RequireComponent(typeof(Animator))].
         _anim.SetFloat(MoveX, snapped.x);
         _anim.SetFloat(MoveY, snapped.y);
+        if (_anim.GetFloat(Speed) <= 0.1f)
+            _anim.CrossFade(DirectionalIdleState(snapped), 0.05f);
+    }
+
+    static string DirectionalIdleState(Vector2 direction)
+    {
+        if (Mathf.Abs(direction.x) >= Mathf.Abs(direction.y))
+            return direction.x >= 0f ? "Idle_East" : "Idle_West";
+        return direction.y >= 0f ? "Idle_North" : "Idle_South";
     }
 
     // Kneel facing a world position (the shrine) for a few seconds. The sprite
