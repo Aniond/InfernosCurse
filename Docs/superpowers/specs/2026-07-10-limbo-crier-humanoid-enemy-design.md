@@ -121,7 +121,7 @@ The Crier rings the cracked bell and makes nearby enemies feel that the end is i
 - Insanity cost: 2 percentage points per slotted orb level.
 - Higher orb levels improve the Faith penalty at levels 3 and 5; radius never increases.
 
-Its future Holy counterpart is **Bell of Vigilance**. The Holy form removes Dread from allies in the same radius and grants a small CT recovery bonus for two turns.
+Its future Holy counterpart is **Bell of Vigilance**. The Holy form removes Dread from allies in the same radius and grants +10% CT recovery for two turns.
 
 ## Skill: Crooked Benediction
 
@@ -197,7 +197,7 @@ False Zeal is a first-class append-only status effect.
 
 Limbo Stain is a one-round temporary terrain effect.
 
-- Deals minor Dark damage equal to 4% maximum HP to a hostile unit ending its turn on the tile.
+- Deals Dark damage equal to 4% maximum HP to a hostile unit ending its turn on the tile.
 - Applies Dread for one affected-unit turn to that hostile unit.
 - Does not affect Limbo-aligned combatants.
 - Reapplication refreshes duration and does not stack damage or create nested snapshots.
