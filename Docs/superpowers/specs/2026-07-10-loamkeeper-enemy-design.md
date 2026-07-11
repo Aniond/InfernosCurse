@@ -40,6 +40,14 @@ Production assets belong under `Assets/Characters/Loamkeeper/`. The source chara
 
 Texture imports use transparency, nearest-neighbor filtering, no compression, no mipmaps, and a consistent pixels-per-unit value matching the existing HD-2D battle characters. The builder must normalize the visible sprite to the battle grid without cropping the shears or thorn cloak.
 
+## Portrait Contract
+
+The Loamkeeper receives a dedicated transparent 128 by 128 pixel-art bust matching the existing Benidito and Rosekin portrait format. The PixelLab south rotation is the identity reference, but the portrait uses closer bust framing for menus and unit information.
+
+The portrait must preserve the decayed straw hat, obscured dead face, thorn-vine cloak, work-worn clothing, and fused rusted shears. The shears may enter the lower edge of the composition but must not cover the face or destroy the silhouette. The palette, outline weight, hard pixel edges, and restrained three-tone shading must remain consistent with the battlefield sprite and existing HD-2D portraits. The image has no background, text, frame, glow, or modern detail.
+
+The production asset is `Assets/Art/Portraits/portrait-loamkeeper.png` and is assigned to `Enemy_Loamkeeper`. Its importer uses Sprite (2D and UI), transparency, nearest-neighbor filtering, no compression, and no mipmaps.
+
 ## Animation Contract
 
 PixelLab currently exposes the following complete animation groups:
@@ -196,6 +204,7 @@ Static and editor verification must confirm:
 - Both active skills are equipped and learnable.
 - Both Holy counterparts are assigned.
 - Texture settings match the HD-2D character standard.
+- The dedicated 128 by 128 portrait is assigned and matches the approved import settings.
 
 Play-mode verification must confirm:
 
