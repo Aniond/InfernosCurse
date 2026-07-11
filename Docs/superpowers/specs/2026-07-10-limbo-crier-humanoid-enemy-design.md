@@ -6,7 +6,7 @@ The Limbo Crier is the common humanoid cultist of Limbo. Criers infiltrate Flore
 
 The Crier is a recurring support-controller rather than an elite. One Crier is manageable. Several Criers protected by melee enemies can destabilize an encounter through area debuffs, allied empowerment, forced movement, and temporary corrupted terrain.
 
-This production pass includes the complete enemy, a reusable humanoid battle-visual profile, all required directional animation, armor and weapon data, a portrait, status effects and icons, temporary terrain presentation, AI behavior, absorbable skills, deterministic tooling, and runtime validation.
+This production pass includes the complete enemy, a reusable humanoid battle-visual profile, all required directional animation, armor and weapon data, a portrait, status effects and icons, temporary terrain presentation, combat AI, persistent world agents, the Limbo Unmooring NPC layer, event memory, Gemini narrative context, the multi-Circle influence foundation, deterministic tooling, and runtime validation.
 
 ## Narrative Role
 
@@ -291,6 +291,290 @@ Criers appear in populated or politically tense locations: markets, plazas, alle
 
 Initial encounter composition uses one Crier protected by two ordinary frontline enemies. Later groups may use two Criers, but Knell of Dread timing and SP prevent permanent debuff loops.
 
+## Opening: Florence Forgets Benidito
+
+Benidito begins as a lifelong Florentine, not an outsider. His neighbors, merchants, guards, and acquaintances know his name, habits, history, and family connections. The opening establishes this familiarity before Limbo removes it.
+
+The first Limbo incident is authored and guaranteed:
+
+1. Familiar citizens greet Benidito naturally by name.
+2. A specific longtime neighbor hesitates, uses the wrong name, and then cannot remember Benidito's name at all.
+3. Other citizens dismiss the lapse as age, exhaustion, grief, or illness.
+4. Later events remove increasingly familiar details: a merchant forgets Benidito's usual order, a neighbor repeats yesterday's conversation, someone cannot identify their own home, and a civic record loses a known name.
+5. Friends remember Benidito's face but disagree about how they know him.
+6. Workplaces become empty and families search for people whom other citizens insist never existed.
+7. Rumors about sermons and bells lead Benidito to his first face-to-face Limbo Crier.
+
+The game does not name Limbo or expose a Circle meter before that confrontation. The first Crier converts the personal mystery into an identifiable threat and unlocks Circle terminology in the journal and relevant UI.
+
+## Persistent Out-of-Combat Crier Agents
+
+Each placed Crier has a stable world-agent ID and belongs to one district. The persistent record stores:
+
+- Agent ID.
+- District node ID.
+- Current authored preaching-site ID.
+- Activity state.
+- Discovered state.
+- Defeated state.
+- Disrupted-through day key.
+- Last processed day key.
+
+The unloaded simulation stores data only; it does not run hidden GameObjects or navigation. When a district loads, the record materializes the Crier at its current authored site and resumes visible behavior.
+
+The visible state machine is:
+
+`Travel -> Preach -> Relocate/Evade -> Hide -> Travel`
+
+- Travel moves between authored sites using ordinary scene navigation.
+- Preach occupies a populated location during its authored hours.
+- Relocate/Evade selects another valid site after disruption or danger.
+- Hide uses an authored night/curfew location.
+- Approaching a sermon permits disruption or confrontation.
+- Confrontation uses the shared hybrid-zone battle architecture and preserves the visible environment.
+
+Daily Limbo contributions:
+
+- Undiscovered cautious Crier: +0.25 percentage points to its district.
+- Discovered active Crier: +0.75 percentage points.
+- All active Criers combined: maximum +2 percentage points per district per day.
+- Sanctity reduces the contribution through Limbo's sanctity-resistance coefficient.
+- Disrupting a sermon suppresses that agent's contribution for the current day and forces relocation.
+- Defeating the Crier permanently disables that world agent.
+- Withdrawing or allowing escape preserves the agent and selects a new preaching site.
+
+Every daily application is idempotent by agent ID and game-date key.
+
+## NPC Memory State
+
+Every eligible authored NPC receives a persistent memory-state record:
+
+- Stable NPC ID.
+- Home district ID.
+- Susceptibility multiplier, default 1.0 and authored from 0.5 to 1.5.
+- Limbo exposure from 0 to 100.
+- Current Unmooring stage.
+- Last processed day key.
+- Original schedule reference.
+- Original relationship reference.
+- Essential-service and quest-critical safeguards.
+- Forgotten-pool state and recovery state.
+
+Exposure comes from overlap between the NPC's authored schedule and an active Crier's preaching site. Unloaded districts resolve overlap deterministically from schedule/site IDs rather than scene navigation.
+
+Daily exposure is:
+
+```text
+rawExposure = 12 x overlappingActiveCriers x susceptibility
+sanctityBlock = 1 - districtSanctity x LimboSanctityResistance
+dailyExposure = min(24, rawExposure x sanctityBlock)
+```
+
+An undiscovered cautious Crier counts as 0.5 overlapping Crier for exposure. A Crier disrupted for the current day contributes zero.
+
+## The Unmooring Cascade
+
+### Grounded: 0-24 Exposure
+
+- Normal identity, schedule, relationships, and dialogue.
+
+### Distracted: 25-49 Exposure
+
+- Repeats or loses parts of dialogue.
+- Arrives one or two hours late.
+- Pauses during routes as though forgetting the destination.
+- Occasionally uses a generic description instead of another NPC's name.
+
+### Unmoored: 50-79 Exposure
+
+- Misses work periods and takes incorrect local routes.
+- Stops recognizing selected neighbors.
+- Forgets minor favors and noncritical promises.
+- May stand at an unrelated landmark without knowing why.
+- Essential services retain a backup access path.
+
+### Forgotten: 80-100 Exposure
+
+- The displayed name becomes `...` until rediscovery.
+- Ordinary NPCs stop referencing the person.
+- The NPC leaves the normal schedule and enters a protected lost-person encounter pool.
+- The NPC is never deleted and every original relationship remains preserved in the memory record.
+
+Quest-critical and essential-service NPCs may become Distracted or Unmoored but are capped at 79 exposure. Their critical quests and services remain recoverable.
+
+No numeric exposure meter is shown. Dialogue, incomplete names, route failures, empty workstations, rumors, and missing-person events communicate progression.
+
+## Unmooring Counterplay and Recovery
+
+- Defeating a Crier removes its future district influence and NPC exposure.
+- Disrupting a sermon prevents that agent's influence and exposure for the current day.
+- District sanctity reduces incoming influence and exposure.
+- A district cleanse removes 20 exposure from every eligible non-Forgotten NPC.
+- With no active Crier and district Limbo below 50%, non-Forgotten NPCs recover 8 exposure per day.
+- A sanctuary district recovers 15 exposure per day.
+- Limbo at or above 50% prevents passive recovery even after the immediate Crier is defeated.
+- Forgotten NPCs do not recover offscreen. They require a lost-person rescue encounter.
+- A rescued Forgotten NPC returns at the next dawn with exposure set to 70, then recovers through the ordinary stages.
+- Restored dialogue, schedules, names, and relationships return by threshold rather than all at once.
+
+## Exploration-First Discovery
+
+Travel and exploration do not raise Circle influence merely because time passed. Only unresolved agents, rituals, events, player choices, and existing Circle bleed sources advance influence. The current universal time-only daily growth is removed.
+
+The player starts in Florence with Limbo at 5-10% in stable districts and up to 15% in the earliest troubled districts. Before the first Crier confrontation, symptoms remain ambiguous and Criers use their reduced cautious contribution.
+
+Rumors and events unlock locations through three stages:
+
+1. **Rumored:** The journal records a vague place, person, route, or event.
+2. **Located:** Corroborating evidence reveals a search area or travel route.
+3. **Discovered:** Physical exploration reveals the exact point of interest and permanent travel node.
+
+Rumors may reveal cult sites, lost-person encounters, abbeys, sanctuaries, Roman or Etruscan ruins, historic roads, bridges, towers, estates, villages, civic landmarks, culturally important Italian locations, Circle secrets, and alternate routes. Major cities and POIs are not automatically exposed merely because their data exists.
+
+## Authoritative World Event Ledger
+
+The game, not Gemini, owns memory. Every consequential interaction appends an immutable `WorldEventRecord` containing:
+
+- Unique event-instance ID.
+- Authored event-type ID.
+- Game date and location ID.
+- Participating NPC and world-agent IDs.
+- Exact player-choice ID.
+- Validated Circle influence changes.
+- NPC exposure and relationship changes.
+- Rumors, POIs, routes, or follow-up event IDs unlocked.
+- A concise factual outcome.
+- Semantic tags such as `remembered_a_name`, `abandoned_the_lost`, or `denied_a_person_existed`.
+
+The first implementation retains the full append-only structured ledger in the save. It does not destructively compact old events. Derived summaries are caches for AI context and can be rebuilt from canonical records.
+
+Event effects apply exactly once by event-instance ID. Loading, retrying a request, losing network access, or revisiting dialogue cannot duplicate consequences.
+
+## Gemini Narrative Director
+
+The existing Gemini runtime client remains the provider boundary. Credentials stay in the existing ignored local configuration and never enter assets, saves, prompts, logs, or source control.
+
+For each request, a narrative-context builder selects:
+
+- Canonical world facts.
+- The current location's Circle ledger.
+- The current NPC's memory and relationship state.
+- Relevant permanent event facts.
+- Up to 20 most recent relevant event records.
+- Current rumors and eligible authored follow-ups.
+- Allowed response and choice IDs.
+
+Gemini may:
+
+- Phrase dialogue, reactions, and rumors.
+- Reference relevant prior choices.
+- Vary emotional delivery without changing facts.
+- Select from eligible authored follow-up IDs.
+- Produce a concise derived summary for future context.
+
+Gemini may not:
+
+- Directly change influence, inventory, quests, NPC state, relationships, rewards, schedules, or travel access.
+- Invent unregistered event or choice IDs.
+- Delete, contradict, or rewrite canonical facts.
+- Emit executable code or arbitrary state patches.
+- Override authored consequence bounds.
+
+Responses use a strict validated schema. Unknown IDs, malformed output, contradiction with canonical facts, timeout, quota failure, or unavailable Gemini all fall back to deterministic authored text and consequences. Simulation results never depend on network success.
+
+## Choice Resonance with Limbo
+
+Choices are not labeled good or evil. They resonate with the nature of a Circle. Forgetting, abandonment, erasure, denial, and social disconnection strengthen Limbo.
+
+Default local Limbo consequences:
+
+- Minor neglect or denial: +0.5 percentage points.
+- Abandoning an exposed NPC: +1 point.
+- Deliberately erasing a person or civic record: +2 to +3 points, explicitly authored per choice.
+- Allowing a known Crier to continue: handled by the agent's daily contribution rather than an immediate duplicate charge.
+- Remembering a lost detail: -0.5 Limbo points.
+- Helping someone return home: -0.5 Limbo points and +1 sanctity point in that district.
+- Rescuing a Forgotten NPC: -1 point plus exposure recovery.
+- Destroying a major Limbo source: -5 local Limbo points unless a named story event explicitly declares a different validated value.
+
+The event definition, not Gemini prose, owns every numeric consequence.
+
+## Multi-Circle Influence Ledger
+
+Generic corruption becomes a reusable container of independent Circle values. Every location stores zero or more `CircleInfluenceState` entries keyed by an append-only Circle ID. Each value ranges independently from 0 to 1; the entries do not have to sum to 1.
+
+Florence designates Limbo as its native Circle. Florence-facing UI, journal text, events, and NPC systems call the value **Limbo Influence**. Internal reusable code uses Circle influence terminology so another Circle may enter Florence and Limbo may enter another city.
+
+Each Circle definition owns:
+
+- Circle ID and display name.
+- Icon and presentation vocabulary.
+- Native-city association.
+- Sanctity-resistance coefficient.
+- Local-source and cross-location propagation tuning.
+- Battle terrain/effect profile.
+- NPC-affliction profile.
+- Event and rumor eligibility tags.
+- Dominant and secondary presentation thresholds.
+
+The highest value controls dominant environmental presentation and encounter weighting. Secondary Circles retain their own event eligibility and quieter symptoms.
+
+## Cross-Location Circle Bleed
+
+Cross-location bleed begins only when a source exceeds 70% in that Circle.
+
+```text
+sourcePressure = clamp01((sourceInfluence - 0.70) / 0.30)
+gradient = clamp01((sourceInfluence - targetInfluence) / 0.25)
+sanctityBlock = 1 - targetSanctity x circleSanctityResistance
+
+dailyBleed = 0.012 x sourcePressure x gradient x routeStrength x sanctityBlock
+```
+
+Route strengths:
+
+- Direct strong road or adjacent district: 1.0.
+- Longer regional connection: 0.75.
+- Weak or indirect connection: 0.50.
+
+All incoming sources of the same Circle are capped at 1.5 percentage points per target per day. Influence is contagious, not liquid; export does not reduce the source. The gradient slows spread as the target approaches the source.
+
+No cross-location bleed occurs below 70%. At 85%, an unresisted strong route exports up to 0.6 points per day. At 100%, it exports up to 1.2 points per day before target resistance and the daily cap.
+
+## Save Migration
+
+- Existing `curseLevel` data in Florence migrates to the Limbo entry.
+- Existing saved `curseNodeIds` and `curseLevels` import as Limbo states when the new Circle-ledger fields are absent.
+- New saves use validated parallel arrays named `influenceLocationIds`, `influenceCircleIds`, and `influenceValues`; all three arrays must have identical lengths.
+- The existing `activeCurse` reference becomes a Circle-definition registry while retaining a compatibility path during migration.
+- Existing battle corruption seeding reads the dominant Circle unless an encounter explicitly selects one.
+- `GameFeatures.CorruptionEnabled` remains a compatibility feature gate for the first migration and may be renamed only after all callers move to Circle terminology.
+
+## World-AI Verification
+
+Deterministic simulation and Play-mode verification must confirm:
+
+- Florence begins with the approved low Limbo values and no visible Circle terminology.
+- The authored neighbor-forgetting event always occurs exactly once.
+- Pre-confrontation Criers apply cautious influence and exposure exactly once per day.
+- The first confrontation unlocks Limbo terminology and full Crier activity.
+- Disruption, escape, withdrawal, and defeat persist across save/load and unloaded scenes.
+- NPC exposure resolves identically in loaded and unloaded districts.
+- All four Unmooring stages apply the approved overlays without mutating original schedules or relationships.
+- Essential NPCs never exceed 79 exposure and retain service/quest recovery paths.
+- Forgotten NPCs enter and leave the protected pool without deletion or duplicate spawning.
+- Recovery, cleansing, and rescue use the approved values and threshold transitions.
+- Rumor, located, and discovered POI stages persist and unlock exactly once.
+- Every event consequence is idempotent by event-instance ID.
+- Gemini context includes relevant prior facts and excludes unrelated bulk history.
+- Invalid, contradictory, timed-out, or offline Gemini responses use deterministic fallback without changing authoritative results.
+- Player choices apply their authored Limbo and NPC consequences exactly once.
+- Multiple Circle entries coexist without normalization or accidental overwrites.
+- Old Florence saves migrate existing curse values to Limbo.
+- Cross-location bleed matches the approved formula, thresholds, route strengths, resistance, gradient, and cap.
+- Free exploration without unresolved sources produces no influence increase.
+- A long-horizon simulation demonstrates that one neglected city can endanger neighbors without producing an unstoppable all-map cascade.
+
 ## Deterministic Tooling
 
 A production builder:
@@ -350,6 +634,7 @@ Play-mode verification confirms:
 - Elite Crier officers, named prophets, or boss variants.
 - Modular runtime sprite-layer swapping for alternate equipment.
 - Civilian riot AI or a complete crowd simulation.
-- Dialogue trees, quests, or voiced sermons.
+- Fully generative quests, unbounded AI-authored state changes, or voiced sermons.
 - Broad combat-AI refactoring.
 - A universal arbitrary skill-effect language.
+- Implementing the other eight Circle-specific NPC-affliction profiles in this pass.
