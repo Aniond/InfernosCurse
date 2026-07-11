@@ -450,6 +450,42 @@ The first implementation retains the full append-only structured ledger in the s
 
 Event effects apply exactly once by event-instance ID. Loading, retrying a request, losing network access, or revisiting dialogue cannot duplicate consequences.
 
+## Campaign-Permanent Chronicle
+
+Major decisions cannot be undone by loading an older save from the same campaign. The authoritative `CampaignChronicle` is stored separately from ordinary save slots under `Application.persistentDataPath`.
+
+- Starting New Game creates a new random campaign ID and a new empty chronicle.
+- Every save slot created in that campaign records the campaign ID and the latest chronicle sequence it has incorporated.
+- Every Campaign-Permanent choice is appended and atomically committed before its irreversible consequences are presented as complete.
+- Loading an older slot from the same campaign reads all chronicle entries after the slot's recorded sequence and reconciles them forward into the loaded state.
+- A previously committed choice does not reopen its options. The event resolves directly to the established aftermath.
+- Deleting or overwriting one save slot does not erase the campaign chronicle.
+- Only starting a genuinely new campaign permits different Campaign-Permanent choices.
+
+Chronicle entries contain:
+
+- Campaign ID.
+- Monotonically increasing sequence number.
+- Event-instance ID.
+- Event-type and choice IDs.
+- Game date and location at commitment.
+- Canonical consequence payload using registered effect IDs and validated numeric values.
+- Previous-entry hash and current-entry hash.
+
+The chronicle uses atomic temporary-file replacement plus a rolling backup. Its hash chain detects truncation, reordering, or partial corruption. This is a reliability and save-scumming boundary, not invasive anti-cheat; the game does not contact an external authority to police local file modification.
+
+Reconciliation is idempotent:
+
+- Circle influence changes apply once by event-instance ID.
+- NPC exposure, relationship, schedule, and Forgotten-pool changes apply once.
+- Rumors, POIs, routes, inventory rewards, currency changes, unlocks, and losses apply once.
+- Dead or disabled world agents remain dead or disabled.
+- Derived Gemini summaries are rebuilt after reconciliation and never override canonical entries.
+
+If a save references a missing campaign chronicle, the game restores the latest valid rolling backup. If neither primary nor backup can be validated, it refuses to silently invent or discard permanent history and presents a clear recovery error before applying the save.
+
+The first Campaign-Permanent decision in each campaign displays: `This choice will be remembered throughout this journey.` Later permanent decisions use a consistent but less intrusive permanence marker.
+
 ## Gemini Narrative Director
 
 The existing Gemini runtime client remains the provider boundary. Credentials stay in the existing ignored local configuration and never enter assets, saves, prompts, logs, or source control.
@@ -546,6 +582,8 @@ No cross-location bleed occurs below 70%. At 85%, an unresisted strong route exp
 - Existing `curseLevel` data in Florence migrates to the Limbo entry.
 - Existing saved `curseNodeIds` and `curseLevels` import as Limbo states when the new Circle-ledger fields are absent.
 - New saves use validated parallel arrays named `influenceLocationIds`, `influenceCircleIds`, and `influenceValues`; all three arrays must have identical lengths.
+- New saves store `campaignId` and `chronicleSequence`.
+- A legacy save with no campaign ID receives a new campaign and baseline chronicle on its first successful migrated load; that assignment is committed before another save can be loaded into the same migrated campaign.
 - The existing `activeCurse` reference becomes a Circle-definition registry while retaining a compatibility path during migration.
 - Existing battle corruption seeding reads the dominant Circle unless an encounter explicitly selects one.
 - `GameFeatures.CorruptionEnabled` remains a compatibility feature gate for the first migration and may be renamed only after all callers move to Circle terminology.
@@ -566,6 +604,12 @@ Deterministic simulation and Play-mode verification must confirm:
 - Recovery, cleansing, and rescue use the approved values and threshold transitions.
 - Rumor, located, and discovered POI stages persist and unlock exactly once.
 - Every event consequence is idempotent by event-instance ID.
+- A Campaign-Permanent choice is committed before its aftermath and cannot be changed by loading an older slot from the same campaign.
+- Loading an older slot reconciles every later chronicle consequence exactly once.
+- Previously committed events do not display their choice UI again.
+- Deleting a slot does not delete its campaign chronicle, while New Game creates an independent chronicle.
+- Primary-chronicle damage restores the valid rolling backup; failure of both files produces a recovery error without silently changing permanent history.
+- Chronicle sequence and hash-chain validation detect gaps, reordering, and partial entries.
 - Gemini context includes relevant prior facts and excludes unrelated bulk history.
 - Invalid, contradictory, timed-out, or offline Gemini responses use deterministic fallback without changing authoritative results.
 - Player choices apply their authored Limbo and NPC consequences exactly once.
