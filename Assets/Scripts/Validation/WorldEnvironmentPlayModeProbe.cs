@@ -76,6 +76,21 @@ public sealed class WorldEnvironmentPlayModeProbe : MonoBehaviour
         yield return new WaitForSecondsRealtime(0.5f);
         Require(ForwardDistance(pausedAt, director.Hour) > 0.001f, "Clock did not resume after all locks released.");
 
+        float timeScaleBefore = Time.timeScale;
+        Time.timeScale = 0f;
+        float menuPausedAt = director.Hour;
+        yield return new WaitForSecondsRealtime(0.25f);
+        Require(ForwardDistance(menuPausedAt, director.Hour) < 0.0001f, "Clock moved while game time was paused.");
+        Time.timeScale = timeScaleBefore;
+
+        WorldWeatherState worldBeforeBattle = director.Weather;
+        BattleWeatherDirector.SetLocalWeather("Dense Fog");
+        Require(Mathf.Abs(WeatherVision.SightMultiplier() - 0.45f) < 0.001f,
+            "Battle-local fog did not affect tactical vision.");
+        Require(director.Weather.sourceProfileName == worldBeforeBattle.sourceProfileName,
+            "Battle-local weather mutated the world forecast.");
+        BattleWeatherDirector.ClearLocalWeather();
+
         director.SetAccumulatedWetness(0.47f);
         var save = new SaveData { accumulatedWetness = director.AccumulatedWetness };
         SaveData restored = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(save));

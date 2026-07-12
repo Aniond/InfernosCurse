@@ -38,7 +38,7 @@ public sealed class WeatherSurfaceController : MonoBehaviour
     public float GrassWetness { get; private set; }
 
     float _nextUpdate;
-    string _lastProfile = string.Empty;
+    WorldWeatherKind _lastWeatherKind = (WorldWeatherKind)(-1);
     float _targetRain;
     float _targetWetness;
     WindZone _lastCozyWindZone;
@@ -107,11 +107,11 @@ public sealed class WeatherSurfaceController : MonoBehaviour
 
     void RefreshWeatherTargets(bool force)
     {
-        string profile = FlorenceWeather.CurrentProfileName ?? string.Empty;
-        if (!force && string.Equals(profile, _lastProfile, StringComparison.Ordinal)) return;
+        WorldWeatherState weather = WorldEnvironmentState.CurrentWeather;
+        if (!force && weather.kind == _lastWeatherKind) return;
 
-        _lastProfile = profile;
-        CurrentPresentation = Classify(profile);
+        _lastWeatherKind = weather.kind;
+        CurrentPresentation = Classify(weather);
 
         switch (CurrentPresentation)
         {
@@ -136,6 +136,8 @@ public sealed class WeatherSurfaceController : MonoBehaviour
                 _targetWetness = 0f;
                 break;
         }
+        _targetRain = Mathf.Max(_targetRain, weather.precipitation);
+        _targetWetness = Mathf.Max(_targetWetness, weather.wetnessTarget);
     }
 
     void ApplyGrassIntegration()
@@ -185,14 +187,25 @@ public sealed class WeatherSurfaceController : MonoBehaviour
         }
     }
 
-    public static Presentation Classify(string profileName)
+    public static Presentation Classify(WorldWeatherState weather)
     {
-        string profile = (profileName ?? string.Empty).Trim().ToLowerInvariant();
-        if (profile.Contains("thunder") || profile.Contains("storm")) return Presentation.Storm;
-        if (profile.Contains("heavy") && profile.Contains("rain")) return Presentation.HeavyRain;
-        if (profile.Contains("rain") || profile.Contains("drizzle")) return Presentation.LightRain;
-        if (profile.Contains("fog") || profile.Contains("mist") || profile.Contains("haze")) return Presentation.Fog;
-        if (profile.Contains("cloud") || profile.Contains("overcast")) return Presentation.Cloudy;
-        return Presentation.Clear;
+        switch (weather.kind)
+        {
+            case WorldWeatherKind.Storm:
+            case WorldWeatherKind.Hail: return Presentation.Storm;
+            case WorldWeatherKind.HeavyRain: return Presentation.HeavyRain;
+            case WorldWeatherKind.Drizzle:
+            case WorldWeatherKind.Rain:
+            case WorldWeatherKind.Sleet:
+            case WorldWeatherKind.Snow: return Presentation.LightRain;
+            case WorldWeatherKind.Fog: return Presentation.Fog;
+            case WorldWeatherKind.PartlyCloudy:
+            case WorldWeatherKind.Cloudy:
+            case WorldWeatherKind.Wind: return Presentation.Cloudy;
+            default: return Presentation.Clear;
+        }
     }
+
+    public static Presentation Classify(string profileName) =>
+        Classify(WorldWeatherClassifier.ClassifyOrClear(profileName));
 }

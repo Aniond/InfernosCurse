@@ -143,13 +143,22 @@ public class LightShaft : MonoBehaviour
     // weather state or running a separate transition.
     static float WeatherStrength()
     {
-        string profile = (FlorenceWeather.CurrentProfileName ?? string.Empty).ToLowerInvariant();
-        if (profile.Contains("thunder") || profile.Contains("storm") || profile.Contains("hail")) return 0.24f;
-        if (profile.Contains("rain") || profile.Contains("precipitation") || profile.Contains("sleet")) return 0.46f;
-        if (profile.Contains("fog") || profile.Contains("haze")) return 0.34f;
-        if (profile.Contains("cloud") || profile.Contains("overcast") || profile.Contains("wind")) return 0.68f;
-        if (profile.Contains("snow")) return 0.74f;
-        return 1f;
+        WorldWeatherState weather = WorldEnvironmentState.CurrentWeather;
+        switch (weather.kind)
+        {
+            case WorldWeatherKind.Storm:
+            case WorldWeatherKind.Hail: return 0.24f;
+            case WorldWeatherKind.Drizzle:
+            case WorldWeatherKind.Rain:
+            case WorldWeatherKind.HeavyRain:
+            case WorldWeatherKind.Sleet: return 0.46f;
+            case WorldWeatherKind.Fog: return 0.34f;
+            case WorldWeatherKind.PartlyCloudy:
+            case WorldWeatherKind.Cloudy:
+            case WorldWeatherKind.Wind: return 0.68f;
+            case WorldWeatherKind.Snow: return 0.74f;
+            default: return 1f;
+        }
     }
 
     /// <summary>

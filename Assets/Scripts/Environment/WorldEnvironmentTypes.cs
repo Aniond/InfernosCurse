@@ -101,3 +101,30 @@ public struct WorldEnvironmentSnapshot
         return value;
     }
 }
+
+public static class WorldEnvironmentState
+{
+    public static WorldWeatherState CurrentWeather
+    {
+        get
+        {
+            WorldEnvironmentDirector director = WorldEnvironmentDirector.Instance;
+            if (director != null) return director.Weather;
+            return WorldWeatherClassifier.ClassifyOrClear(FlorenceWeather.CurrentProfileName);
+        }
+    }
+
+    public static WorldTimePhase CurrentPhase
+    {
+        get
+        {
+            WorldEnvironmentDirector director = WorldEnvironmentDirector.Instance;
+            if (director != null) return director.Snapshot.phase;
+            float hour = GameClock.HasClock ? GameClock.Hour : 12f;
+            if (hour >= 20f || hour < 5f) return WorldTimePhase.Night;
+            if (hour < 7f) return WorldTimePhase.Dawn;
+            if (hour < 18f) return WorldTimePhase.Day;
+            return WorldTimePhase.Dusk;
+        }
+    }
+}

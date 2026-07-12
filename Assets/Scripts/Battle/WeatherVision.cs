@@ -9,13 +9,20 @@ public static class WeatherVision
 {
     public static float SightMultiplier()
     {
-        string p = FlorenceWeather.CurrentProfileName;
-        if (string.IsNullOrEmpty(p)) return 1f;
-        p = p.ToLowerInvariant();
-        if (p.Contains("fog"))                          return 0.45f;   // world closes in
-        if (p.Contains("storm") || p.Contains("thunder")) return 0.6f;
-        if (p.Contains("rain") || p.Contains("snow") ||
-            p.Contains("sleet") || p.Contains("hail"))  return 0.75f;
-        return 1f;
+        WorldWeatherState weather = BattleWeatherDirector.HasLocalWeather
+            ? BattleWeatherDirector.LocalWeather
+            : WorldEnvironmentState.CurrentWeather;
+        switch (weather.kind)
+        {
+            case WorldWeatherKind.Fog: return 0.45f;
+            case WorldWeatherKind.Storm: return 0.6f;
+            case WorldWeatherKind.Drizzle:
+            case WorldWeatherKind.Rain:
+            case WorldWeatherKind.HeavyRain:
+            case WorldWeatherKind.Snow:
+            case WorldWeatherKind.Sleet:
+            case WorldWeatherKind.Hail: return 0.75f;
+            default: return 1f;
+        }
     }
 }

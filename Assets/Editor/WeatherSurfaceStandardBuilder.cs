@@ -85,6 +85,46 @@ public static class WeatherSurfaceStandardBuilder
         Debug.Log("[WeatherSurfaceStandard] Existing exploration scenes converted.");
     }
 
+    [MenuItem("InfernosCurse/Environment/Weather Surfaces/4. Correct Core Water")]
+    public static void CorrectCoreWater()
+    {
+        EnsureSharedStandard();
+        ConfigurePrefabWater(
+            "Assets/Environment/FlorentineInnFloor1/PropKit/Prefabs/CourtyardFountain.prefab",
+            "WaterSurface", StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
+        ConfigurePrefabWater(
+            "Assets/Environment/MercatoVecchio/ProductionKit/Prefabs/Mercato_FountainPlaza.prefab",
+            "Fountain_WaterSurface", StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
+
+        var setup = EditorSceneManager.GetSceneManagerSetup();
+        const string mercatoPath = "Assets/Scenes/MercatoVecchio.unity";
+        try
+        {
+            Scene scene = EditorSceneManager.OpenScene(mercatoPath, OpenSceneMode.Single);
+            ConfigureNamedWater(scene, "Arno_River", StandardWaterProfile.River, WeatherSurfaceExposure.Outdoor);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+        finally { EditorSceneManager.RestoreSceneManagerSetup(setup); }
+
+        AssetDatabase.SaveAssets();
+        Debug.Log("[WeatherSurfaceStandard] Core Arno and fountain water corrected; decorative streams/ripples preserved.");
+    }
+
+    static void ConfigurePrefabWater(string path, string childName, StandardWaterProfile profile,
+        WeatherSurfaceExposure exposure)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            MeshRenderer renderer = root.GetComponentsInChildren<MeshRenderer>(true)
+                .FirstOrDefault(candidate => candidate.name == childName);
+            if (renderer != null) ConfigureWater(renderer.gameObject, profile, exposure);
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     static void ConvertScene(Scene scene)
     {
         switch (scene.name)
@@ -692,6 +732,7 @@ public static class WeatherSurfaceStandardValidator
                     (renderer.sharedMaterial != null ? renderer.sharedMaterial.name : string.Empty)).ToLowerInvariant();
                 if (combined.Contains("meadow") || combined.Contains("grass")) grassCandidate = true;
                 if ((combined.Contains("water") || combined.Contains("river")) &&
+                    !IsIntentionalNonSurface(renderer.name) &&
                     renderer.GetComponent<WeatherSurface>() == null)
                 {
                     Debug.LogError($"[WeatherSurfaceStandard] {path}: legacy/unregistered water renderer '{renderer.name}'.", renderer);
@@ -712,5 +753,14 @@ public static class WeatherSurfaceStandardValidator
             findings++;
         }
         return findings;
+    }
+
+    static bool IsIntentionalNonSurface(string rendererName)
+    {
+        string value = (rendererName ?? string.Empty).ToLowerInvariant();
+        return value.StartsWith("riverwall_") ||
+               value.StartsWith("riverfront_") ||
+               value.StartsWith("waterstream_") ||
+               value.StartsWith("ripple_");
     }
 }

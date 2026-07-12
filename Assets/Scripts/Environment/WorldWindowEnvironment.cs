@@ -127,7 +127,7 @@ public sealed class WorldWindowEnvironment : MonoBehaviour
         set => exteriorWeatherObjects = value ?? Array.Empty<WeatherObject>();
     }
 
-    public WeatherKind CurrentWeather => ClassifyWeather(FlorenceWeather.CurrentProfileName);
+    public WeatherKind CurrentWeather => ClassifyWeather(WorldEnvironmentState.CurrentWeather);
 
     void OnEnable()
     {
@@ -152,7 +152,7 @@ public sealed class WorldWindowEnvironment : MonoBehaviour
 
         float hour = hasClock ? GameClock.Hour : 12f;
         float daylight = DaylightAt(hour);
-        WeatherKind weather = hasWeather ? ClassifyWeather(FlorenceWeather.CurrentProfileName) : WeatherKind.Clear;
+        WeatherKind weather = hasWeather ? ClassifyWeather(WorldEnvironmentState.CurrentWeather) : WeatherKind.Clear;
         float weatherLight = WeatherLightMultiplier(weather);
         float lightning = SampleAuthoritativeLightning(thunderReferenceIntensity);
 
@@ -249,15 +249,23 @@ public sealed class WorldWindowEnvironment : MonoBehaviour
         }
     }
 
-    static WeatherKind ClassifyWeather(string profileName)
+    static WeatherKind ClassifyWeather(WorldWeatherState weather)
     {
-        string value = (profileName ?? string.Empty).ToLowerInvariant();
-        if (value.Contains("thunder") || value.Contains("storm") || value.Contains("hail")) return WeatherKind.Storm;
-        if (value.Contains("snow") || value.Contains("sleet")) return WeatherKind.Snow;
-        if (value.Contains("rain") || value.Contains("precipitation")) return WeatherKind.Rain;
-        if (value.Contains("fog") || value.Contains("haze")) return WeatherKind.Fog;
-        if (value.Contains("cloud") || value.Contains("overcast") || value.Contains("wind")) return WeatherKind.Cloudy;
-        return WeatherKind.Clear;
+        switch (weather.kind)
+        {
+            case WorldWeatherKind.Storm:
+            case WorldWeatherKind.Hail: return WeatherKind.Storm;
+            case WorldWeatherKind.Snow:
+            case WorldWeatherKind.Sleet: return WeatherKind.Snow;
+            case WorldWeatherKind.Drizzle:
+            case WorldWeatherKind.Rain:
+            case WorldWeatherKind.HeavyRain: return WeatherKind.Rain;
+            case WorldWeatherKind.Fog: return WeatherKind.Fog;
+            case WorldWeatherKind.PartlyCloudy:
+            case WorldWeatherKind.Cloudy:
+            case WorldWeatherKind.Wind: return WeatherKind.Cloudy;
+            default: return WeatherKind.Clear;
+        }
     }
 
     static WeatherMask MaskFor(WeatherKind weather)

@@ -10,6 +10,9 @@ using UnityEngine;
 // Applies through FlorenceWeather.Apply, so COZY owns the actual transition.
 public class BattleWeatherDirector : MonoBehaviour
 {
+    public static bool HasLocalWeather { get; private set; }
+    public static WorldWeatherState LocalWeather { get; private set; }
+
     [Tooltip("Enemy turns between possible weather shifts.")]
     public int shiftEveryNTurns = 4;
     [Tooltip("Chance a due shift actually happens (classic mode).")]
@@ -25,6 +28,8 @@ public class BattleWeatherDirector : MonoBehaviour
         _profiles = Resources.LoadAll<ScriptableObject>("Profiles/Weather Profiles")
             .Select(p => p.name).ToArray();
 
+        SetLocalWeather(WorldEnvironmentState.CurrentWeather);
+
         if (BattleManager.Instance != null)
             BattleManager.Instance.OnStateChanged += OnBattleState;
     }
@@ -33,6 +38,7 @@ public class BattleWeatherDirector : MonoBehaviour
     {
         if (BattleManager.Instance != null)
             BattleManager.Instance.OnStateChanged -= OnBattleState;
+        ClearLocalWeather();
     }
 
     void OnBattleState(BattleState s)
@@ -50,8 +56,6 @@ public class BattleWeatherDirector : MonoBehaviour
     void RequestShift(string cause)
     {
         if (_busy || _profiles == null || _profiles.Length == 0) return;
-        if (FlorenceWeather.Instance == null) return;
-
         if (!GeminiClient.Available) { ApplyClassic(); return; }
         _busy = true;
         StartCoroutine(AskGemini(cause));
@@ -60,14 +64,14 @@ public class BattleWeatherDirector : MonoBehaviour
     void ApplyClassic()
     {
         string pick = _profiles[Random.Range(0, _profiles.Length)];
-        FlorenceWeather.Instance.Apply(pick);
+        SetLocalWeather(pick);
         Debug.Log($"[WeatherDirector] (classic) weather shifts: {pick}");
     }
 
     IEnumerator AskGemini(string cause)
     {
         string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        string current = FlorenceWeather.CurrentProfileName;
+        string current = LocalWeather.sourceProfileName;
         string prompt =
             "You are the weather director of a dark tactical RPG set in 1299 Florence, " +
             "where an infernal curse creeps through the land. A battle is underway in '" + scene + "'. " +
@@ -90,7 +94,7 @@ public class BattleWeatherDirector : MonoBehaviour
                     string.Equals(p, profile, System.StringComparison.OrdinalIgnoreCase));
                 if (valid != null)
                 {
-                    FlorenceWeather.Instance.Apply(valid);
+                    SetLocalWeather(valid);
                     Debug.Log($"[WeatherDirector] (Gemini) weather shifts: {valid} — \"{omen}\"");
                 }
                 else
@@ -107,4 +111,18 @@ public class BattleWeatherDirector : MonoBehaviour
                 _busy = false;
             });
     }
+
+    public static void SetLocalWeather(string profileName)
+    {
+        LocalWeather = WorldWeatherClassifier.ClassifyOrClear(profileName);
+        HasLocalWeather = true;
+    }
+
+    public static void SetLocalWeather(WorldWeatherState weather)
+    {
+        LocalWeather = weather.Clamped();
+        HasLocalWeather = true;
+    }
+
+    public static void ClearLocalWeather() => HasLocalWeather = false;
 }
