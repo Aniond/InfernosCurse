@@ -73,6 +73,17 @@ public sealed class WorldEnvironmentDirector : MonoBehaviour
         }
     }
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void EnsureRuntimeAuthority()
+    {
+        if (Instance != null) return;
+        GameSystemsRoot systems = FindAnyObjectByType<GameSystemsRoot>();
+        GameObject host = systems != null ? systems.gameObject : new GameObject("WorldEnvironmentRuntime");
+        if (systems == null) DontDestroyOnLoad(host);
+        host.AddComponent<WorldEnvironmentDirector>();
+        Debug.Log($"[WorldEnvironment] Runtime authority installed on '{host.name}'.");
+    }
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }

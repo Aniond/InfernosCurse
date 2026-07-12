@@ -11,7 +11,7 @@ public static class GugolMapAuthoringValidator
     public static void ValidateMenu()
     {
         if (!Validate(out string error)) throw new InvalidOperationException(error);
-        Debug.Log("[GugolMapValidator] Validation passed: profile, streets, venues, NPC knowledge, hidden-state isolation, and save v8.");
+        Debug.Log("[GugolMapValidator] Validation passed: profile, streets, venues, NPC knowledge, hidden-state isolation, and save v9+.");
     }
 
     public static bool Validate(out string error)
@@ -72,7 +72,7 @@ public static class GugolMapAuthoringValidator
         }
 
         int saveVersion = (int)typeof(SaveSystem).GetField(nameof(SaveSystem.CURRENT_VERSION)).GetRawConstantValue();
-        if (saveVersion != 8) errors.Add($"SaveSystem version is {saveVersion}, expected 8");
+        if (saveVersion < 9) errors.Add($"SaveSystem version is {saveVersion}, expected 9 or newer");
         ValidateNpcKnowledge(errors);
         ValidateForbiddenDependencies(errors);
 

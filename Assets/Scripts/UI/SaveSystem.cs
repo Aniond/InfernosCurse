@@ -14,6 +14,7 @@ public class SaveData
     [NonSerialized] public bool migratedLegacyInnScenePosition;
     public float timeOfDay;
     public string weatherType;
+    public float accumulatedWetness;
     public long savedAt; // UTC ticks
 
     // ── Guild-era additions (2026-07-03). Old saves deserialize these as
@@ -78,7 +79,7 @@ public class SaveData
 public static class SaveSystem
 {
     public const int SLOT_COUNT = 3;
-    public const int CURRENT_VERSION = 8;
+    public const int CURRENT_VERSION = 9;
 
     // Mid-battle saves capture a scene with none of its encounter state —
     // loading one lands in the arena with no battle and no exit. Forbidden.
@@ -155,6 +156,8 @@ public static class SaveSystem
         data.timeOfDay = GameClock.Hour;
 
         data.weatherType = FlorenceWeather.CurrentProfileName;
+        var environment = WorldEnvironmentDirector.Instance;
+        if (environment != null) data.accumulatedWetness = environment.AccumulatedWetness;
 
         // Guild-era state (all null-guarded — systems may be absent in tests).
         data.florins = FlorinWallet.Balance;
@@ -390,6 +393,8 @@ public static class SaveSystem
 
         if (!string.IsNullOrEmpty(data.weatherType) && FlorenceWeather.Instance != null)
             FlorenceWeather.Instance.Apply(data.weatherType);
+        var environment = WorldEnvironmentDirector.Instance;
+        if (environment != null) environment.SetAccumulatedWetness(data.accumulatedWetness);
 
         ImportParty(data);
 
