@@ -15,6 +15,8 @@ public static class MercatoVecchioProductionKitBuilder
     const string TerracottaPath = "Assets/Environment/FlorentineInnFloor1/StructuralKit/Materials/Inn_ServiceTerracotta.mat";
     const string FountainModelPath = "Assets/Environment/MarketSquare/Props/Fountain.glb";
     const string WaterPath = "Assets/Art/Environment/WeatherSurfaces/Water/Water_Fountain.mat";
+    const float FountainOuterDiameter = 4.9f;
+    const float FountainPlazaTop = 0.24f;
 
     [MenuItem("InfernosCurse/Mercato Vecchio/1. Rebuild Production Kit")]
     public static void Build()
@@ -114,7 +116,7 @@ public static class MercatoVecchioProductionKitBuilder
             GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(source);
             model.name = "Fountain_AuthoredModel";
             model.transform.SetParent(root.transform, false);
-            model.transform.localScale = Vector3.one * 1.45f;
+            NormalizeModelToHorizontalDiameter(model, FountainOuterDiameter, FountainPlazaTop);
         }
         else
         {
@@ -129,6 +131,32 @@ public static class MercatoVecchioProductionKitBuilder
             WeatherSurfaceStandardBuilder.ConfigureWater(surface, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
         }
         return root;
+    }
+
+    static void NormalizeModelToHorizontalDiameter(GameObject model, float targetDiameter, float groundY)
+    {
+        model.transform.localPosition = Vector3.zero;
+        model.transform.localRotation = Quaternion.identity;
+        model.transform.localScale = Vector3.one;
+
+        Bounds bounds = RendererBounds(model);
+        float diameter = Mathf.Max(bounds.size.x, bounds.size.z);
+        if (diameter <= 0.001f)
+            throw new InvalidOperationException("Authored fountain has no measurable horizontal renderer bounds.");
+
+        model.transform.localScale = Vector3.one * (targetDiameter / diameter);
+        bounds = RendererBounds(model);
+        model.transform.position += new Vector3(-bounds.center.x, groundY - bounds.min.y, -bounds.center.z);
+    }
+
+    static Bounds RendererBounds(GameObject root)
+    {
+        Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0)
+            throw new InvalidOperationException(root.name + " has no renderers.");
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+        return bounds;
     }
 
     static void Save(string name, GameObject root)
@@ -218,9 +246,45 @@ public static class MercatoVecchioProductionKitBuilder
             if (name != "Mercato_FountainPlaza" && prefab.GetComponentsInChildren<Collider>(true).Length == 0)
                 errors.Add(name + " has no colliders");
         }
+        ValidateFountain(errors);
         foreach (string error in errors) Debug.LogError("[MercatoProductionKitValidator] " + error);
         if (errors.Count > 0) throw new InvalidOperationException($"Mercato production kit validation failed with {errors.Count} error(s).");
         MercatoCommercePolishBuilder.Validate();
         Debug.Log("[MercatoProductionKitValidator] Validation passed for 7 reusable production prefabs.");
+    }
+
+    static void ValidateFountain(List<string> errors)
+    {
+        string path = $"{PrefabRoot}/Mercato_FountainPlaza.prefab";
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            Transform model = root.transform.Find("Fountain_AuthoredModel");
+            Transform water = root.transform.Find("Fountain_WaterSurface");
+            if (model == null)
+            {
+                errors.Add("Mercato fountain is missing its authored model");
+                return;
+            }
+            if (water == null)
+            {
+                errors.Add("Mercato fountain is missing its water surface");
+                return;
+            }
+
+            Bounds modelBounds = RendererBounds(model.gameObject);
+            Bounds waterBounds = RendererBounds(water.gameObject);
+            float modelDiameter = Mathf.Max(modelBounds.size.x, modelBounds.size.z);
+            float waterDiameter = Mathf.Max(waterBounds.size.x, waterBounds.size.z);
+            if (Mathf.Abs(modelDiameter - FountainOuterDiameter) > 0.05f)
+                errors.Add($"Mercato fountain authored diameter is {modelDiameter:0.00}m; expected {FountainOuterDiameter:0.00}m");
+            if (Mathf.Abs(waterDiameter - 4.3f) > 0.05f)
+                errors.Add($"Mercato fountain water diameter is {waterDiameter:0.00}m; expected 4.30m");
+            if (modelDiameter - waterDiameter < 0.5f)
+                errors.Add("Mercato fountain needs at least a 0.25m visible stone rim around the water");
+            if (Mathf.Abs(modelBounds.min.y - FountainPlazaTop) > 0.03f)
+                errors.Add($"Mercato fountain is not grounded on the plaza ({modelBounds.min.y:0.00}m)");
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 }
