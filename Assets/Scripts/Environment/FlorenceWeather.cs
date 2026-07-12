@@ -1,50 +1,27 @@
 using System;
-using UnityEngine;
+using System.Collections.Generic;
 using DistantLands.Cozy;
 using DistantLands.Cozy.Data;
+using UnityEngine;
 
-// Rolls one weather condition per in-game day from research-backed Arno-valley
-// climate data (Assets/Data/Weather/FlorenceClimate.json) and applies it through
-// COZY. Fully deterministic: the base roll AND the autumn rain-spell chain are
-// pure functions of the calendar date, so a given playthrough day always gets
-// the same sky — across revisits and across save/load.
-//
-// Era layer (chronicle-verified — see the JSON header and WEATHER_SYSTEM.md):
-// the circa-1300 Arno was flood-prone through multi-day autumn rain (Villani:
-// 1269, 1280s, 1302-03, 1333). In autumn a wet day can chain into the next;
-// late spell days render as Heavy Rain and raise FloodRiskToday for future
-// gameplay/story hooks.
-//
-// Florence fog is a radiation/morning phenomenon: fog days start in Dense Fog
-// and burn off to haze mid-morning instead of lasting all day.
-public class FlorenceWeather : MonoBehaviour
+/// <summary>
+/// Deterministic Florence forecast service. The calendar and district generate
+/// two to four fronts per day; COZY only presents the currently active front.
+/// </summary>
+public sealed class FlorenceWeather : MonoBehaviour
 {
-    // Lazy-resolving so a mid-play domain reload (statics wiped, Awake not
-    // re-run) can't leave the singleton permanently null.
     static FlorenceWeather _instance;
-    public static FlorenceWeather Instance
-    {
-        get => _instance != null ? _instance : (_instance = FindAnyObjectByType<FlorenceWeather>());
-        private set => _instance = value;
-    }
+    public static FlorenceWeather Instance =>
+        _instance != null ? _instance : (_instance = FindAnyObjectByType<FlorenceWeather>());
 
-    [Tooltip("FlorenceClimate.json — per-day condition probabilities keyed by real month name.")]
     public TextAsset climateJson;
+    [Min(0f)] public float transitionSeconds = 20f;
 
-    [Tooltip("Seconds COZY takes to blend into the day's weather.")]
-    public float transitionSeconds = 20f;
-
-    [Tooltip("Hour (0-24) at which morning fog burns off into haze.")]
-    public float fogBurnOffHour = 10.5f;
-
-    /// <summary>COZY profile name currently applied (for save games).</summary>
-    public static string CurrentProfileName { get; private set; } = "";
-
-    /// <summary>True on a late day of an autumn rain spell — the 1269/1333-style Arno flood setup.</summary>
+    public static string CurrentProfileName { get; private set; } = string.Empty;
     public static bool FloodRiskToday { get; private set; }
 
     [Serializable]
-    public class MonthRow
+    public sealed class MonthRow
     {
         public int month;
         public string name;
@@ -54,7 +31,7 @@ public class FlorenceWeather : MonoBehaviour
     }
 
     [Serializable]
-    public class RainSpell
+    public sealed class RainSpell
     {
         public string[] months;
         public float chainProb = 0.45f;
@@ -64,363 +41,184 @@ public class FlorenceWeather : MonoBehaviour
     }
 
     [Serializable]
-    class ClimateFile { public MonthRow[] months; public RainSpell rainSpell; }
+    sealed class ClimateFile
+    {
+        public MonthRow[] months;
+        public RainSpell rainSpell;
+    }
 
     MonthRow[] _months;
     RainSpell _spell;
-    string _appliedDayKey = "";
-    string _appliedDistrictId = "";
-    string _todayCondition = "";
-    bool _fogBurnedOff;
+    WorldDailyForecast _forecast;
+    string _forecastKey = string.Empty;
+    int _activeFrontIndex = -1;
+
+    static Dictionary<string, WeatherProfile> _profileCache;
+
+    public WorldDailyForecast CurrentForecast => _forecast;
+    public WorldWeatherState CurrentWeather =>
+        _forecast != null ? _forecast.FrontAt(GameClock.Hour).weather : WorldWeatherState.Clear();
 
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
-        Instance = this;
+        _instance = this;
         EnsureData();
-    }
-
-    // Re-parse after mid-play domain reloads too (non-serialized cache dies).
-    void EnsureData()
-    {
-        if (_months != null) return;
-        if (climateJson != null)
-        {
-            var file = JsonUtility.FromJson<ClimateFile>(climateJson.text);
-            _months = file.months;
-            _spell = file.rainSpell;
-        }
-        else Debug.LogWarning("[FlorenceWeather] No climate JSON assigned.");
     }
 
     void OnDestroy()
     {
-        if (Instance == this) Instance = null;
+        if (_instance == this) _instance = null;
     }
 
     void Update()
     {
-        // Poll the calendar rather than subscribing — both live on GameSystems
-        // and this sidesteps init-order between them. One string compare per frame.
         EnsureData();
-        var cal = GameCalendar.Instance;
-        if (cal == null || _months == null) return;
+        GameCalendar calendar = GameCalendar.Instance;
+        if (calendar == null || _months == null) return;
 
-        string key = cal.Year + ":" + cal.DayOfYear;
-        if (key != _appliedDayKey)
+        string key = $"{calendar.Year}:{calendar.DayOfYear}:{DistrictTracker.CurrentNodeId}";
+        if (!string.Equals(key, _forecastKey, StringComparison.Ordinal))
         {
-            _appliedDayKey = key;
-            ApplyToday(cal);
-        }
-        // Same poll-don't-subscribe pattern for district changes: arriving in a
-        // new district re-derives its local variant of today's weather.
-        else if (DistrictTracker.CurrentNodeId != _appliedDistrictId)
-        {
-            ApplyToday(cal);
+            _forecastKey = key;
+            _forecast = Generate(calendar, ResolveNode(DistrictTracker.CurrentNodeId));
+            _activeFrontIndex = -1;
+            FloodRiskToday = _forecast.floodRisk;
         }
 
-        // Radiation fog burns off mid-morning; the slow transition reads as the
-        // valley haze lifting rather than a weather change.
-        if (_todayCondition == "fog" && !_fogBurnedOff && GameClock.Hour >= fogBurnOffHour && GameClock.Hour < 20f)
-        {
-            _fogBurnedOff = true;
-            ApplyProfile("Mostly Clear", 60f);
-        }
+        int index = _forecast.FrontIndexAt(GameClock.Hour);
+        if (index == _activeFrontIndex || index < 0) return;
+        _activeFrontIndex = index;
+        Present(_forecast.fronts[index], transitionSeconds);
     }
 
-    // ── deterministic condition engine ──────────────────────────────────────
-
-    static int Seed(int year, int dayOfYear) => year * 1000 + dayOfYear;
-
-    MonthRow RowForDay(GameCalendar cal, int dayOfYear)
+    public WorldDailyForecast ForecastForNode(HubNode node)
     {
-        int mi = Mathf.Clamp(dayOfYear / Mathf.Max(1, cal.daysPerMonth), 0, 11);
-        return RowFor((GameCalendar.Month)mi);
+        EnsureData();
+        GameCalendar calendar = GameCalendar.Instance;
+        return calendar != null && _months != null
+            ? Generate(calendar, node)
+            : new WorldDailyForecast();
     }
 
-    MonthRow RowFor(GameCalendar.Month month)
+    public string ConditionForNode(HubNode node)
     {
-        // GameCalendar is stile fiorentino — match by English month NAME, never index.
-        string english = GameCalendar.EnglishName(month);
-        foreach (var m in _months)
-            if (string.Equals(m.name, english, StringComparison.OrdinalIgnoreCase))
-                return m;
-        return null;
+        WorldDailyForecast forecast = ForecastForNode(node);
+        WorldWeatherFront front = forecast.FrontAt(GameClock.HasClock ? GameClock.Hour : 12f);
+        return string.IsNullOrEmpty(front.condition) ? "clear" : front.condition;
     }
 
-    // The raw dice roll for a date, no chaining.
-    static string BaseCondition(MonthRow m, int seed)
+    public WorldWeatherState WeatherForNode(HubNode node)
     {
-        var rng = new System.Random(seed);
-        double r = rng.NextDouble();
-        if ((r -= m.fogProb) < 0) return "fog";
-        if ((r -= m.rainProb) < 0) return "rain";
-        if ((r -= m.stormProb) < 0) return "storm";
-        if ((r -= m.windProb) < 0) return "wind";
-        if ((r -= m.snowProb) < 0) return "snow";
-        if ((r -= m.sleetProb) < 0) return "sleet";
-        if ((r -= m.hailProb) < 0) return "hail";
-        return "clear";
+        WorldDailyForecast forecast = ForecastForNode(node);
+        WorldWeatherFront front = forecast.FrontAt(GameClock.HasClock ? GameClock.Hour : 12f);
+        return string.IsNullOrEmpty(front.profileName) ? WorldWeatherState.Clear() : front.weather;
     }
 
-    static bool IsWet(string c) => c == "rain" || c == "storm";
-
-    bool InSpellSeason(MonthRow m)
-    {
-        if (_spell?.months == null || m == null) return false;
-        foreach (var n in _spell.months)
-            if (string.Equals(n, m.name, StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
-    }
-
-    // 1 = first wet day of a spell, 2 = second consecutive, … 0 = dry today.
-    // Pure function of the date, so spells reproduce identically after
-    // save/load or a revisit. Two passes: walk back to the nearest day that is
-    // CERTAINLY dry (no base wet, no possible chain roll — decidable without
-    // history), then replay the spell recurrence forward from that zero.
-    int SpellDay(GameCalendar cal, int year, int dayOfYear)
-    {
-        int maxDays = _spell != null ? _spell.maxDays : 4;
-        int daysPerYear = Mathf.Max(1, cal.daysPerMonth) * 12;
-        const int LookbackCap = 12; // spells cap at maxDays; this bound is generous
-
-        int start = 1;
-        for (; start <= LookbackCap; start++)
-        {
-            int y = year, d = dayOfYear - start;
-            while (d < 0) { d += daysPerYear; y--; }
-            var row = RowForDay(cal, d);
-            if (row == null) break;
-            bool possiblyWet = IsWet(BaseCondition(row, Seed(y, d))) ||
-                               (InSpellSeason(row) && ChainRoll(y, d));
-            if (!possiblyWet) break; // spell(d) == 0 for certain
-        }
-
-        int spell = 0;
-        for (int back = start - 1; back >= 0; back--)
-        {
-            int y = year, d = dayOfYear - back;
-            while (d < 0) { d += daysPerYear; y--; }
-            var row = RowForDay(cal, d);
-            if (row == null) { spell = 0; continue; }
-
-            bool wet = IsWet(BaseCondition(row, Seed(y, d)));
-            if (!wet && spell >= 1 && spell < maxDays && InSpellSeason(row))
-                wet = ChainRoll(y, d);
-            spell = wet ? Mathf.Min(spell + 1, maxDays) : 0;
-        }
-        return spell;
-    }
-
-    bool ChainRoll(int year, int dayOfYear)
-    {
-        // Separate seed stream so chaining never disturbs the base roll.
-        var rng = new System.Random(Seed(year, dayOfYear) ^ 0x05F00D);
-        return rng.NextDouble() < (_spell != null ? _spell.chainProb : 0f);
-    }
-
-    // ── daily application ────────────────────────────────────────────────────
-
-    void ApplyToday(GameCalendar cal)
-    {
-        var row = RowForDay(cal, cal.DayOfYear);
-        if (row == null) return;
-
-        int seed = Seed(cal.Year, cal.DayOfYear);
-        string cond = BaseCondition(row, seed);
-
-        int spellDay = 0;
-        if (IsWet(cond) || InSpellSeason(row))
-            spellDay = SpellDay(cal, cal.Year, cal.DayOfYear);
-        if (spellDay >= 1 && !IsWet(cond))
-            cond = "rain"; // chained extension of yesterday's rain
-
-        FloodRiskToday = _spell != null && spellDay >= _spell.floodRiskFromDay;
-
-        // District layer: the city rolls ONE base condition (rain spells and
-        // flood logic stay city-wide), then the district the player occupies
-        // renders its own local variant of it.
-        var node = HubMap.Instance != null ? HubMap.Instance.GetNode(DistrictTracker.CurrentNodeId) : null;
-        string localCond = DeriveDistrictCondition(cond, node, seed);
-
-        _todayCondition = localCond;
-        _fogBurnedOff = false;
-        _appliedDistrictId = DistrictTracker.CurrentNodeId;
-
-        ApplyProfile(ProfileForDistrict(localCond, node, seed, spellDay), transitionSeconds);
-        if (FloodRiskToday)
-            Debug.Log($"[FlorenceWeather] Rain spell day {spellDay} — FLOOD RISK on the Arno (1269/1333-style).");
-    }
-
-    // ── per-district variants ────────────────────────────────────────────────
-
-    // FNV-1a — stable across runtimes/domain reloads, unlike string.GetHashCode.
-    static int NodeSalt(string id)
-    {
-        unchecked
-        {
-            uint h = 2166136261;
-            foreach (char c in id ?? "") { h ^= c; h *= 16777619; }
-            return (int)h;
-        }
-    }
-
-    // Pure function of (city condition, microclimate, date, node id): a given
-    // district always shows the same local weather on a given day.
-    static string DeriveDistrictCondition(string city, HubNode node, int daySeed)
-    {
-        if (node == null || node.microClimate == MicroClimate.Default) return city;
-        var rng = new System.Random(daySeed ^ NodeSalt(node.id));
-        switch (node.microClimate)
-        {
-            case MicroClimate.Riverside:
-                // Radiation fog pools over the Arno on days the city wakes clear.
-                if (city == "clear" && rng.NextDouble() < 0.35) return "fog";
-                return city;
-            case MicroClimate.OpenPiazza:
-                // Open squares turn gusty under an otherwise clear sky.
-                if (city == "clear" && rng.NextDouble() < 0.25) return "wind";
-                return city;
-            case MicroClimate.Sheltered:
-                // Walls and rooflines blunt the worst of it.
-                if (city == "storm") return "rain";
-                if (city == "hail")  return "rain";
-                if (city == "wind")  return "clear";
-                return city;
-            case MicroClimate.Hilltop:
-                // Hills sit above the valley's radiation fog but catch the wind.
-                if (city == "fog"   && rng.NextDouble() < 0.65) return "clear";
-                if (city == "clear" && rng.NextDouble() < 0.30) return "wind";
-                return city;
-            default:
-                return city;
-        }
-    }
-
-    string ProfileForDistrict(string cond, HubNode node, int seed, int spellDay)
-    {
-        int salt = node != null ? NodeSalt(node.id) : 0;
-        string profile = ProfileFor(cond, seed ^ salt, spellDay);
-        // The river bank catches a rain spell hardest.
-        if (node != null && node.microClimate == MicroClimate.Riverside &&
-            cond == "rain" && spellDay >= 1)
-            profile = "Heavy Rain";
-        return profile;
-    }
-
-    /// <summary>
-    /// Pure flood-risk check for an arbitrary date. World-event authoring may call this
-    /// per day-tick so multi-day jumps (road travel, rest chains) charge the
-    /// Arno flood spike on exactly the days it applies — the cached static
-    /// FloodRiskToday only reflects the LAST ApplyToday and goes stale across
-    /// AdvanceDay×N loops.
-    /// </summary>
     public bool ComputeFloodRisk(int year, int dayOfYear)
     {
         EnsureData();
-        var cal = GameCalendar.Instance;
-        if (cal == null || _months == null || _spell == null) return false;
-        var row = RowForDay(cal, dayOfYear);
-        if (row == null) return false;
-
-        string cond = BaseCondition(row, Seed(year, dayOfYear));
-        if (!IsWet(cond) && !InSpellSeason(row)) return false;
-        return SpellDay(cal, year, dayOfYear) >= _spell.floodRiskFromDay;
+        GameCalendar calendar = GameCalendar.Instance;
+        return calendar != null && WorldForecastGenerator.ComputeFloodRisk(
+            year, dayOfYear, calendar.daysPerMonth, _months, _spell);
     }
 
     /// <summary>
-    /// The condition ("clear","fog","rain","storm","wind","snow","sleet","hail")
-    /// a district shows today. Pure and side-effect free — the Gugol Mappe pins
-    /// call this for their weather glyphs, including while the game is paused.
+    /// Compatibility/manual presentation entry point. The deterministic world
+    /// forecast resumes on the next update and remains the source of truth.
     /// </summary>
-    public string ConditionForNode(HubNode node)
+    public void Apply(string profileName)
     {
-        EnsureData();
-        var cal = GameCalendar.Instance;
-        if (cal == null || _months == null || node == null) return "clear";
-        var row = RowForDay(cal, cal.DayOfYear);
-        if (row == null) return "clear";
-
-        int seed = Seed(cal.Year, cal.DayOfYear);
-        string cond = BaseCondition(row, seed);
-        int spellDay = 0;
-        if (IsWet(cond) || InSpellSeason(row))
-            spellDay = SpellDay(cal, cal.Year, cal.DayOfYear);
-        if (spellDay >= 1 && !IsWet(cond))
-            cond = "rain";
-        return DeriveDistrictCondition(cond, node, seed);
-    }
-
-    string ProfileFor(string cond, int seed, int spellDay)
-    {
-        var rng = new System.Random(seed ^ 0x9E37);
-        switch (cond)
+        WorldWeatherState weather = WorldWeatherClassifier.ClassifyOrClear(profileName);
+        var front = new WorldWeatherFront
         {
-            case "fog": return "Dense Fog";
-            case "rain":
-                if (_spell != null && spellDay >= _spell.heavyFromDay) return "Heavy Rain";
-                return rng.NextDouble() < 0.3 ? "Heavy Rain" : "Light Rain";
-            case "storm": return "Thunder Storm";
-            case "wind": return "Mostly Cloudy";              // gusty grey day
-            case "snow": return "Light Snow";
-            case "sleet": return "Light Precipitation";       // cold mix
-            case "hail": return "Hail Storm";
-            default:
-                double c = rng.NextDouble();
-                return c < 0.5 ? "Clear" : (c < 0.8 ? "Mostly Clear" : "Partly Cloudy");
-        }
+            startHour = 0f,
+            endHour = 24f,
+            condition = ConditionName(weather.kind),
+            profileName = profileName,
+            weather = weather
+        };
+        Present(front, transitionSeconds);
+        _activeFrontIndex = -1;
     }
 
-    /// <summary>Apply a COZY weather profile by name (also used by save-game restore).</summary>
-    public void Apply(string profileName) => ApplyProfile(profileName, transitionSeconds);
+    WorldDailyForecast Generate(GameCalendar calendar, HubNode node)
+    {
+        return WorldForecastGenerator.Generate(
+            calendar.Year,
+            calendar.DayOfYear,
+            calendar.daysPerMonth,
+            _months,
+            _spell,
+            node);
+    }
 
-    // COZY nests some profiles in subfolders (e.g. Heavy Rain), so an exact-path
-    // Resources.Load misses them — resolve by NAME over a recursive LoadAll once.
-    static System.Collections.Generic.Dictionary<string, WeatherProfile> _profileCache;
+    void EnsureData()
+    {
+        if (_months != null) return;
+        if (climateJson == null)
+        {
+            Debug.LogWarning("[FlorenceWeather] No climate JSON assigned.");
+            return;
+        }
+        ClimateFile file = JsonUtility.FromJson<ClimateFile>(climateJson.text);
+        _months = file?.months;
+        _spell = file?.rainSpell;
+    }
 
-    static WeatherProfile FindProfile(string name)
+    static HubNode ResolveNode(string nodeId)
+    {
+        return HubMap.Instance != null ? HubMap.Instance.GetNode(nodeId) : null;
+    }
+
+    void Present(WorldWeatherFront front, float transition)
+    {
+        CurrentProfileName = front.profileName ?? string.Empty;
+        FloodRiskToday = front.weather.floodRisk || (_forecast != null && _forecast.floodRisk);
+
+        WorldEnvironmentDirector director = WorldEnvironmentDirector.Instance;
+        if (director != null) director.SetWeather(front.weather);
+
+        CozyWeather cozy = CozyWeather.instance;
+        if (cozy == null || cozy.weatherModule == null || !cozy.gameObject.activeInHierarchy) return;
+        WeatherProfile profile = FindProfile(front.profileName);
+        if (profile == null)
+        {
+            Debug.LogWarning($"[FlorenceWeather] COZY profile '{front.profileName}' not found.");
+            return;
+        }
+        cozy.weatherModule.ecosystem.weatherSelectionMode = CozyEcosystem.EcosystemStyle.manual;
+        cozy.weatherModule.ecosystem.SetWeather(profile, Mathf.Max(0f, transition));
+        Debug.Log($"[FlorenceWeather] Front {_activeFrontIndex + 1}/{_forecast?.fronts?.Length ?? 0}: " +
+                  $"{front.profileName} ({front.startHour:00.0}-{front.endHour:00.0}).");
+    }
+
+    static WeatherProfile FindProfile(string profileName)
     {
         if (_profileCache == null)
         {
-            _profileCache = new System.Collections.Generic.Dictionary<string, WeatherProfile>(StringComparer.OrdinalIgnoreCase);
-            foreach (var p in Resources.LoadAll<WeatherProfile>("Profiles/Weather Profiles"))
-                if (!_profileCache.ContainsKey(p.name)) _profileCache[p.name] = p;
+            _profileCache = new Dictionary<string, WeatherProfile>(StringComparer.OrdinalIgnoreCase);
+            foreach (WeatherProfile profile in Resources.LoadAll<WeatherProfile>("Profiles/Weather Profiles"))
+                if (!_profileCache.ContainsKey(profile.name)) _profileCache.Add(profile.name, profile);
         }
-        _profileCache.TryGetValue(name, out var found);
+        _profileCache.TryGetValue(profileName ?? string.Empty, out WeatherProfile found);
         return found;
     }
 
-    void ApplyProfile(string profileName, float transition)
+    static string ConditionName(WorldWeatherKind kind)
     {
-        var cozy = CozyWeather.instance;
-        if (cozy == null || cozy.weatherModule == null)
+        switch (kind)
         {
-            Debug.LogWarning("[FlorenceWeather] COZY not present — cannot set weather.");
-            return;
+            case WorldWeatherKind.Fog: return "fog";
+            case WorldWeatherKind.Drizzle:
+            case WorldWeatherKind.Rain:
+            case WorldWeatherKind.HeavyRain: return "rain";
+            case WorldWeatherKind.Storm: return "storm";
+            case WorldWeatherKind.Wind: return "wind";
+            case WorldWeatherKind.Snow: return "snow";
+            case WorldWeatherKind.Sleet: return "sleet";
+            case WorldWeatherKind.Hail: return "hail";
+            default: return "clear";
         }
-
-        // Weather is suspended (battle scenes — CozySceneAdapter's guard).
-        // SetWeather would try to start a coroutine on the inactive sphere and
-        // error. Skip silently: the district poll re-applies on return because
-        // the arrival node differs from the one recorded here.
-        if (!cozy.gameObject.activeInHierarchy) return;
-
-        var profile = FindProfile(profileName);
-        if (profile == null)
-        {
-            Debug.LogWarning($"[FlorenceWeather] COZY profile '{profileName}' not found.");
-            return;
-        }
-
-        cozy.weatherModule.ecosystem.weatherSelectionMode = CozyEcosystem.EcosystemStyle.manual;
-        cozy.weatherModule.ecosystem.SetWeather(profile, transition);
-        CurrentProfileName = profileName;
-
-        // A save-restore counts as today's weather — don't re-roll over it.
-        var cal = GameCalendar.Instance;
-        if (cal != null) _appliedDayKey = cal.Year + ":" + cal.DayOfYear;
-        _appliedDistrictId = DistrictTracker.CurrentNodeId;
-
-        Debug.Log($"[FlorenceWeather] Weather set: {profileName}");
     }
 }
