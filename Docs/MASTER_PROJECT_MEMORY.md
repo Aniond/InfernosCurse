@@ -390,7 +390,7 @@ Completed and runtime-verified on 2026-07-12:
 - `MercatoVecchioProductionBuilder` now places those four roles across the same sixteen deterministic anchors and adds two authored handcarts. Existing aisles, travel routes, battle-grid geometry, player start, and fountain placement are preserved. The old `Stall_Goods_*` cube merchandise is rejected by validation.
 - The deterministic rebuild checks for a dirty Mercato scene before regenerating referenced prefabs, preventing its own prefab imports from creating a false dirty-scene failure.
 - Rebuilt Arno and fountain surfaces now use `WeatherSurfaceStandardBuilder.ConfigureWater`; rain impacts and shared weather-surface registration survive future Mercato rebuilds.
-- The approved fountain integration in `Docs/superpowers/specs/2026-07-12-mercato-fountain-scale-integration-design.md` (design commit `6b2b1485`) normalizes the authored fountain to a 4.90 m outer diameter around the existing 4.30 m water surface. The builder centers it from renderer bounds, grounds it at the 0.24 m plaza top, and validates the resulting visible stone rim.
+- The approved fountain integration in `Docs/superpowers/specs/2026-07-12-mercato-fountain-scale-integration-design.md` (design commit `6b2b1485`) normalizes the authored fountain to a 4.90 m outer diameter. The lower-basin water is 3.55 m wide at a 1.06 m waterline so it stays contained by the stone bowl. The builder preserves the GLB's authored upright rotation, centers it from renderer bounds, grounds it at the 0.24 m plaza top, and validates the resulting orientation and containment.
 
 ### Reusable seamless-interior camera profile
 
@@ -417,7 +417,7 @@ Completed and runtime-verified on 2026-07-12:
 - `[HybridZoneValidator]` classified ten scenes with zero invalid partial configurations; Mercato remained a valid 90x64 urban hybrid zone.
 - `[UrbanTerrainValidator]` passed five profile/material/mesh sets and five production surfaces with colliders retained.
 - `[WeatherSurfaceStandard]` passed with no unexplained legacy grass or water surfaces after the registered Arno/fountain correction.
-- `[MercatoProductionKitValidator]` passed the rebuilt seven-prefab kit with the authored fountain at 4.90 m, its water at 4.30 m, at least 0.25 m of radial stone rim, and the model grounded on the plaza top.
+- `[MercatoProductionKitValidator]` passed the rebuilt seven-prefab kit with the authored fountain upright at 4.90 m, its contained lower-basin water at 3.55 m, and the model grounded on the plaza top.
 - Manual runtime Game-view review confirmed distinct period stall silhouettes, restrained canvas colors, open aisles, readable player scale, and the preserved locked HD-2D composition. Unity was left out of Play Mode.
 
 ## Gugol Mappe Refined Browsing and Street View

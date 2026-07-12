@@ -17,6 +17,8 @@ public static class MercatoVecchioProductionKitBuilder
     const string WaterPath = "Assets/Art/Environment/WeatherSurfaces/Water/Water_Fountain.mat";
     const float FountainOuterDiameter = 4.9f;
     const float FountainPlazaTop = 0.24f;
+    const float FountainWaterDiameter = 3.55f;
+    const float FountainWaterSurfaceY = 1.06f;
 
     [MenuItem("InfernosCurse/Mercato Vecchio/1. Rebuild Production Kit")]
     public static void Build()
@@ -127,7 +129,7 @@ public static class MercatoVecchioProductionKitBuilder
         Material water = AssetDatabase.LoadAssetAtPath<Material>(WaterPath);
         if (water != null)
         {
-            GameObject surface = Cylinder(root.transform, "Fountain_WaterSurface", new Vector3(0f, 0.92f, 0f), 2.15f, 0.04f, water, 32, false);
+            GameObject surface = Cylinder(root.transform, "Fountain_WaterSurface", new Vector3(0f, FountainWaterSurfaceY, 0f), FountainWaterDiameter * 0.5f, 0.04f, water, 32, false);
             WeatherSurfaceStandardBuilder.ConfigureWater(surface, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
         }
         return root;
@@ -136,7 +138,6 @@ public static class MercatoVecchioProductionKitBuilder
     static void NormalizeModelToHorizontalDiameter(GameObject model, float targetDiameter, float groundY)
     {
         model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.identity;
         model.transform.localScale = Vector3.one;
 
         Bounds bounds = RendererBounds(model);
@@ -273,15 +274,26 @@ public static class MercatoVecchioProductionKitBuilder
             }
 
             Bounds modelBounds = RendererBounds(model.gameObject);
-            Bounds waterBounds = RendererBounds(water.gameObject);
+            Renderer waterRenderer = water.GetComponent<Renderer>();
+            if (waterRenderer == null)
+            {
+                errors.Add("Mercato fountain water surface has no renderer");
+                return;
+            }
+            Bounds waterBounds = waterRenderer.bounds;
+            GameObject source = AssetDatabase.LoadAssetAtPath<GameObject>(FountainModelPath);
+            if (source == null || Quaternion.Angle(model.localRotation, source.transform.localRotation) > 0.1f)
+                errors.Add("Mercato fountain does not preserve the authored model orientation");
             float modelDiameter = Mathf.Max(modelBounds.size.x, modelBounds.size.z);
             float waterDiameter = Mathf.Max(waterBounds.size.x, waterBounds.size.z);
             if (Mathf.Abs(modelDiameter - FountainOuterDiameter) > 0.05f)
                 errors.Add($"Mercato fountain authored diameter is {modelDiameter:0.00}m; expected {FountainOuterDiameter:0.00}m");
-            if (Mathf.Abs(waterDiameter - 4.3f) > 0.05f)
-                errors.Add($"Mercato fountain water diameter is {waterDiameter:0.00}m; expected 4.30m");
-            if (modelDiameter - waterDiameter < 0.5f)
-                errors.Add("Mercato fountain needs at least a 0.25m visible stone rim around the water");
+            if (Mathf.Abs(waterDiameter - FountainWaterDiameter) > 0.05f)
+                errors.Add($"Mercato fountain water diameter is {waterDiameter:0.00}m; expected {FountainWaterDiameter:0.00}m");
+            if (modelDiameter - waterDiameter < 1.2f)
+                errors.Add("Mercato fountain water must remain contained inside the lower stone basin");
+            if (waterBounds.min.y < FountainWaterSurfaceY - 0.03f)
+                errors.Add($"Mercato fountain water is sitting too low at {waterBounds.min.y:0.00}m");
             if (Mathf.Abs(modelBounds.min.y - FountainPlazaTop) > 0.03f)
                 errors.Add($"Mercato fountain is not grounded on the plaza ({modelBounds.min.y:0.00}m)");
         }
