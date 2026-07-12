@@ -309,7 +309,7 @@ public class FlorenceWeather : MonoBehaviour
     }
 
     /// <summary>
-    /// Pure flood-risk check for an arbitrary date. DailyCurseDrift calls this
+    /// Pure flood-risk check for an arbitrary date. World-event authoring may call this
     /// per day-tick so multi-day jumps (road travel, rest chains) charge the
     /// Arno flood spike on exactly the days it applies — the cached static
     /// FloodRiskToday only reflects the LAST ApplyToday and goes stale across

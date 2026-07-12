@@ -5,8 +5,8 @@ using TMPro;
 
 // One clickable pin on the Gugol Mappe overlay. Built entirely in code by
 // GugolMapUI (no prefab). Ported from MapNodeView (which still serves the
-// legacy WorldMap scene): pointer handlers and the subtle curse tint are
-// carried over verbatim; adds locked/teaser state, hover scale, a pulsing
+// legacy WorldMap scene): pointer handlers plus locked/teaser state, hover
+// scale, a pulsing
 // "you are here" dot, a per-district weather glyph, and search dimming.
 [RequireComponent(typeof(RectTransform))]
 public class GugolMapPin : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
@@ -20,8 +20,7 @@ public class GugolMapPin : MonoBehaviour, IPointerClickHandler, IPointerEnterHan
     public Image      youAreHereDot;
     public TMP_Text   lockedTooltip;
 
-    [Header("Curse Tint (subtle — curse is a hidden value)")]
-    public Color cursedColor    = new Color(0.55f, 0.10f, 0.65f);
+    [Header("Authored Site Tint")]
     public Color sanctuaryColor = new Color(0.95f, 0.90f, 0.55f);
 
     public Color lockedTint = new Color(0.62f, 0.60f, 0.58f, 0.85f);
@@ -49,10 +48,8 @@ public class GugolMapPin : MonoBehaviour, IPointerClickHandler, IPointerEnterHan
         Refresh();
     }
 
-    // Re-read state and update visuals. Called on HubMap.OnNodeChanged.
-    // The curse level is a HIDDEN value — pins never display it as a measurable
-    // gauge. The icon tint shifts only coarsely so the player can sense unease
-    // without reading a number. (Ported verbatim from MapNodeView.Refresh.)
+    // Re-read ordinary authored state. Hidden Circle values never alter a map
+    // pin's color, opacity, label, rating, or iconography.
     public void Refresh()
     {
         if (Node == null) return;
@@ -62,8 +59,6 @@ public class GugolMapPin : MonoBehaviour, IPointerClickHandler, IPointerEnterHan
             tint = lockedTint;
         else if (Node.isSanctuarySite)
             tint = Color.Lerp(Color.white, sanctuaryColor, 0.30f);
-        else if (GameFeatures.CorruptionEnabled && Node.curseLevel >= 0.5f)
-            tint = Color.Lerp(Color.white, cursedColor, 0.22f);   // subtle, fixed
         else
             tint = Color.white;
 

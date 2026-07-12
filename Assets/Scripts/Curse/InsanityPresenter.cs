@@ -3,61 +3,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-// Benidito's madness, on the 0-100 percent scale (David 7/08):
-//   INSANITY   — personal, from equipped unrefined orbs.
-//   CORRUPTION — the WORLD value: Florence rots under Limbo the longer Ben
-//                takes to solve it (HubMap daily tide). It warps NPCs too —
-//                they forget things, lose their way (future NPC-AI layer).
-//   For Ben:  Insanity + Corruption = the TOTAL that drives what he sees.
-// Encounter beacons use Personal() only — the road/zone rolls already carry
-// their own curse terms, and double-counting corruption would stack the deck.
-public static class InsanityState
-{
-    // Set >= 0 to preview manifestation tiers without farming orbs
-    // (InsanityPresenter exposes it in the inspector). -1 = live value.
-    public static int DebugOverride = -1;
-
-    // Orb-carried insanity only (the beacon component).
-    public static int Personal()
-    {
-        if (!GameFeatures.CorruptionEnabled) return 0;
-        if (DebugOverride >= 0) return DebugOverride;
-        foreach (var m in RestSystem.PartyMembers)
-            if (m != null && m.role == CombatantRole.Benidito)
-                return m.CurrentInsanity();
-        return 0;
-    }
-
-    // World corruption as a percent — Florence's Limbo rot, averaged.
-    public static int WorldCorruption()
-    {
-        if (!GameFeatures.CorruptionEnabled) return 0;
-        var hub = HubMap.Instance;
-        return hub != null ? Mathf.RoundToInt(hub.GlobalCurseLevel() * 100f) : 0;
-    }
-
-    // What Ben actually experiences: personal + world, clamped to 100.
-    public static int Total()
-    {
-        if (!GameFeatures.CorruptionEnabled) return 0;
-        if (DebugOverride >= 0) return DebugOverride;
-        return Mathf.Clamp(Personal() + WorldCorruption(), 0, 100);
-    }
-
-    // Back-compat alias for the encounter hooks (personal only).
-    public static int Current() => Personal();
-}
-
-// The Call-of-Cthulhu layer (David 7/08): insanity is a STORYTELLING system,
-// never a number on screen. Carrying unrefined monster orbs corrupts Ben's
-// senses by degree — at low levels nothing is noticeable; as the price grows
-// the screen darkens, water runs red, and (once an audio clip is wired) he
-// starts hearing whispers. Church refinement burns the corruption off an orb
-// and the world quietly comes back.
-//
-// Lives on GameSystems (persists across zones). Uses a screen-space overlay
-// vignette (no post-processing, no fight with COZY) and tints scene water via
-// MaterialPropertyBlock (never touches shared material assets).
+// Benidito's private sensory layer. It reads only PlayerInsanityState; Circle
+// Influence never enters this presenter and the presentation never mutates the
+// world. The value remains hidden from the player.
 public class InsanityPresenter : MonoBehaviour
 {
     [Header("Tier thresholds — insanity is a PERCENTAGE 0-100 (balance knobs)")]
@@ -99,9 +47,9 @@ public class InsanityPresenter : MonoBehaviour
 
     void Start()
     {
-        if (!GameFeatures.CorruptionEnabled)
+        if (!GameFeatures.InsanityPresentationEnabled)
         {
-            InsanityState.DebugOverride = -1;
+            PlayerInsanityState.DebugOverride = -1;
             enabled = false;
             return;
         }
@@ -114,18 +62,21 @@ public class InsanityPresenter : MonoBehaviour
         ScanWater();
     }
 
-    void OnDestroy() => SceneManager.sceneLoaded -= OnSceneLoaded;
+    void OnDestroy()
+    {
+        PlayerInsanityState.DebugOverride = -1;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
     void OnSceneLoaded(Scene s, LoadSceneMode m) => ScanWater();
 
     void Update()
     {
-        InsanityState.DebugOverride = debugInsanityOverride;
+        PlayerInsanityState.DebugOverride = debugInsanityOverride;
         _pulse += Time.deltaTime;
         if (_pulse < 0.5f) return;   // storytelling cadence, not a combat system
         _pulse = 0f;
 
-        // Insanity + Corruption = what Ben experiences (David 7/08)
-        int ins = InsanityState.Total();
+        int ins = PlayerInsanityState.Current;
 
         // 1. the light thins
         float dark = Ramp(ins, darkenAt, fullEffectAt) * maxVignette;

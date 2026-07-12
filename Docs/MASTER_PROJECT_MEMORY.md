@@ -1,6 +1,6 @@
 # Inferno's Curse Master Project Memory
 
-Last updated: 2026-07-10
+Last updated: 2026-07-11
 
 ## Purpose
 
@@ -11,8 +11,8 @@ This is the restart-safe handoff document for continuing work in `C:\UnityGames\
 - Engine: Unity 6.4, editor `6000.4.11f1`.
 - Render pipeline: URP 17.4.
 - Repository branch: `main`.
-- Current local HEAD: `1354b6a Build RealBlend urban hybrid terrain`.
-- `origin/main` was still at `b494bf8` when this handoff was updated; the later local commits have not been pushed.
+- Local implementation baseline: the verified Circle-territory, seamless Mercato, and refined Gugol Mappe commit immediately follows `8c0574f1 Plan Gugol Mappe refinement and Street View`.
+- `origin/main` is at `365e1153`; the later local implementation and design/plan commits have not been pushed.
 - Primary project root: `C:\UnityGames\InfernosCurse`.
 - The project contains unrelated dirty working-tree changes. Never reset, clean, or discard them without explicit user approval.
 - Keep API keys and tokens out of tracked files. The user has provided PixelLab and 3D AI Studio credentials in conversation, but they are intentionally absent from this document and repository.
@@ -33,6 +33,28 @@ Approved constraints:
 - Supported counter input: keyboard interaction, gamepad south button, and mouse click.
 - Do not add modern objects. Bookcases are period furniture; televisions are not.
 - Current structural art direction is restrained thirteenth-century Florentine: lime plaster, pietra serena, handmade terracotta, courtyard pavers, and dark chestnut timber.
+
+### Seamless accessible-building workflow
+
+Approved on 2026-07-11 as part of the Mercato Vecchio production rebuild:
+
+- Small and medium accessible interiors such as inns, shops, homes, workshops, and guild rooms should normally be embedded or additively streamed within their surrounding zone.
+- Entering these buildings should be seamless: no visible scene load, with threshold-driven camera framing, wall and roof occlusion, contained interior lighting, audio blending, NPC activation, and save restoration.
+- Interiors remain separately authorable modules even when they share the exterior zone's coordinate space.
+- Major landmarks with substantially different scale or presentation remain dedicated zones. The Duomo is the explicit first example.
+- The Albergo Fiorentino is the pilot: preserve the completed `FlorentineInnFloor1` work as a reusable interior module inside the rebuilt `MercatoVecchio` zone.
+- Ordinary outdoor encounters must not route into protected social interiors; story-authored interior combat requires explicit authorization.
+- Full design: `Docs/superpowers/specs/2026-07-11-mercato-vecchio-and-seamless-interiors-design.md`.
+
+Verified implementation state on 2026-07-11:
+
+- `Assets/Editor/MercatoVecchioProductionBuilder.cs` deterministically rebuilds the production square with the Loggia north, fountain plaza center, organized stall rows, west-side Albergo Fiorentino, southern Arno edge, eastern Ponte route, and northwestern Signoria route.
+- `Assets/Editor/MercatoVecchioProductionKitBuilder.cs` owns seven reusable production prefabs under `Assets/Environment/MercatoVecchio/ProductionKit`.
+- `Assets/Environment/FlorentineInnFloor1/Prefabs/FlorentineInnFloor1_Module.prefab` is the reusable inn module. It has stable IDs `albergo_fiorentino` / `albergo_fiorentino_floor1`, threshold anchors, local lighting and camera control, shadow-preserving occlusion, and protected battle access.
+- The production Mercato embeds that module behind the west facade. Entry and exit occur in the active `MercatoVecchio` scene; there is no scene-load handoff.
+- Save format v7 records player facing and `subLocationId`. Pre-v7 saves naming `FlorentineInnFloor1` migrate to `MercatoVecchio` plus `albergo_fiorentino_floor1`, with the old inn position remapped through the embedded module transform.
+- `InfernosCurse/Validation/Run Mercato Seamless Play Mode Probe` passed five repeated crossings, camera/light state changes, protected battle locking, legacy-save migration, missing-ID recovery, and duplicate-authority checks.
+- `InfernosCurse/Validation/Run Limbo Crier Interactive Play Mode Probe` passed discovery, player interaction, the three-enemy in-place battle, duplicate-input protection, temporary Limbo terrain, protected-inn locking, permanent victory, and exploration/portal restoration.
 
 ## Completed Inn Work
 
@@ -185,9 +207,10 @@ The first-floor prop pass was freshly rebuilt and verified on 2026-07-10:
 - Design: `40016c8 Design hybrid exploration and battle zones`.
 - Plan: `8b704d9 Plan hybrid Rose Garden battle zone`.
 - First production implementation: `1ceae4c Build hybrid Rose Garden battle zone`.
-- Giardino delle Rose is the current valid production hybrid zone. It uses a 32x32 authored grid and the natural control-texture path of `InfernosCurse/HybridZoneTerrain`.
-- The five urban scenes currently have the exploration camera and migrated terrain, but still classify as `Migration candidate`; they do not yet contain active `ZoneBattleAuthoring` encounter setups.
-- Latest verification: `[HybridZoneValidator] Validation passed: 10 scene(s) classified, 0 invalid.` This means configuration is internally consistent; it does not mean every migration candidate already supports battles.
+- Giardino delle Rose remains a valid production hybrid zone. It uses a 32x32 authored grid and the natural control-texture path of `InfernosCurse/HybridZoneTerrain`.
+- Mercato Vecchio is now the first active urban hybrid zone. Its production 90x64 grid uses world origin `(-50,-32)`, collider-derived obstruction/cover authoring, protected seamless interiors, and the shared locked exploration-to-battle camera handoff.
+- Ponte Vecchio, Duomo, Piazza della Signoria, and Via Calimala retain migrated urban terrain but remain encounter-authoring migration candidates.
+- The latest Crier encounter validator confirms the Mercato hybrid references, obstruction grid, player interaction path, in-place battle startup, and restoration lifecycle.
 
 ## Completed RealBlend Urban Terrain Pass
 
@@ -252,7 +275,93 @@ The migration preserves object transforms, colliders, overlays, paths, props, tr
 - Latest urban verification:
   - `[UrbanTerrainValidator] Validation passed for 5 urban profile/material/mesh sets.`
   - `[UrbanTerrainValidator] Production validation passed for 5 urban surfaces; colliders retained.`
-- The urban scenes cannot yet complete an exploration-to-battle runtime probe because their encounter authoring has not been migrated. This is a known remaining task, not a terrain failure.
+- Mercato has now completed an exploration-to-battle runtime probe through the Limbo Crier encounter. The other four urban scenes remain encounter-authoring migrations.
+
+## Completed Limbo World, Memory, and Crier Stack
+
+### Circle influence and permanent event memory
+
+- Save format is now v8 and carries the persistent Circle state, Crier records, NPC memory records, discovery records, world-event ledger, campaign ID, Chronicle sequence, player facing, seamless-interior sub-location, and player-known NPC map sightings. Older saves initialize a valid empty sighting ledger and fall back to authored usual locations.
+- Limbo is a named circle influence rather than generic container corruption. It grows locally, can bleed into connected districts when neglected, and remains bounded by deterministic caps and idempotent daily processing.
+- The campaign Chronicle is append-only, hash-chained, mirrored to a rolling backup, and reconciled into the indexed `WorldEventLedger`. Save slots reference permanent history rather than replacing it, so loading an older slot cannot rewrite decisions already committed to the campaign.
+- The Windows atomic replacement path now retries the same durable replace for a bounded period when antivirus, indexing, or sync briefly locks the destination. The validator includes a deterministic transient-lock regression that failed before the fix and passes afterward.
+- Gemini is a bounded narrative director only. It receives canonical facts, approved IDs, vocabulary, and state summaries, returns strict JSON, and cannot directly mutate authoritative world state. Invalid or unavailable AI output uses deterministic fallback events.
+
+### Persistent Limbo simulation and NPC Unmooring
+
+- One cautious opening Crier record begins in Mercato and remains undiscovered until an approved rumor/event consequence reveals it.
+- The Crier travels among three preaching sites and one hide site, respects curfew state, raises Limbo influence during unresolved daily simulation, and relocates after disruption.
+- Five Mercato NPC memory definitions track susceptibility, schedule overlap, relationship identity, exposure, and the Grounded -> Distracted -> Unmoored -> Forgotten progression.
+- Essential-service and quest-critical safeguards prevent the innkeeper or record clerk from becoming irrecoverably unavailable. Forgotten NPCs require authored rescue rather than passive offscreen recovery.
+- Discoveries include the strange-bell rumor, missing-neighbor rumor, lost-neighbor POI, Roman Florentia stone POI, and the corroborated Mercato Crier route.
+
+### Limbo Crier combat package
+
+- Production combatant: level-2 `Limbo Crier`, a common Florentine doomsayer in a soot-dark robe, iron half-mask, false reliquary, and bell-hook staff.
+- Specialized deterministic `LimboCrierAI` prioritizes formation support, Dread pressure, pulls, and legal fallbacks instead of using a flat generic enemy turn.
+- Active kit:
+  - `Bell-Hook Jab`: equipped-weapon melee.
+  - `Knell of Dread`: charged caster-centered Dread field; absorbable and level-scaled.
+  - `Crooked Benediction`: applies False Zeal to an ally.
+  - `Pilgrim's Hook`: ranged one-cell pull; absorbable.
+  - Holy/refined counterparts: `Bell of Vigilance` and `Pilgrim's Rescue`.
+- Dread and False Zeal were appended to the serialized status enum. Both use exact two-affected-turn timing, refresh without stacking, and expose UI icons/tooltips through `StatusEffectPresentationCatalog`.
+- Equipment is fully wired: `Bell-Hook Staff`, `Crier's Jack`, and `False Reliquary`, including signed Dark/Holy damage-received modifiers.
+- Shared forced movement rejects blocked, occupied, reserved, objective, protected, or illegal-edge destinations.
+- Temporary terrain restores every authored cell field on expiry, victory, defeat, teardown, and test reset. Limbo Stain damages hostile non-Limbo occupants, applies Dread, and cannot overwrite protected objectives or stronger authored corruption.
+
+### Production visual package and source metadata
+
+- PixelLab Pro source character: `7a07c91f-65dc-4501-a80f-a154619092bc`.
+- Imported production package contains 228 unique 196x196 character images: eight rotations plus four-direction walking, Bell-Hook Jab, Knell of Dread, Crooked Benediction, Pilgrim's Hook, hurt, and death sequences.
+- Portrait is 128x128. Dread, False Zeal, Bell-Hook Staff, Crier's Jack, and False Reliquary icons are 32x32.
+- All sprite imports use point filtering, no mipmaps, and uncompressed textures. Source IDs, prompts, group IDs, expected frame counts, and import contracts are recorded in `Assets/Characters/LimboCrier/Source/pixellab-source.json` and the humanoid visual profile; credentials are never stored.
+- Raw recoverable generation output is kept only under ignored `GeneratedAssets/PixelLab/LimboCrier`. Deterministic scripts live under `Tools/pixellab`.
+- The Limbo Stain texture is project-authored procedural art: disconnected violet/charcoal cracks and arcs, not a stock magic circle. `TemporaryTerrainPresenter` mirrors authoritative apply/restore events and pulses the visual without modifying the authored scene.
+
+### Exploration-to-battle encounter
+
+- `Assets/Prefabs/Narrative/LimboCrierWorld.prefab` is linked to `LimboCrier_Mercato_01`. It reuses the production directional profile for exploration walking/idle animation and never doubles as a staged `BattleUnit`.
+- Before discovery, the world actor is invisible, non-blocking, and not interactable. After discovery, the shared `PlayerWorldInteractor` exposes `Confront the Limbo Crier`.
+- The Mercato confrontation starts in place with one Crier behind two level-1 Cursebearer frontliners. Repeated interaction while the handoff is active cannot create duplicate managers or enemies.
+- Defeat restores the same persistent Crier. Victory calls `PersistentLimboWorldState.DefeatAgent`, removes it from daily Limbo simulation, destroys the world actor, and restores exploration/camera ownership.
+- The 2026-07-10 batch Play-mode walkthrough passed the complete golden path: hidden discovery gate -> player interaction -> one Crier plus two frontliners -> Limbo Stain apply/refresh/restore -> persistent victory cleanup. Ten repeated confrontation attempts did not duplicate the encounter.
+
+### Final validation evidence
+
+- `[CampaignChronicleValidator]` passed hash chain, atomic mirror, transient-lock recovery, backup recovery, save envelope, indexed ledger, and idempotent reconciliation.
+- `[LimboWorldSimulationValidator]` passed daily caps/idempotence, Unmooring/recovery, loaded-unloaded parity, discovery monotonicity, and v5 save state.
+- `[GeminiNarrativeValidator]` passed bounded context, strict schema/IDs, locked vocabulary, deterministic fallback, and state-invariant AI output.
+- `[FlorenceLimboWorldAuthoringValidator]` passed one Crier, five safeguarded NPC records, five discoveries, and four Mercato sites.
+- `[LimboCrierCombatValidator]` passed exact data, status timing, targeting, forced movement, temporary-terrain restore, equipment modifiers, humanoid fallback, 228 images, portrait/icons, source metadata, and import settings.
+- `[LimboCrierEncounterValidator]` passed the discovery-gated prefab, three-enemy formation, Mercato hybrid grid, persistent victory, player interaction path, and stain lifecycle.
+- `[LimboCrierFinalValidator]` ran the complete stack in one Unity batch and exited successfully.
+
+## Gugol Mappe Refined Browsing and Street View
+
+- The browsing hierarchy is now masthead-free and map-first. Search plus direct `City`, `Tuscany`, and `Italy` controls stay in a fitted chrome layer while the parchment map remains dominant.
+- `GugolMapUI` remains the open/close, pause, travel, and input coordinator. Layer fitting/transitions, feature presentation, knowledge snapshots, weather treatment, selection state, context cards, and search are split into project-owned map presenters and services under `Assets/Scripts/Map`.
+- Street View is a new append-only presentation state; the serialized `MapLevel` values were not changed. A street can use dedicated art or safely fall back to a magnified city-map crop.
+- Street, venue, NPC, presentation, and world-expression contracts live under `Assets/Resources/GugolMap`. `Assets/Editor/GugolMappeRefinedAuthoringBuilder.cs` deterministically authors the initial profile, two streets, three venues, and five NPC definitions.
+- The Mercato pilot includes Mercato Vecchio and Via Calimala. Mercato Street View exposes The Florentine Inn, Mercato Public Stalls, Mercato Records Desk, and five known NPC markers. Venue labels remain visible; NPC names are resolved through click or mixed search to avoid label clutter.
+- The Florentine Inn map record targets the seamless `albergo_fiorentino` / `albergo_fiorentino_floor1` contract rather than loading a legacy standalone inn scene.
+- Search indexes only the immutable player-knowledge snapshot. Exact proper-name matches take priority, so `Mercato Vecchio` opens the street even when NPC last-known text contains the same words.
+- NPC map knowledge stores authored usual locations or player-known last sightings only. It never reads a live transform or simulation-only position, and it round-trips in save v8.
+- Hidden Circle numbers and player Sanity are isolated from map presentation. The authoring validator rejects forbidden raw influence, Circle evaluation, and Insanity dependencies in the map scripts.
+- Weather and authored world-state expression IDs may change map presentation; numeric Circle changes alone may not.
+- Latest verification on 2026-07-11:
+  - `dotnet build Assembly-CSharp-Editor.csproj --no-restore --nologo`: 0 errors; existing project/package warnings remain.
+  - `[GugolMapValidator] Refined authoring validation passed after reload.`
+  - `[GugolMapPlayModeVerifier] PASS`: masthead-free City map -> exact street search -> Mercato Street View -> three venues plus five known NPC markers -> venue card -> Tuscany/Italy navigation -> close/reopen without duplicate canvases.
+  - Manual runtime review confirmed compact zoom-independent markers, readable venue labels, the Florentine Inn service card, and its Street View directions route.
+
+### Adding another Street View area
+
+1. Create stable `GugolStreetDefinition`, `GugolVenueDefinition`, and optional `GugolNpcMapDefinition` assets in the matching `Assets/Resources/GugolMap` folders.
+2. Author normalized city centerlines, forgiving hit widths, Street View bounds or dedicated background art, venue anchors, discovery contracts, and route fallbacks.
+3. Link entrances through stable owning-zone, building, and sub-location IDs. Small shops/inns remain seamless parts of their exterior zone; major landmarks may use dedicated scenes.
+4. Add explicit `GugolNpcSightingReporter` hooks only where a player observation or authored interaction should update last-known knowledge.
+5. Run `InfernosCurse/Validation/Validate Gugol Mappe Refined Authoring`, then `Run Gugol Mappe Play Mode Probe` before treating the area as production-ready.
 
 ## Tooling State
 
@@ -319,6 +428,9 @@ The following remain intentionally uncommitted and must not be reset, cleaned, o
 - The approved fountain/facing refinement: `Assets/Scripts/Environment/InnFountainAnimator.cs`, `Assets/Editor/BeniditoDirectionalIdleBuilder.cs`, the generated directional idle clips, `Assets/Characters/Benidito/Benidito.controller`, and `Assets/Scripts/Player/PlayerController.cs`.
 - The approved authored-fountain pass: `Docs/superpowers/specs/2026-07-10-3d-ai-octagonal-inn-fountain-design.md`, `Docs/superpowers/plans/2026-07-10-3d-ai-octagonal-inn-fountain-plan.md`, `Assets/Environment/FlorentineInnFloor1/PropKit/Models/`, the rebuilt fountain prefab and scene, and the authored-fountain changes in `Assets/Editor/FlorentineInnPropKitBuilder.cs`.
 - The approved COZY inn-light isolation fix: `Assets/Scripts/Environment/IndoorWeatherLightingGuard.cs`, its meta file, the lighting changes in `Assets/Editor/FlorentineInnFloor1Builder.cs`, strengthened validation in `Assets/Editor/FlorentineInnPropKitBuilder.cs`, and the rebuilt inn scene.
+- The verified Limbo/Crier baseline is committed in `7383acd6`. Any later dirty changes touching its Circle/Chronicle/Gemini/NPC/discovery scripts, validators, prefab, Mercato authoring, or data remain user-owned follow-up work and must be inspected before staging; the raw PixelLab cache under `GeneratedAssets/PixelLab/LimboCrier` remains ignored.
+- The approved Gugol Mappe implementation is included in the local implementation commit immediately after `8c0574f1`: runtime contracts/presenters/services, save-v8 NPC map knowledge, deterministic refined authoring, `Assets/Resources/GugolMap`, and the authoring and Play-mode validators.
+- Do not accidentally bundle the unrelated COZY forecast churn in `Assets/Resources/GameSystems.prefab`; the Limbo skill registry uses Resources-backed assets and does not require that prefab change.
 - `Docs/MASTER_PROJECT_MEMORY.md` itself remains untracked until the user asks to commit this handoff update.
 - `Refrences/maps/ubuntu-24.04.4-wsl-amd64.wsl`
 - `Refrences/maps/wsl.2.7.10.0.x64.msi`
@@ -354,19 +466,19 @@ Treat all of these as user-owned or session-generated changes. Inspect them indi
 
 ## Recommended Next Work
 
-The local project is complete through commit `1354b6a`, but the commits after `origin/main` have not been pushed. Confirm the desired next action after restart.
+The refined Gugol Mappe, Circle-territory foundation, and seamless Mercato implementation are runtime-verified and committed locally immediately after design/plan commit `8c0574f1`. They have not been pushed. Unrelated inn, package, font, BattleArena, tooling, and COZY changes remain dirty and intentionally excluded.
 
 Likely sequence:
 
 1. Open Unity and allow imports/compilation to settle.
-2. Confirm Unity MCP is connected and the console is clean.
-3. Migrate approved urban scenes from `Migration candidate` to active hybrid battle zones, starting with Piazza and Mercato as the open/dense extremes.
-4. For each migrated urban zone, verify exploration collision, encounter startup, terrain identity preservation, tactical readability, victory cleanup, and restoration of the locked exploration camera.
-5. Run the full urban, hybrid-zone, battle-terrain, and weather validators after each scene batch.
-6. Commit this master-document update only when requested.
-7. Push local commits only if the user asks to push.
-8. Review the completed first-floor prop pass at gameplay-camera distance and commit it when requested.
-9. Keep NPC capsule replacement, live upstairs bed activation, and the second inn floor outside scope until explicitly approved.
+2. Run `InfernosCurse/Validation/Validate Gugol Mappe Refined Authoring` and `Run Gugol Mappe Play Mode Probe` after changing map definitions, search, save knowledge, Street View geometry, or map presentation.
+3. Review the Crier visually in Mercato at gameplay-camera distance when local, then tune only presentation if needed; the functional encounter already passes Play mode.
+4. Migrate the next approved urban scene from `Migration candidate` to an active hybrid battle zone, with Piazza della Signoria as the open-space counterpart to dense Mercato.
+5. For each migrated urban zone, verify exploration collision, encounter startup, terrain identity preservation, tactical readability, victory cleanup, and restoration of the locked exploration camera.
+6. Run the full urban, hybrid-zone, battle-terrain, weather, and Limbo validators after each scene batch.
+7. Inspect and commit any remaining approved inn or BattleArena work separately; do not bundle package, font, tooling, or COZY churn without review.
+8. Push local commits only if the user asks to push.
+9. Return to the inn when the user is local; keep NPC capsule replacement, live upstairs bed activation, and the second floor outside scope until explicitly approved.
 
 ## Git Safety
 
@@ -374,4 +486,4 @@ Likely sequence:
 - Stage explicit paths only.
 - The last structural commit is large because it includes the complete GSpawn Asset Store package and configured library data.
 - The RealBlend urban terrain commit is also large because it includes the complete approved RealBlend package.
-- Current local HEAD is `1354b6a`; no push was performed for the later local commit series during this session.
+- The local implementation commit follows `8c0574f1`; `origin/main` remains `365e1153`. No push was performed in this pass.

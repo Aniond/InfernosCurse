@@ -16,6 +16,8 @@ public static class WorldEffectIds
     public const string WorldAgentState = "world_agent_state";
     public const string InventoryDelta = "inventory_delta";
     public const string FlorinsDelta = "florins_delta";
+    public const string SiteOutcomeState = "site_outcome_state";
+    public const string SiteRemembrance = "site_remembrance";
 }
 
 [Serializable]
@@ -199,6 +201,9 @@ public sealed class UnityWorldConsequenceSink : IWorldConsequenceBatchSink
             case WorldEffectIds.RouteUnlock:
                 return ExplorationDiscoveryLedger.CanAdvance(
                     effect.targetId, DiscoveryKind.Route, (DiscoveryStage)effect.intValue, out error);
+            case WorldEffectIds.SiteOutcomeState:
+            case WorldEffectIds.SiteRemembrance:
+                return SiteOutcomeState.CanApplyEffects(new[] { effect }, out error);
             default:
                 error = $"Effect '{effect.effectId}' is registered but its runtime owner is not installed yet.";
                 return false;
@@ -213,6 +218,7 @@ public sealed class UnityWorldConsequenceSink : IWorldConsequenceBatchSink
         error = null;
         int florinDelta = 0;
         var npcExposureDeltas = new Dictionary<string, float>(StringComparer.Ordinal);
+        if (!SiteOutcomeState.CanApplyEffects(effects, out error)) return false;
         foreach (var effect in effects ?? Array.Empty<WorldConsequenceEffect>())
         {
             if (!WorldConsequenceRegistry.TryValidate(effect, out error)) return false;
@@ -222,6 +228,9 @@ public sealed class UnityWorldConsequenceSink : IWorldConsequenceBatchSink
                 npcExposureDeltas[effect.targetId] = npcExposureDeltas.TryGetValue(effect.targetId, out float current)
                     ? current + effect.numericValue
                     : effect.numericValue;
+            else if (effect.effectId == WorldEffectIds.SiteOutcomeState ||
+                     effect.effectId == WorldEffectIds.SiteRemembrance)
+                continue;
             else if (!CanApply(effect, out error))
                 return false;
         }
@@ -284,6 +293,12 @@ public sealed class UnityWorldConsequenceSink : IWorldConsequenceBatchSink
                             effect.targetId, kind, (DiscoveryStage)effect.intValue,
                             effect.secondaryId, CurrentDayKey(), out _, out error)) return false;
                     break;
+                case WorldEffectIds.SiteOutcomeState:
+                case WorldEffectIds.SiteRemembrance:
+                    if (!SiteOutcomeState.TryApplyEffect(effect, CurrentDayKey(), out error)) return false;
+                    if (effect.effectId == WorldEffectIds.SiteRemembrance)
+                        PersistentLimboWorldState.ApplyAuthoredRemembrance(effect.targetId, effect.secondaryId);
+                    break;
                 default:
                     error = $"Effect '{effect.effectId}' has no runtime applier.";
                     return false;
@@ -321,6 +336,8 @@ public static class WorldConsequenceRegistry
         WorldEffectIds.WorldAgentState,
         WorldEffectIds.InventoryDelta,
         WorldEffectIds.FlorinsDelta,
+        WorldEffectIds.SiteOutcomeState,
+        WorldEffectIds.SiteRemembrance,
     };
 
     public static bool IsRegistered(string effectId) =>
@@ -389,6 +406,19 @@ public static class WorldConsequenceRegistry
             case WorldEffectIds.FlorinsDelta:
                 if (effect.intValue == 0)
                     error = "Florin deltas must be non-zero.";
+                break;
+            case WorldEffectIds.SiteOutcomeState:
+                if (string.IsNullOrWhiteSpace(effect.targetId) ||
+                    string.IsNullOrWhiteSpace(effect.secondaryId) ||
+                    string.IsNullOrWhiteSpace(effect.stringValue) ||
+                    !Enum.IsDefined(typeof(NarrativePermanence), effect.intValue))
+                    error = "Site outcomes require site, outcome, source-event, and known permanence values.";
+                break;
+            case WorldEffectIds.SiteRemembrance:
+                if (string.IsNullOrWhiteSpace(effect.targetId) ||
+                    string.IsNullOrWhiteSpace(effect.secondaryId) ||
+                    string.IsNullOrWhiteSpace(effect.stringValue))
+                    error = "Site remembrance requires site, outcome, and authored memory text IDs.";
                 break;
         }
         return error == null;
@@ -523,6 +553,7 @@ public static class WorldEventLedger
             semanticTags = CloneStrings(choice.semanticTags),
             campaignPermanent = definition.campaignPermanent,
         };
+        HydrateContextualEffects(record.consequences, record.eventInstanceId);
 
         if (TryGet(record.eventInstanceId, out var existing))
         {
@@ -531,6 +562,7 @@ public static class WorldEventLedger
                 error = $"Event '{record.eventInstanceId}' was already resolved with choice '{existing.choiceId}'.";
                 return false;
             }
+            CircleWarningLedger.NotifyWorldEvent(existing);
             committedRecord = existing;
             return true;
         }
@@ -595,7 +627,11 @@ public static class WorldEventLedger
             var combined = CombineEffects(pending);
             if (!batchSink.CanApplyBatch(combined, out error) || !batchSink.TryApplyBatch(combined, out error))
                 return false;
-            foreach (var record in pending) AddIndexed(WorldEventRecord.Clone(record));
+            foreach (var record in pending)
+            {
+                AddIndexed(WorldEventRecord.Clone(record));
+                CircleWarningLedger.NotifyWorldEvent(record);
+            }
         }
         else
         {
@@ -702,6 +738,7 @@ public static class WorldEventLedger
                 if (!sink.TryApply(effect, out error)) return false;
         }
         AddIndexed(WorldEventRecord.Clone(record));
+        CircleWarningLedger.NotifyWorldEvent(record);
         return true;
     }
 
@@ -787,6 +824,17 @@ public static class WorldEventLedger
             foreach (var effect in record.consequences ?? Array.Empty<WorldConsequenceEffect>())
                 result[index++] = effect;
         return result;
+    }
+
+    static void HydrateContextualEffects(WorldConsequenceEffect[] effects, string eventInstanceId)
+    {
+        foreach (var effect in effects ?? Array.Empty<WorldConsequenceEffect>())
+        {
+            if (effect == null || effect.effectId != WorldEffectIds.SiteOutcomeState) continue;
+            if (string.IsNullOrWhiteSpace(effect.stringValue) ||
+                string.Equals(effect.stringValue, "$event_instance", StringComparison.Ordinal))
+                effect.stringValue = eventInstanceId;
+        }
     }
 
     static void AddIndexed(WorldEventRecord record)

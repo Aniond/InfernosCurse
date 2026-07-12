@@ -1,18 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Resting: the only way to recover outside battle, and the way time is spent.
-// Every rest burns EXACTLY one day (the resource) and feeds the district's
-// corruption a little — an inn night less so, a rough camp more, and an
-// allied Albergatori guild inn can even cleanse. "Players should want a
-// reason to go out and not hug the inn."
+// Resting recovers the party and spends exactly one day. Time advancement may
+// let registered world sources act, but rest itself never raises or cleanses a
+// Circle and never changes player Insanity.
 public static class RestSystem
 {
     public const float MorningHour = 7f;
 
-    // Inn nightly curse cost before guild discounts; camp is worse.
-    public const float InnRestCurseCost = 0.02f;
-    public const float CampRestCurseCost = 0.035f;
     public const float CampHealFraction = 0.6f;
 
     // The future party roster feeds this (empty today — battles refill HP/SP
@@ -29,22 +24,7 @@ public static class RestSystem
         Heal(1f);
         AdvanceToMorning();
 
-        float mult = GameFeatures.CorruptionEnabled && guilds != null
-            ? guilds.GetRestCurseCostMultiplier()
-            : 0f;
-        var hub = HubMap.Instance;
-        if (GameFeatures.CorruptionEnabled && hub != null)
-        {
-            hub.AddCurse(nodeId, InnRestCurseCost * mult);
-            float cleanse = isGuildInn && guilds != null ? guilds.GetInnCleansePercent() : 0f;
-            if (cleanse > 0f)
-            {
-                var node = hub.GetNode(nodeId);
-                if (node != null && node.curseLevel > 0f)
-                    hub.Cleanse(nodeId, node.curseLevel * cleanse);
-            }
-        }
-        Debug.Log($"[Rest] inn night in {nodeId} (paid {price}, cost×{mult:F2}{(isGuildInn ? ", guild inn" : "")})");
+        Debug.Log($"[Rest] inn night in {nodeId} (paid {price}{(isGuildInn ? ", guild inn" : "")})");
         return true;
     }
 
@@ -53,10 +33,6 @@ public static class RestSystem
     {
         Heal(CampHealFraction);
         AdvanceToMorning();
-        // No guild discount — the Albergatori are the INNKEEPERS' guild; the
-        // open night in a cursed city is always full exposure.
-        if (GameFeatures.CorruptionEnabled)
-            HubMap.Instance?.AddCurse(nodeId, CampRestCurseCost);
         Debug.Log($"[Rest] camped rough in {nodeId} — the night takes its toll");
     }
 

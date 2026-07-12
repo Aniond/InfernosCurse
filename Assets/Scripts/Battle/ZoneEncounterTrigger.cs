@@ -82,17 +82,13 @@ public class ZoneEncounterTrigger : MonoBehaviour
             : new Vector2Int(Mathf.FloorToInt(player.transform.position.x),
                              Mathf.FloorToInt(player.transform.position.z));
 
-        float insanityScent = GameFeatures.CorruptionEnabled
-            ? 1f + InsanityState.Current() * 0.003f
-            : 1f;
-
         foreach (var enemy in _staged)
         {
             if (enemy == null) continue;
             float dx = enemy.gridPosition.x - playerCell.x;
             float dz = enemy.gridPosition.y - playerCell.y;
             float distanceSquared = dx * dx + dz * dz;
-            float sight = enemy.SightRange * WeatherVision.SightMultiplier() * insanityScent;
+            float sight = enemy.SightRange * WeatherVision.SightMultiplier();
             if (distanceSquared <= proximityTrigger * proximityTrigger ||
                 distanceSquared <= sight * sight)
             {
@@ -250,6 +246,12 @@ public class ZoneEncounterTrigger : MonoBehaviour
         _heights ??= GetComponent<BattleTerrainHeights>();
         if (_zone == null) { message = "ZoneBattleAuthoring is missing"; return false; }
         if (!_zone.TryValidate(out message)) return false;
+        if (SeamlessInteriorRegistry.ActiveModule != null &&
+            SeamlessInteriorRegistry.ActiveModule.ProtectedSocialInterior)
+        {
+            message = $"player is inside protected interior '{SeamlessInteriorRegistry.ActiveSubLocationId}'";
+            return false;
+        }
         if (battleKitPrefab == null) battleKitPrefab = _zone.battleKitPrefab;
         if (battleKitPrefab == null) { message = "BattleKit prefab is missing"; return false; }
         if (battleKitPrefab.GetComponentInChildren<BattleManager>(true) == null ||
@@ -278,6 +280,8 @@ public class ZoneEncounterTrigger : MonoBehaviour
         _exitStates = _zone.zoneExits.Select(exit => exit != null && exit.enabled).ToArray();
         for (int i = 0; i < _zone.zoneExits.Length; i++)
             if (_zone.zoneExits[i] != null) _zone.zoneExits[i].enabled = false;
+        foreach (var interior in _zone.protectedInteriors)
+            if (interior != null) interior.SetBattleLocked(true);
 
         _exploreRootStates = _zone.explorationOnlyRoots.Select(root => root != null && root.activeSelf).ToArray();
         foreach (var root in _zone.explorationOnlyRoots)
@@ -453,6 +457,8 @@ public class ZoneEncounterTrigger : MonoBehaviour
             if (_zone.explorationOnlyRoots[i] != null) _zone.explorationOnlyRoots[i].SetActive(_exploreRootStates[i]);
         for (int i = 0; i < _zone.battleOnlyRoots.Length && i < _battleRootStates.Length; i++)
             if (_zone.battleOnlyRoots[i] != null) _zone.battleOnlyRoots[i].SetActive(_battleRootStates[i]);
+        foreach (var interior in _zone.protectedInteriors)
+            if (interior != null) interior.SetBattleLocked(false);
     }
 
     void OnDestroy()

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: LimboCrier_Mercato_01
   m_EditorClassIdentifier: Assembly-CSharp::WorldAgentDefinition
   agentId: limbo_crier_mercato_01
+  territoryId: firenze
   districtId: mercato
   startingSiteId: mercato_crier_sermon_fountain
   availableSiteIds:

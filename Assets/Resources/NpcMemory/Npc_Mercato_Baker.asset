@@ -14,11 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcMemoryDefinition
   npcId: npc_mercato_baker
   homeDistrictId: mercato
+  homeTerritoryId: firenze
+  relevanceLayer: 1
   susceptibility: 1
   originalScheduleId: schedule_mercato_baker
   originalRelationshipId: relationship_mercato_usual_customer
   overlappingPreachingSiteIds:
   - mercato_crier_sermon_fountain
   - mercato_crier_sermon_west_stalls
+  relevantSiteIds:
+  - mercato
   essentialService: 0
   questCritical: 0

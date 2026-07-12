@@ -9,6 +9,9 @@ public class SaveData
     public string slotName;
     public string sceneName;
     public float playerX, playerY, playerZ;
+    public float playerFacingX, playerFacingY;
+    public string subLocationId;
+    [NonSerialized] public bool migratedLegacyInnScenePosition;
     public float timeOfDay;
     public string weatherType;
     public long savedAt; // UTC ticks
@@ -45,6 +48,16 @@ public class SaveData
     public NpcMemoryRecord[] npcMemory;
     public ExplorationDiscoveryRecord[] discoveries;
 
+    // v6: influence arrays contain mutable owner territories only. Florence
+    // sites resolve to firenze and aggregate regions are never serialized.
+    public string circleSimulationDayKey;
+    public CircleWarningRecord[] circleWarnings;
+    public SiteOutcomeRecord[] siteOutcomes;
+
+    // v8: player-owned Gugol Mappe knowledge. This stores authored or observed
+    // last-known streets, never live NPC simulation positions.
+    public GugolNpcMapKnowledgeRecord[] npcMapKnowledge;
+
     // ── v2 (2026-07-05): the combat-progression layer. Old saves have
     // saveVersion 0 and null arrays — all guarded. Parallel arrays indexed by
     // roster order (PartyRoster order is fixed). Nested data (unlocked skills,
@@ -65,7 +78,7 @@ public class SaveData
 public static class SaveSystem
 {
     public const int SLOT_COUNT = 3;
-    public const int CURRENT_VERSION = 5;
+    public const int CURRENT_VERSION = 8;
 
     // Mid-battle saves capture a scene with none of its encounter state —
     // loading one lands in the arena with no battle and no exit. Forbidden.
@@ -110,6 +123,7 @@ public static class SaveSystem
         data.saveVersion = CURRENT_VERSION;
         data.slotName    = $"Slot {slot}";
         data.sceneName   = SceneManager.GetActiveScene().name;
+        data.subLocationId = SeamlessInteriorRegistry.ActiveSubLocationId;
         data.savedAt     = DateTime.UtcNow.Ticks;
         data.campaignId = chronicle.campaignId;
         data.chronicleSequence = incorporatedSequence;
@@ -117,8 +131,11 @@ public static class SaveSystem
         data.worldAgents = PersistentLimboWorldState.ExportAgents();
         data.npcMemory = PersistentLimboWorldState.ExportNpcs();
         data.discoveries = ExplorationDiscoveryLedger.Export();
-        var worldSimulation = UnityEngine.Object.FindAnyObjectByType<LimboWorldSimulationDirector>();
-        if (worldSimulation != null) data.worldSimulationDayKey = worldSimulation.AppliedDayKey;
+        data.circleWarnings = CircleWarningLedger.Export();
+        data.siteOutcomes = SiteOutcomeState.Export();
+        data.npcMapKnowledge = GugolNpcMapKnowledgeLedger.Export();
+        var circleSimulation = UnityEngine.Object.FindAnyObjectByType<CircleWorldSimulationDirector>();
+        if (circleSimulation != null) data.circleSimulationDayKey = circleSimulation.AppliedDayKey;
 
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
@@ -126,6 +143,12 @@ public static class SaveSystem
             data.playerX = player.transform.position.x;
             data.playerY = player.transform.position.y;
             data.playerZ = player.transform.position.z;
+            var controller = player.GetComponent<PlayerController>();
+            if (controller != null)
+            {
+                data.playerFacingX = controller.Facing.x;
+                data.playerFacingY = controller.Facing.y;
+            }
         }
 
         // Persist real time-of-day (GameClock falls back to noon with no backend).
@@ -143,15 +166,14 @@ public static class SaveSystem
             data.calMonth = (int)cal.CurrentMonth;
             data.calDayOfMonth = cal.DayOfMonth;
         }
-        var drift = UnityEngine.Object.FindAnyObjectByType<DailyCurseDrift>();
-        if (drift != null) data.driftDayKey = drift.AppliedDayKey;
         if (GuildSystem.Instance != null)
             GuildSystem.Instance.ExportTo(out data.guildIds, out data.guildReps);
         if (HubMap.Instance != null)
         {
-            // Keep the legacy Limbo arrays during migration so older tools can
-            // still inspect a save, while v3 loads prefer the Circle table.
-            HubMap.Instance.ExportNodeStates(out data.curseNodeIds, out data.curseLevels, out data.curseSanctity);
+            // v6 writes mutable owner ledgers only. Legacy Limbo values remain
+            // read-compatible for one version but are no longer emitted.
+            HubMap.Instance.ExportSanctityStates(out data.curseNodeIds, out data.curseSanctity);
+            data.curseLevels = Array.Empty<float>();
             HubMap.Instance.ExportInfluenceStates(
                 out data.influenceLocationIds,
                 out data.influenceCircleIds,
@@ -181,6 +203,7 @@ public static class SaveSystem
                 Debug.LogError($"[SaveSystem] Slot {slot} cannot be loaded: {error}");
                 return null;
             }
+            MigrateLegacyLocation(data);
             return data;
         }
         catch (Exception e)
@@ -201,6 +224,7 @@ public static class SaveSystem
     public static void LoadAndApply(SaveData data)
     {
         if (data == null) return;
+        MigrateLegacyLocation(data);
         if (!TryValidateCampaignEnvelope(data, out string validationError))
         {
             Debug.LogError("[SaveSystem] Load blocked before scene change: " + validationError);
@@ -267,6 +291,12 @@ public static class SaveSystem
             Debug.LogError("[SaveSystem] World event ledger is invalid: " + ledgerError);
             return;
         }
+        if (!CircleNarrativeState.TryImport(
+                data.circleWarnings, data.siteOutcomes, out string circleNarrativeError))
+        {
+            Debug.LogError("[SaveSystem] Circle warning or site-outcome state is invalid: " + circleNarrativeError);
+            return;
+        }
         if (!PersistentLimboWorldState.Import(data.worldAgents, data.npcMemory, out string worldStateError))
         {
             Debug.LogError("[SaveSystem] Persistent Limbo world state is invalid: " + worldStateError);
@@ -277,11 +307,31 @@ public static class SaveSystem
             Debug.LogError("[SaveSystem] Exploration discovery state is invalid: " + discoveryError);
             return;
         }
+        if (!GugolNpcMapKnowledgeLedger.Import(data.npcMapKnowledge, out string mapKnowledgeError))
+        {
+            Debug.LogError("[SaveSystem] Gugol NPC map knowledge is invalid: " + mapKnowledgeError);
+            return;
+        }
 
         var player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
             var pos = new Vector3(data.playerX, data.playerY, data.playerZ);
+            bool interiorRestored = SeamlessInteriorRegistry.TryRestore(
+                data.subLocationId, player.transform, out Vector3 recoveryPosition, out string interiorError);
+            if (!interiorRestored)
+            {
+                pos = recoveryPosition;
+                Debug.LogWarning($"[SaveSystem] Interior restore recovered outside: {interiorError}.");
+            }
+            else if (data.migratedLegacyInnScenePosition &&
+                     SeamlessInteriorRegistry.TryGet(data.subLocationId, out SeamlessInteriorModule migratedModule))
+            {
+                // The standalone inn was authored with its module at the scene
+                // origin. Preserve the old room position by treating the saved
+                // coordinates as module-local when moving it into Mercato.
+                pos = migratedModule.transform.TransformPoint(pos);
+            }
             // Move via Rigidbody when present so physics interpolation doesn't
             // smear the teleport across a frame.
             var rb = player.GetComponent<Rigidbody>();
@@ -291,6 +341,13 @@ public static class SaveSystem
                 rb.linearVelocity = Vector3.zero;
             }
             player.transform.position = pos;
+
+            if (data.saveVersion >= 7)
+            {
+                var facing = new Vector2(data.playerFacingX, data.playerFacingY);
+                if (facing.sqrMagnitude > 0.01f)
+                    player.GetComponent<PlayerController>()?.SetFacing(facing);
+            }
         }
 
         // Restore date BEFORE hour: FlorenceWeather re-rolls off the date, and
@@ -312,26 +369,24 @@ public static class SaveSystem
             GuildSystem.Instance.ImportFrom(data.guildIds, data.guildReps);
         if (HubMap.Instance != null)
         {
-            bool hasCircleTable = data.influenceLocationIds != null &&
-                                  data.influenceCircleIds != null &&
-                                  data.influenceValues != null;
-            bool imported = hasCircleTable && HubMap.Instance.ImportInfluenceStates(
-                data.influenceLocationIds,
-                data.influenceCircleIds,
-                data.influenceValues);
-
-            if (imported)
-                HubMap.Instance.ImportSanctityStates(data.curseNodeIds, data.curseSanctity);
-            else
-                HubMap.Instance.ImportNodeStates(data.curseNodeIds, data.curseLevels, data.curseSanctity);
+            if (!TryImportCircleState(data, HubMap.Instance, out string circleError))
+            {
+                Debug.LogError("[SaveSystem] Circle territory import failed: " + circleError);
+                return;
+            }
+            HubMap.Instance.ImportSanctityStates(data.curseNodeIds, data.curseSanctity);
         }
 
-        var drift = UnityEngine.Object.FindAnyObjectByType<DailyCurseDrift>();
-        if (drift != null && !string.IsNullOrEmpty(data.driftDayKey))
-            drift.RestoreDayKey(data.driftDayKey);
-        var worldSimulation = UnityEngine.Object.FindAnyObjectByType<LimboWorldSimulationDirector>();
-        if (worldSimulation != null && !string.IsNullOrEmpty(data.worldSimulationDayKey))
-            worldSimulation.RestoreDayKey(data.worldSimulationDayKey);
+        var circleSimulation = UnityEngine.Object.FindAnyObjectByType<CircleWorldSimulationDirector>();
+        if (circleSimulation != null)
+        {
+            string simulationKey = !string.IsNullOrEmpty(data.circleSimulationDayKey)
+                ? data.circleSimulationDayKey
+                : !string.IsNullOrEmpty(data.worldSimulationDayKey)
+                    ? data.worldSimulationDayKey
+                    : data.driftDayKey;
+            if (!string.IsNullOrEmpty(simulationKey)) circleSimulation.RestoreDayKey(simulationKey);
+        }
 
         if (!string.IsNullOrEmpty(data.weatherType) && FlorenceWeather.Instance != null)
             FlorenceWeather.Instance.Apply(data.weatherType);
@@ -351,6 +406,20 @@ public static class SaveSystem
         }
         data.chronicleSequence = incorporatedSequence;
         data.worldEvents = WorldEventLedger.Export();
+        data.circleWarnings = CircleWarningLedger.Export();
+        data.siteOutcomes = SiteOutcomeState.Export();
+    }
+
+    internal static bool MigrateLegacyLocation(SaveData data)
+    {
+        if (data == null || data.saveVersion >= 7) return false;
+        if (!string.Equals(data.sceneName, "FlorentineInnFloor1", StringComparison.Ordinal)) return false;
+
+        data.sceneName = "MercatoVecchio";
+        data.subLocationId = "albergo_fiorentino_floor1";
+        data.migratedLegacyInnScenePosition = true;
+        Debug.Log("[SaveSystem] Migrated legacy Florentine Inn save into MercatoVecchio/albergo_fiorentino_floor1.");
+        return true;
     }
 
     /// <summary>
@@ -363,7 +432,10 @@ public static class SaveSystem
         {
             PersistentLimboWorldState.Reset();
             ExplorationDiscoveryLedger.Reset();
-            var director = UnityEngine.Object.FindAnyObjectByType<LimboWorldSimulationDirector>();
+            CircleWarningLedger.Reset();
+            SiteOutcomeState.Reset();
+            GugolNpcMapKnowledgeLedger.Reset();
+            var director = UnityEngine.Object.FindAnyObjectByType<CircleWorldSimulationDirector>();
             if (director != null) director.RestoreDayKey(string.Empty);
             if (!FlorenceOpeningBaseline.Apply(out string baselineError))
                 Debug.LogWarning("[SaveSystem] New campaign created, but Florence baseline is pending: " + baselineError);
@@ -392,8 +464,21 @@ public static class SaveSystem
             return false;
         }
         if (!WorldEventLedger.TryValidateRecords(data.worldEvents, out error)) return false;
+        if (!CircleWarningLedger.TryValidateRecords(data.circleWarnings, out error)) return false;
+        if (!SiteOutcomeState.TryValidateRecords(data.siteOutcomes, out error)) return false;
         if (!PersistentLimboWorldState.TryValidate(data.worldAgents, data.npcMemory, out error)) return false;
         if (!ExplorationDiscoveryLedger.TryValidateRecords(data.discoveries, out error)) return false;
+        if (!GugolNpcMapKnowledgeLedger.TryValidateRecords(data.npcMapKnowledge, out error)) return false;
+
+        bool anyCircleArray = data.influenceLocationIds != null ||
+                              data.influenceCircleIds != null ||
+                              data.influenceValues != null;
+        if (anyCircleArray && !CircleTerritoryMigration.TryValidateInput(
+                data.influenceLocationIds,
+                data.influenceCircleIds,
+                data.influenceValues,
+                out error))
+            return false;
 
         if (data.worldEvents != null)
         {
@@ -420,6 +505,86 @@ public static class SaveSystem
                 return false;
         }
         return true;
+    }
+
+    static bool TryImportCircleState(SaveData data, HubMap hub, out string error)
+    {
+        error = null;
+        bool hasCircleTable = data.influenceLocationIds != null &&
+                              data.influenceCircleIds != null &&
+                              data.influenceValues != null;
+
+        string[] locationIds;
+        int[] circleIds;
+        float[] values;
+
+        if (hasCircleTable && data.saveVersion >= 6)
+        {
+            if (!CircleTerritoryMigration.TryValidateInput(
+                    data.influenceLocationIds,
+                    data.influenceCircleIds,
+                    data.influenceValues,
+                    out error))
+                return false;
+
+            for (int i = 0; i < data.influenceLocationIds.Length; i++)
+            {
+                string locationId = data.influenceLocationIds[i];
+                string ownerId = hub.ResolveInfluenceTerritoryId(locationId);
+                if (!string.Equals(locationId, ownerId, StringComparison.Ordinal))
+                {
+                    error = $"v6 entry '{locationId}' is not a mutable Circle territory owner.";
+                    return false;
+                }
+            }
+            locationIds = data.influenceLocationIds;
+            circleIds = data.influenceCircleIds;
+            values = data.influenceValues;
+        }
+        else
+        {
+            string[] legacyLocations;
+            int[] legacyCircles;
+            float[] legacyValues;
+
+            if (hasCircleTable)
+            {
+                legacyLocations = data.influenceLocationIds;
+                legacyCircles = data.influenceCircleIds;
+                legacyValues = data.influenceValues;
+            }
+            else if (data.curseNodeIds != null && data.curseLevels != null &&
+                     data.curseNodeIds.Length == data.curseLevels.Length)
+            {
+                legacyLocations = data.curseNodeIds;
+                legacyValues = data.curseLevels;
+                legacyCircles = new int[legacyLocations.Length];
+                for (int i = 0; i < legacyCircles.Length; i++)
+                    legacyCircles[i] = (int)CircleId.Limbo;
+            }
+            else if (data.curseNodeIds == null && data.curseLevels == null)
+            {
+                return true; // Pre-Circle save: retain the authored New Game baseline.
+            }
+            else
+            {
+                error = "Legacy Limbo arrays are malformed.";
+                return false;
+            }
+
+            if (!CircleTerritoryMigration.TryMigrateToOwners(
+                    hub,
+                    legacyLocations,
+                    legacyCircles,
+                    legacyValues,
+                    out locationIds,
+                    out circleIds,
+                    out values,
+                    out error))
+                return false;
+        }
+
+        return hub.ImportInfluenceStates(locationIds, circleIds, values);
     }
 
     // ── Party progression (v2) ─────────────────────────────────────────────────

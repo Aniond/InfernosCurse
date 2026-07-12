@@ -38,6 +38,16 @@ public class HubNode
     public string discoveryId;
     public DiscoveryStage minimumDiscoveryStage = DiscoveryStage.Discovered;
 
+    [Header("Circle Territory")]
+    public string influenceTerritoryId;
+    public string parentRegionId;
+    public TerritoryKind territoryKind = TerritoryKind.None;
+    public float regionalWeight;
+    public bool ownsCircleState;
+    public bool aggregateOnly;
+    public bool nonStateNode;
+    public List<CircleRouteStrength> routeStrengthOverrides = new();
+
     public CircleId nativeCircle = CircleId.Limbo;
     public List<CircleInfluenceState> circleInfluence = new();
     [Range(0f, 1f)] public float sanctity     = 0f;   // holy resistance to spread
@@ -48,6 +58,7 @@ public class HubNode
 
     // Runtime — set by HubMap
     [System.NonSerialized] public List<HubNode> neighbors = new();
+    [System.NonSerialized] public HubNode influenceTerritory;
 
     // Compatibility bridge while existing Florence callers move from the old
     // single curse value to explicit Circle influence. In Florence the legacy
@@ -58,17 +69,50 @@ public class HubNode
         set => SetInfluence(CircleId.Limbo, value);
     }
 
+    public bool HasTerritoryContract =>
+        ownsCircleState || aggregateOnly || nonStateNode || !string.IsNullOrEmpty(influenceTerritoryId);
+
+    public bool IsInfluenceOwner => influenceTerritory == this;
+
+    public string ResolvedInfluenceTerritoryId => influenceTerritory != null
+        ? influenceTerritory.id
+        : string.Empty;
+
     public float GetInfluence(CircleId circle) =>
-        CircleInfluenceLedger.Get(circleInfluence, circle);
+        influenceTerritory != null
+            ? influenceTerritory.GetOwnedInfluence(circle)
+            : 0f;
 
     public bool SetInfluence(CircleId circle, float value) =>
-        CircleInfluenceLedger.Set(circleInfluence, circle, value);
+        influenceTerritory != null && influenceTerritory.SetOwnedInfluence(circle, value);
 
     public bool AddInfluence(CircleId circle, float delta) =>
+        influenceTerritory != null && influenceTerritory.AddOwnedInfluence(circle, delta);
+
+    internal float GetOwnedInfluence(CircleId circle) =>
+        CircleInfluenceLedger.Get(circleInfluence, circle);
+
+    internal bool SetOwnedInfluence(CircleId circle, float value) =>
+        CircleInfluenceLedger.Set(circleInfluence, circle, value);
+
+    internal bool AddOwnedInfluence(CircleId circle, float delta) =>
         CircleInfluenceLedger.Add(circleInfluence, circle, delta);
 
+    public float GetRouteStrength(string neighborId)
+    {
+        if (routeStrengthOverrides != null)
+            foreach (var route in routeStrengthOverrides)
+                if (route != null && route.neighborId == neighborId)
+                    return Mathf.Clamp01(route.strength);
+        return 1f;
+    }
+
     public CircleId DominantCircle =>
-        CircleInfluenceLedger.Dominant(circleInfluence, nativeCircle);
+        influenceTerritory != null
+            ? CircleInfluenceLedger.Dominant(
+                influenceTerritory.circleInfluence,
+                influenceTerritory.nativeCircle)
+            : nativeCircle;
 
     public float DominantInfluence => GetInfluence(DominantCircle);
 

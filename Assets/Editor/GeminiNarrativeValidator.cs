@@ -90,11 +90,21 @@ public static class GeminiNarrativeValidator
         {
             new HubNodeData
             {
+                id = "firenze",
+                displayName = "Florence",
+                nativeCircle = CircleId.Limbo,
+                startingCurseLevel = 0.15f,
+                ownsCircleState = true,
+                territoryKind = TerritoryKind.City,
+                neighborIds = new List<string> { "mercato" },
+            },
+            new HubNodeData
+            {
                 id = "mercato",
                 displayName = "Mercato Vecchio",
                 nativeCircle = CircleId.Limbo,
-                startingCurseLevel = 0.15f,
-                neighborIds = new List<string>(),
+                influenceTerritoryId = "firenze",
+                neighborIds = new List<string> { "firenze" },
             },
         };
         hub.EnsureGraphBuilt();
@@ -135,7 +145,10 @@ public static class GeminiNarrativeValidator
             "Recent-event selector did not keep exactly the newest 20 relevant records.", errors);
         Expect(!prompt.Contains("IRRELEVANT_DUOMO_FACT"), "Unrelated event leaked into narrative context.", errors);
         Expect(prompt.Contains("npcMemoryStage=\"Distracted\""), "NPC memory stage was omitted from context.", errors);
-        Expect(prompt.Contains("Limbo:15%"), "Unlocked location Circle ledger was omitted from context.", errors);
+        Expect(prompt.Contains("Limbo:limbo_symptom_familiarity_slips"),
+            "Unlocked authored Circle symptom was omitted from context.", errors);
+        Expect(!prompt.Contains("Limbo:15%"),
+            "Hidden numeric Circle influence leaked into narrative context.", errors);
         Expect(prompt.Contains("rumor_limbo_bells_mercato:Rumored"), "Known rumor was omitted from context.", errors);
         Expect(!prompt.Contains("poi_roman_florentia_stone"), "Hidden cultural POI leaked into context.", errors);
         Expect(prompt.IndexOf("apiKey", StringComparison.OrdinalIgnoreCase) < 0 &&

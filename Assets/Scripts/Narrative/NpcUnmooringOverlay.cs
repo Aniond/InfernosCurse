@@ -20,6 +20,10 @@ public sealed class NpcUnmooringPresentationState
     public bool useOriginalSchedule;
     public bool useBackupServiceAccess;
     public bool inForgottenPool;
+    public NpcCircleRelevanceLayer relevanceLayer;
+    public string[] erasedMemoryIds = Array.Empty<string>();
+    public string[] rememberedMemoryIds = Array.Empty<string>();
+    public bool hasPermanentMemoryGap;
 }
 
 public static class NpcUnmooringPresentation
@@ -37,6 +41,8 @@ public static class NpcUnmooringPresentation
                 stage = NpcMemoryStage.Grounded,
                 dialogueMode = NpcDialogueOverlayMode.Original,
                 useOriginalSchedule = true,
+                erasedMemoryIds = Array.Empty<string>(),
+                rememberedMemoryIds = Array.Empty<string>(),
             };
         }
 
@@ -48,6 +54,10 @@ public static class NpcUnmooringPresentation
             useOriginalSchedule = true,
             useBackupServiceAccess = false,
             inForgottenPool = record.forgottenPool,
+            relevanceLayer = record.relevanceLayer,
+            erasedMemoryIds = Clone(record.erasedMemoryIds),
+            rememberedMemoryIds = Clone(record.rememberedMemoryIds),
+            hasPermanentMemoryGap = (record.erasedMemoryIds?.Length ?? 0) > 0,
         };
 
         switch (record.stage)
@@ -78,6 +88,14 @@ public static class NpcUnmooringPresentation
                 break;
         }
         return state;
+    }
+
+    static string[] Clone(string[] values)
+    {
+        if (values == null || values.Length == 0) return Array.Empty<string>();
+        var result = new string[values.Length];
+        Array.Copy(values, result, values.Length);
+        return result;
     }
 
     static uint StableHash(string value)

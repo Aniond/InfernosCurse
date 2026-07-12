@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 637c561bbec64155a3e9c6ad9b32efb0, type: 3}
+  m_Name: LimboExpression
+  m_EditorClassIdentifier: Assembly-CSharp::CircleExpressionProfile
+  circle: 0
+  propagationTuning: {fileID: 11400000, guid: a3fadcf8f369fbc4e983610ef7b4574d, type: 2}
+  bands:
+  - beginsAtInfluence: 0.1
+    symptomTextId: limbo_symptom_familiarity_slips
+    eventTags:
+    - misremembered_name
+    - missed_greeting
+    npcOverlayVocabulary:
+    - hesitates
+    - searches_for_a_name
+    environmentalPresentationIds:
+    - limbo_subtle_absence
+    encounterTags:
+    - limbo_unease
+  - beginsAtInfluence: 0.35
+    symptomTextId: limbo_symptom_names_misplaced
+    eventTags:
+    - neighbor_unrecognized
+    - routine_displaced
+    npcOverlayVocabulary:
+    - fragmented
+    - uncertain_familiarity
+    environmentalPresentationIds:
+    - limbo_missing_signs
+    encounterTags:
+    - limbo_crier_activity
+  - beginsAtInfluence: 0.55
+    symptomTextId: limbo_symptom_routines_unmoored
+    eventTags:
+    - work_abandoned
+    - route_forgotten
+    npcOverlayVocabulary:
+    - dislocated
+    - speaks_around_absence
+    environmentalPresentationIds:
+    - limbo_unattended_places
+    encounterTags:
+    - limbo_unmoored_witness
+  - beginsAtInfluence: 0.75
+    symptomTextId: limbo_symptom_places_forgotten
+    eventTags:
+    - place_erased
+    - collective_memory_gap
+    npcOverlayVocabulary:
+    - denies_the_place
+    - grief_without_a_name
+    environmentalPresentationIds:
+    - limbo_erased_landmark
+    encounterTags:
+    - limbo_forgotten_ground

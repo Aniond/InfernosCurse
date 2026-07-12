@@ -4,26 +4,13 @@ using UnityEngine;
 
 public static class FlorenceOpeningBaseline
 {
-    // Stable Florence districts begin at 5-10%; Mercato is the earliest
-    // troubled district at 15%. This table is applied only by explicit New Game.
+    // Explicit New Game seeds mutable owner territories only. Florence sites
+    // resolve to the one citywide Firenze ledger; Tuscany is derived read-only.
     public static readonly IReadOnlyDictionary<string, float> LimboByLocation =
         new Dictionary<string, float>(StringComparer.Ordinal)
         {
-            ["duomo"] = 0.05f,
-            ["novella"] = 0.05f,
-            ["mercato"] = 0.15f,
-            ["signoria"] = 0.08f,
-            ["pontevecchio"] = 0.10f,
-            ["oltrarno"] = 0.10f,
-            ["santacroce"] = 0.07f,
-            ["sanlorenzo"] = 0.07f,
             ["firenze"] = 0.08f,
-            ["wp_mugnone"] = 0f,
             ["fiesole"] = 0.05f,
-            ["toscana"] = 0.02f,
-            ["giardino_rose"] = 0.06f,
-            ["salone_arti"] = 0.08f,
-            ["via_calimala"] = 0.10f,
         };
 
     public static bool Apply(out string error)
@@ -38,15 +25,16 @@ public static class FlorenceOpeningBaseline
         hub.EnsureGraphBuilt();
         foreach (var pair in LimboByLocation)
         {
-            if (hub.GetNode(pair.Key) == null)
+            var node = hub.GetNode(pair.Key);
+            if (node == null || !node.IsInfluenceOwner)
             {
-                error = $"Florence baseline location '{pair.Key}' is missing from HubMap.";
+                error = $"Florence baseline owner '{pair.Key}' is missing or does not own Circle state.";
                 return false;
             }
         }
         foreach (var pair in LimboByLocation)
             hub.ApplyLedgerBaseline(pair.Key, CircleId.Limbo, pair.Value, clearOtherCircles: true);
-        Debug.Log("[FlorenceOpeningBaseline] Applied low-burn Limbo opening values for a new campaign.");
+        Debug.Log("[FlorenceOpeningBaseline] Applied owner-only Florence and Fiesole Limbo baselines.");
         return true;
     }
 }

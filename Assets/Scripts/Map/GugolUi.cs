@@ -121,10 +121,8 @@ public static class GugolUi
     public static float Rating(HubNode node)
         => 3.9f + (Mathf.Abs(StableHash(node.id)) % 11) * 0.1f;   // 3.9–4.9
 
-    // Review counts are hash-noise — except tainted places, which always sit at
-    // 666. A vibe tell, not a gauge: the curse stays an unreadable hidden value.
+    // Review counts are ordinary deterministic parody data. Hidden Circle state
+    // never changes a rating or review count.
     public static int ReviewCount(HubNode node)
-        => GameFeatures.CorruptionEnabled && node.curseLevel >= 0.5f
-            ? 666
-            : 100 + Mathf.Abs(StableHash(node.id + "r")) % 900;
+        => 100 + Mathf.Abs(StableHash(node.id + "r")) % 900;
 }

@@ -21,12 +21,15 @@ public class PlayerController : MonoBehaviour
     private Transform _cam;
     private Vector2 _moveInput;
     private Vector2 _snapped;
+    private Vector2 _facing = Vector2.down;
     private bool _isRunning;
     private float _footOffset;
 
     private static readonly int MoveX = Animator.StringToHash("MoveX");
     private static readonly int MoveY = Animator.StringToHash("MoveY");
     private static readonly int Speed  = Animator.StringToHash("Speed");
+
+    public Vector2 Facing => _facing;
 
     // Kneel ceremony (shrine pledge): movement locks and a directional kneel
     // state plays until the timer runs out, then control returns.
@@ -107,6 +110,7 @@ public class PlayerController : MonoBehaviour
         // Update animator only when moving so idle holds last facing direction
         if (_snapped.sqrMagnitude > 0.01f)
         {
+            _facing = _snapped;
             _anim.SetFloat(MoveX, _snapped.x);
             _anim.SetFloat(MoveY, _snapped.y);
         }
@@ -154,6 +158,7 @@ public class PlayerController : MonoBehaviour
     {
         var snapped = SnapToCardinal(dir);
         if (snapped.sqrMagnitude < 0.01f) return;
+        _facing = snapped;
         // _anim is guaranteed by [RequireComponent(typeof(Animator))].
         _anim.SetFloat(MoveX, snapped.x);
         _anim.SetFloat(MoveY, snapped.y);

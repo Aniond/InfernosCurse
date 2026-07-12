@@ -6,6 +6,7 @@ using UnityEngine;
 public static class LimboCrierPlayModeVerifier
 {
     const string PendingKey = "InfernosCurse.LimboCrierPlayModeVerifier.Pending";
+    const string InteractiveKey = "InfernosCurse.LimboCrierPlayModeVerifier.Interactive";
 
     static LimboCrierPlayModeVerifier()
     {
@@ -17,6 +18,19 @@ public static class LimboCrierPlayModeVerifier
     // editor after walking the complete exploration -> combat -> victory path.
     public static void RunBatch()
     {
+        SessionState.SetBool(InteractiveKey, false);
+        QueueRun();
+    }
+
+    [MenuItem("InfernosCurse/Validation/Run Limbo Crier Interactive Play Mode Probe")]
+    public static void RunInteractive()
+    {
+        SessionState.SetBool(InteractiveKey, true);
+        QueueRun();
+    }
+
+    static void QueueRun()
+    {
         SessionState.SetBool(PendingKey, true);
         EditorSceneManager.OpenScene(
             LimboCrierEncounterBuilder.MercatoScenePath, OpenSceneMode.Single);
@@ -27,6 +41,9 @@ public static class LimboCrierPlayModeVerifier
     {
         if (state != PlayModeStateChange.EnteredPlayMode || !SessionState.GetBool(PendingKey, false)) return;
         SessionState.EraseBool(PendingKey);
-        new GameObject("LimboCrierPlayModeProbe").AddComponent<LimboCrierPlayModeProbe>();
+        bool interactive = SessionState.GetBool(InteractiveKey, false);
+        SessionState.EraseBool(InteractiveKey);
+        var probe = new GameObject("LimboCrierPlayModeProbe").AddComponent<LimboCrierPlayModeProbe>();
+        probe.exitEditorOnComplete = !interactive;
     }
 }

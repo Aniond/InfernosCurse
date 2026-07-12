@@ -449,6 +449,103 @@ public static class GugolMappeSetup
             if (string.IsNullOrEmpty(fs.entryId))   fs.entryId = "fiesole_gate";
             fs.microClimate = MicroClimate.Hilltop;
         }
+
+        ConfigureCircleTerritories(hub);
+    }
+
+    static void ConfigureCircleTerritories(HubMap hub)
+    {
+        ConfigureOwner(hub, "firenze", TerritoryKind.City, "toscana", 8f, 0.08f);
+        ConfigureOwner(hub, "fiesole", TerritoryKind.Town, "toscana", 1f, 0.05f);
+
+        string[] florenceSites =
+        {
+            "duomo", "novella", "mercato", "signoria", "pontevecchio", "oltrarno",
+            "santacroce", "sanlorenzo", "giardino_rose", "salone_arti", "via_calimala",
+        };
+        foreach (string siteId in florenceSites)
+            ConfigureSite(hub, siteId, "firenze");
+
+        var waypoint = hub.nodeData.Find(node => node.id == "wp_mugnone");
+        if (waypoint != null)
+        {
+            ClearTerritoryContract(waypoint);
+            waypoint.nonStateNode = true;
+            waypoint.startingInfluences.Clear();
+            waypoint.startingCurseLevel = 0f;
+        }
+
+        var region = hub.nodeData.Find(node => node.id == "toscana");
+        if (region != null)
+        {
+            ClearTerritoryContract(region);
+            region.aggregateOnly = true;
+            region.startingInfluences.Clear();
+            region.startingCurseLevel = 0f;
+        }
+
+        SetRouteStrength(hub, "firenze", "wp_mugnone", 0.75f);
+        SetRouteStrength(hub, "fiesole", "wp_mugnone", 0.75f);
+    }
+
+    static void ConfigureOwner(
+        HubMap hub,
+        string id,
+        TerritoryKind kind,
+        string parentRegionId,
+        float regionalWeight,
+        float limboBaseline)
+    {
+        var node = hub.nodeData.Find(candidate => candidate.id == id);
+        if (node == null) return;
+        ClearTerritoryContract(node);
+        node.ownsCircleState = true;
+        node.territoryKind = kind;
+        node.parentRegionId = parentRegionId;
+        node.regionalWeight = regionalWeight;
+        node.nativeCircle = CircleId.Limbo;
+        node.startingCurseLevel = 0f;
+        node.startingInfluences = new List<CircleInfluenceSeed>
+        {
+            new CircleInfluenceSeed { circle = CircleId.Limbo, value = limboBaseline },
+        };
+    }
+
+    static void ConfigureSite(HubMap hub, string id, string ownerId)
+    {
+        var node = hub.nodeData.Find(candidate => candidate.id == id);
+        if (node == null) return;
+        ClearTerritoryContract(node);
+        node.influenceTerritoryId = ownerId;
+        node.nativeCircle = CircleId.Limbo;
+        node.startingInfluences.Clear();
+        node.startingCurseLevel = 0f;
+    }
+
+    static void ClearTerritoryContract(HubNodeData node)
+    {
+        node.influenceTerritoryId = string.Empty;
+        node.parentRegionId = string.Empty;
+        node.territoryKind = TerritoryKind.None;
+        node.regionalWeight = 0f;
+        node.ownsCircleState = false;
+        node.aggregateOnly = false;
+        node.nonStateNode = false;
+        node.routeStrengthOverrides ??= new List<CircleRouteStrength>();
+    }
+
+    static void SetRouteStrength(HubMap hub, string id, string neighborId, float strength)
+    {
+        var node = hub.nodeData.Find(candidate => candidate.id == id);
+        if (node == null) return;
+        node.routeStrengthOverrides ??= new List<CircleRouteStrength>();
+        var route = node.routeStrengthOverrides.Find(candidate => candidate.neighborId == neighborId);
+        if (route == null)
+        {
+            route = new CircleRouteStrength { neighborId = neighborId };
+            node.routeStrengthOverrides.Add(route);
+        }
+        route.strength = Mathf.Clamp01(strength);
     }
 
     static void SetLevel(HubMap hub, string id, MapLevel level)

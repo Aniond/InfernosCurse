@@ -38,6 +38,8 @@ public class GugolMapUI : MonoBehaviour
     public Sprite iconStar, iconClock;
     public Sprite iconSun, iconCloud, iconRain, iconFog, iconWind, iconStorm, iconSnow, iconFlood;
     public Sprite fallbackPreview;
+    [Tooltip("Optional project-owned presentation profile. Existing serialized art remains the fallback.")]
+    public GugolMapPresentationProfile presentationProfile;
 
     [Header("Fonts (Cinzel headers / EB Garamond body; TMP default when null)")]
     public TMP_FontAsset headerFont;
@@ -93,7 +95,18 @@ public class GugolMapUI : MonoBehaviour
     TMP_InputField _search;
     TextMeshProUGUI _searchPlaceholder;
     Button _zoomInBtn, _zoomOutBtn;
+    Button _cityBtn, _regionBtn, _worldBtn;
     MapLevel _layer = MapLevel.City;
+    RectTransform _featureLayer;
+    RectTransform _chromeLayer;
+    AspectRatioFitter _chromeFitter;
+    GugolMapLayerPresenter _layerPresenter;
+    GugolMapFeaturePresenter _featurePresenter;
+    GugolMapWeatherPresenter _weatherPresenter;
+    GugolMapCardHost _contextCard;
+    GugolMapKnowledgeSnapshot _knowledge;
+    GugolMapSearchIndex _searchIndex;
+    readonly GugolMapSelectionState _selectionState = new();
 
     readonly Dictionary<string, GugolMapPin> _pins = new();
     readonly List<GameObject> _waypointDots = new();
@@ -112,16 +125,36 @@ public class GugolMapUI : MonoBehaviour
     }
 
     public static bool IsOpen => _instance != null && _instance._open;
+    public GugolMapViewKind CurrentView => _selectionState.View;
+    public string FocusedStreetId => _selectionState.FocusedStreetId;
 
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(this); return; }
         Instance = this;
+        if (presentationProfile == null)
+            presentationProfile = Resources.Load<GugolMapPresentationProfile>(
+                "GugolMap/Presentation/FlorenceRefined");
+        ApplyPresentationProfileFallbacks();
         BuildUI();
         CloseInternal(rearmExit: false);
     }
 
     void OnDestroy() { if (Instance == this) Instance = null; }
+
+    void ApplyPresentationProfileFallbacks()
+    {
+        if (presentationProfile == null) return;
+        mapBackground ??= presentationProfile.cityBackground;
+        regionBackground ??= presentationProfile.regionBackground;
+        worldBackground ??= presentationProfile.worldBackground;
+        pinSprite ??= presentationProfile.defaultPin;
+        townPinSprite ??= presentationProfile.townPin;
+        youAreHereSprite ??= presentationProfile.playerMarker;
+        walkerSprite ??= presentationProfile.routeWalker;
+        cardSprite ??= presentationProfile.contextCard;
+        searchBarSprite ??= presentationProfile.searchBar;
+    }
 
     void Update()
     {
@@ -141,8 +174,10 @@ public class GugolMapUI : MonoBehaviour
             {
                 if (_travelling)      _route.SkipToEnd();   // fast-forward, never cancel mid-route
                 else if (typing)      { /* TMP eats ESC to unfocus — swallow */ }
+                else if (_contextCard != null && _contextCard.IsOpen) _contextCard.Hide();
                 else if (_card.IsOpen) _card.Hide();
-                else                   Close();
+                else if (_selectionState.View == GugolMapViewKind.Street) ExitStreetView();
+                else Close();
             }
         }
     }
@@ -169,6 +204,7 @@ public class GugolMapUI : MonoBehaviour
             return false;
         }
         _hub.EnsureGraphBuilt();
+        RebuildKnowledgeSnapshot();
 
         EnsureEventSystem();
         // Activate BEFORE building pins: TMP components under an inactive root
@@ -182,6 +218,8 @@ public class GugolMapUI : MonoBehaviour
 
         _hub.OnNodeChanged -= OnNodeChanged;
         _hub.OnNodeChanged += OnNodeChanged;
+        GugolNpcMapKnowledgeLedger.OnChanged -= OnMapKnowledgeChanged;
+        GugolNpcMapKnowledgeLedger.OnChanged += OnMapKnowledgeChanged;
 
         _open = true;
         if (pauseWhileOpen)
@@ -213,6 +251,8 @@ public class GugolMapUI : MonoBehaviour
         if (_open && pauseWhileOpen) Time.timeScale = _savedTimeScale;
         _open = false;
         if (_hub != null) _hub.OnNodeChanged -= OnNodeChanged;
+        GugolNpcMapKnowledgeLedger.OnChanged -= OnMapKnowledgeChanged;
+        _featurePresenter?.Clear();
 
         if (rearmExit && _sourceExit != null) _sourceExit.RearmAfterMapClosed();
         _sourceExit = null;
@@ -244,6 +284,16 @@ public class GugolMapUI : MonoBehaviour
 
     Sprite BackgroundFor(MapLevel level)
     {
+        if (presentationProfile != null)
+        {
+            Sprite profileSprite = level switch
+            {
+                MapLevel.City => presentationProfile.cityBackground,
+                MapLevel.Region => presentationProfile.regionBackground,
+                _ => presentationProfile.worldBackground,
+            };
+            if (profileSprite != null) return profileSprite;
+        }
         switch (level)
         {
             case MapLevel.City:   return mapBackground;
@@ -268,8 +318,12 @@ public class GugolMapUI : MonoBehaviour
     {
         if (_travelling) return;
         _layer = layer;
+        _selectionState.SetBase(layer);
 
         var bg = BackgroundFor(layer);
+        if (_layerPresenter != null) _layerPresenter.ShowBase(layer, bg, immediate: !_open);
+        else
+        {
         if (bg != null) { _mapImg.sprite = bg; _mapImg.color = Color.white; }
         else            { _mapImg.sprite = null; _mapImg.color = new Color(0.89f, 0.83f, 0.70f, 1f); }
         _fitter.aspectRatio = bg != null ? bg.rect.width / bg.rect.height : 1f;
@@ -279,10 +333,15 @@ public class GugolMapUI : MonoBehaviour
         _fitter.enabled = false;
         _fitter.enabled = true;
         Canvas.ForceUpdateCanvases();
+        }
+        UpdateChromeAspect(bg);
 
         RebuildPins();
+        if (layer == MapLevel.City) _featurePresenter?.ShowCityStreets(_knowledge);
+        else _featurePresenter?.Clear();
         _route.Clear();
         _card.Hide();
+        _contextCard?.Hide();
         if (_search != null) _search.SetTextWithoutNotify("");
         if (_searchPlaceholder != null) _searchPlaceholder.text = SearchHintFor(layer);
         SetAllDimmed(null);
@@ -293,6 +352,29 @@ public class GugolMapUI : MonoBehaviour
     {
         if (_zoomInBtn  != null) _zoomInBtn.interactable  = _layer > MapLevel.City  && !_travelling;
         if (_zoomOutBtn != null) _zoomOutBtn.interactable = _layer < MapLevel.World && !_travelling;
+        SetScaleButtonState(_cityBtn, _selectionState.View == GugolMapViewKind.City);
+        SetScaleButtonState(_regionBtn, _selectionState.View == GugolMapViewKind.Region);
+        SetScaleButtonState(_worldBtn, _selectionState.View == GugolMapViewKind.World);
+    }
+
+    void SetScaleButtonState(Button button, bool selected)
+    {
+        if (button == null) return;
+        button.interactable = !_travelling;
+        if (button.targetGraphic is Image image)
+            image.color = selected
+                ? new Color(0.55f, 0.16f, 0.12f, 0.98f)
+                : new Color(0.94f, 0.90f, 0.80f, 0.97f);
+        var label = button.GetComponentInChildren<TextMeshProUGUI>();
+        if (label != null) label.color = selected ? Color.white : new Color(0.30f, 0.23f, 0.13f);
+    }
+
+    void UpdateChromeAspect(Sprite background)
+    {
+        if (_chromeFitter == null) return;
+        _chromeFitter.aspectRatio = background != null ? background.rect.width / background.rect.height : 1f;
+        _chromeFitter.enabled = false;
+        _chromeFitter.enabled = true;
     }
 
     // ── Pins ───────────────────────────────────────────────────────────────────
@@ -304,6 +386,7 @@ public class GugolMapUI : MonoBehaviour
         foreach (var d in _waypointDots) if (d != null) Destroy(d);
         _waypointDots.Clear();
         _selected = null;
+        if (_selectionState.View == GugolMapViewKind.Street) return;
 
         var weather = FlorenceWeather.Instance;
         var cur = _hub.GetNode(DistrictTracker.CurrentNodeId);
@@ -465,6 +548,96 @@ public class GugolMapUI : MonoBehaviour
         if (node != null && _pins.TryGetValue(node.id, out var pin)) pin.Refresh();
     }
 
+    void RebuildKnowledgeSnapshot()
+    {
+        _knowledge = GugolMapKnowledgeService.Build(_hub);
+        _searchIndex = new GugolMapSearchIndex(_knowledge);
+        _weatherPresenter?.Apply(_knowledge);
+    }
+
+    void OnMapKnowledgeChanged()
+    {
+        if (!_open) return;
+        RebuildKnowledgeSnapshot();
+        if (_selectionState.View == GugolMapViewKind.Street &&
+            _knowledge.TryGet(GugolMapFeatureKind.Street, _selectionState.FocusedStreetId, out var street))
+            _featurePresenter?.ShowStreet(_knowledge, street.street);
+        else if (_layer == MapLevel.City)
+            _featurePresenter?.ShowCityStreets(_knowledge);
+    }
+
+    public void OnStreetClicked(GugolStreetDefinition street)
+    {
+        if (_travelling || street == null || _knowledge == null) return;
+        if (!_knowledge.TryGet(GugolMapFeatureKind.Street, street.streetId, out var feature) || !feature.IsVisible)
+            return;
+
+        _selectionState.EnterStreet(street.streetId);
+        _layer = MapLevel.City;
+        _card.Hide();
+        _contextCard?.Hide();
+        _route.Clear();
+        RebuildPins();
+        _layerPresenter?.ShowStreet(street, immediate: false);
+        UpdateChromeAspect(street.streetViewBackground != null
+            ? street.streetViewBackground
+            : BackgroundFor(MapLevel.City));
+        Canvas.ForceUpdateCanvases();
+        _featurePresenter?.ShowStreet(_knowledge, street);
+        _contextCard?.ShowStreet(feature);
+        RefreshZoomButtons();
+        if (_searchPlaceholder != null) _searchPlaceholder.text = "Search this street...";
+    }
+
+    void ExitStreetView()
+    {
+        SetLayer(MapLevel.City);
+    }
+
+    public void OnMapFeatureClicked(GugolMapFeatureRecord feature)
+    {
+        if (_travelling || feature == null || !feature.IsVisible) return;
+        _selectionState.Select(feature.kind, feature.featureId);
+        switch (feature.kind)
+        {
+            case GugolMapFeatureKind.Street:
+                OnStreetClicked(feature.street);
+                break;
+            case GugolMapFeatureKind.Venue:
+                _contextCard?.ShowVenue(feature, () => ShowDirectionsToFeature(feature), null);
+                break;
+            case GugolMapFeatureKind.Npc:
+                _contextCard?.ShowNpc(feature, () => ShowDirectionsToFeature(feature));
+                break;
+        }
+    }
+
+    void ShowDirectionsToFeature(GugolMapFeatureRecord feature)
+    {
+        if (feature == null || _knowledge == null ||
+            !_knowledge.TryGet(GugolMapFeatureKind.Street, feature.streetId, out var streetFeature) ||
+            streetFeature.street == null) return;
+
+        Vector2 destination = streetFeature.street.routeFallbackPosition;
+        if (!string.IsNullOrWhiteSpace(feature.venueId) &&
+            _knowledge.TryGet(GugolMapFeatureKind.Venue, feature.venueId, out var venueFeature) &&
+            venueFeature.venue != null)
+            destination = venueFeature.venue.streetViewAnchor;
+        else if (feature.venue != null)
+            destination = feature.venue.streetViewAnchor;
+
+        _route.ShowNormalizedRoute(new List<Vector2>
+        {
+            streetFeature.street.routeFallbackPosition,
+            destination,
+        });
+    }
+
+    public void OnContextCardHidden()
+    {
+        _selectionState.ClearSelection();
+    }
+
     // ── Selection / routing ────────────────────────────────────────────────────
 
     public void OnPinClicked(GugolMapPin pin)
@@ -587,7 +760,7 @@ public class GugolMapUI : MonoBehaviour
     {
         var spots = new List<ZoneEntryPoint>();
         var seenIds = new HashSet<string>();
-        foreach (var ep in FindObjectsByType<ZoneEntryPoint>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var ep in FindObjectsByType<ZoneEntryPoint>(FindObjectsInactive.Include))
         {
             if (!ep.fastTravelDestination) continue;
             if (!seenIds.Add(ep.entryId)) continue;   // de-dupe cross-scene arrival markers
@@ -775,6 +948,31 @@ public class GugolMapUI : MonoBehaviour
     {
         query = (query ?? "").Trim().ToLowerInvariant();
         if (query.Length == 0) return;
+
+        var results = _searchIndex?.Query(query, 1);
+        if (results != null && results.Count > 0)
+        {
+            var feature = results[0];
+            if (feature.kind == GugolMapFeatureKind.Location && feature.node != null)
+            {
+                if (_layer != feature.node.mapLevel) SetLayer(feature.node.mapLevel);
+                if (_pins.TryGetValue(feature.node.id, out var locationPin)) OnPinClicked(locationPin);
+                return;
+            }
+            if (feature.kind == GugolMapFeatureKind.Street)
+            {
+                OnStreetClicked(feature.street);
+                return;
+            }
+            if ((feature.kind == GugolMapFeatureKind.Venue || feature.kind == GugolMapFeatureKind.Npc) &&
+                _knowledge.TryGet(GugolMapFeatureKind.Street, feature.streetId, out var street))
+            {
+                OnStreetClicked(street.street);
+                OnMapFeatureClicked(feature);
+                return;
+            }
+        }
+
         foreach (var pin in _pins.Values)
         {
             if (pin.Node.displayName.ToLowerInvariant().Contains(query))
@@ -830,6 +1028,24 @@ public class GugolMapUI : MonoBehaviour
             ? mapBackground.rect.width / mapBackground.rect.height
             : 16f / 9f;
         mapGo.AddComponent<MapClickCatcher>().owner = this;
+        var transition = mapGo.AddComponent<GugolMapTransitionController>();
+        _layerPresenter = mapGo.AddComponent<GugolMapLayerPresenter>();
+        _layerPresenter.Configure(_mapImg, _fitter, transition, presentationProfile, mapBackground);
+
+        var chromeGo = new GameObject("MapChrome", typeof(RectTransform), typeof(AspectRatioFitter));
+        chromeGo.transform.SetParent(_root.transform, false);
+        _chromeLayer = (RectTransform)chromeGo.transform;
+        _chromeLayer.anchorMin = _chromeLayer.anchorMax = new Vector2(0.5f, 0.5f);
+        _chromeLayer.pivot = new Vector2(0.5f, 0.5f);
+        _chromeFitter = chromeGo.GetComponent<AspectRatioFitter>();
+        _chromeFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        _chromeFitter.aspectRatio = _fitter.aspectRatio;
+
+        var weatherGo = new GameObject("WeatherOverlay", typeof(RectTransform), typeof(Image),
+            typeof(GugolMapWeatherPresenter));
+        weatherGo.transform.SetParent(mapGo.transform, false);
+        GugolUi.Stretch((RectTransform)weatherGo.transform);
+        _weatherPresenter = weatherGo.GetComponent<GugolMapWeatherPresenter>();
 
         // Route dots under the pins, both in the map rect's coordinate space.
         var routeGo = new GameObject("RouteLayer", typeof(RectTransform));
@@ -839,6 +1055,14 @@ public class GugolMapUI : MonoBehaviour
         _route.dotSprite = GugolUi.CircleSprite;
         _route.walkerSprite = walkerSprite != null ? walkerSprite : GugolUi.CircleSprite;
 
+        var featureGo = new GameObject("FeatureLayer", typeof(RectTransform));
+        featureGo.transform.SetParent(mapGo.transform, false);
+        GugolUi.Stretch((RectTransform)featureGo.transform);
+        _featureLayer = (RectTransform)featureGo.transform;
+        _featurePresenter = featureGo.AddComponent<GugolMapFeaturePresenter>();
+        _featurePresenter.Configure(this, _featureLayer, bodyFont,
+            presentationProfile != null ? presentationProfile.ink : new Color(0.24f, 0.17f, 0.09f));
+
         var pinGo = new GameObject("PinLayer", typeof(RectTransform));
         pinGo.transform.SetParent(mapGo.transform, false);
         GugolUi.Stretch((RectTransform)pinGo.transform);
@@ -846,8 +1070,7 @@ public class GugolMapUI : MonoBehaviour
         _route.mapRect = _pinLayer;
 
         BuildSearchBar();
-        BuildWordmark();
-        BuildZoomControl();
+        BuildScaleControl();
 
         // Attribution parody, bottom-right.
         var attrib = GugolUi.MakeText(_root.transform,
@@ -867,17 +1090,23 @@ public class GugolMapUI : MonoBehaviour
         _card = cardGo.AddComponent<GugolDirectionsCard>();
         _card.Init(this, (RectTransform)cardGo.transform, cardSprite,
             headerFont, bodyFont, walkerSprite, iconStar, iconClock, fallbackPreview);
+
+        var contextGo = new GameObject("MapContextCardHost", typeof(RectTransform));
+        contextGo.transform.SetParent(_root.transform, false);
+        GugolUi.Stretch((RectTransform)contextGo.transform);
+        _contextCard = contextGo.AddComponent<GugolMapCardHost>();
+        _contextCard.Init(this, (RectTransform)contextGo.transform, cardSprite, headerFont, bodyFont);
     }
 
     void BuildSearchBar()
     {
         var barGo = new GameObject("SearchBar", typeof(RectTransform), typeof(Image));
-        barGo.transform.SetParent(_root.transform, false);
+        barGo.transform.SetParent(_chromeLayer, false);
         var barRt = (RectTransform)barGo.transform;
         barRt.anchorMin = barRt.anchorMax = new Vector2(0f, 1f);
         barRt.pivot = new Vector2(0f, 1f);
-        barRt.anchoredPosition = new Vector2(28f, -28f);
-        barRt.sizeDelta = new Vector2(400f, 56f);
+        barRt.anchoredPosition = new Vector2(24f, -24f);
+        barRt.sizeDelta = new Vector2(340f, 52f);
 
         var barImg = barGo.GetComponent<Image>();
         if (searchBarSprite != null)
@@ -901,13 +1130,13 @@ public class GugolMapUI : MonoBehaviour
         var ink = new Color(0.24f, 0.17f, 0.09f);
         var text = GugolUi.MakeText(area.transform, "", 22, FontStyles.Normal, ink, bodyFont);
         GugolUi.Stretch((RectTransform)text.transform);
-        text.enableWordWrapping = false;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
         text.overflowMode = TextOverflowModes.Overflow;
 
         var placeholder = GugolUi.MakeText(area.transform, "Search Florence...", 22,
             FontStyles.Italic, new Color(0.45f, 0.38f, 0.28f, 0.75f), bodyFont);
         GugolUi.Stretch((RectTransform)placeholder.transform);
-        placeholder.enableWordWrapping = false;
+        placeholder.textWrappingMode = TextWrappingModes.NoWrap;
         _searchPlaceholder = placeholder;
 
         _search.textViewport = areaRt;
@@ -921,6 +1150,46 @@ public class GugolMapUI : MonoBehaviour
     }
 
     // The Google zoom control, in parchment: "+" over "−", bottom-right.
+    void BuildScaleControl()
+    {
+        var group = new GameObject("ScaleControl", typeof(RectTransform));
+        group.transform.SetParent(_chromeLayer, false);
+        var rect = (RectTransform)group.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = new Vector2(0f, -86f);
+        rect.sizeDelta = new Vector2(510f, 52f);
+
+        _cityBtn = MakeScaleButton(group.transform, "City", -170f, () => SetLayer(MapLevel.City));
+        _regionBtn = MakeScaleButton(group.transform, "Tuscany", 0f, () => SetLayer(MapLevel.Region));
+        _worldBtn = MakeScaleButton(group.transform, "Italy", 170f, () => SetLayer(MapLevel.World));
+        RefreshZoomButtons();
+    }
+
+    Button MakeScaleButton(Transform parent, string labelText, float x, UnityEngine.Events.UnityAction onClick)
+    {
+        var go = new GameObject("Scale_" + labelText, typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(parent, false);
+        var rect = (RectTransform)go.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(x, 0f);
+        rect.sizeDelta = new Vector2(158f, 48f);
+
+        var image = go.GetComponent<Image>();
+        image.color = new Color(0.94f, 0.90f, 0.80f, 0.97f);
+        var button = go.GetComponent<Button>();
+        button.targetGraphic = image;
+        button.onClick.AddListener(onClick);
+        var label = GugolUi.MakeText(go.transform, labelText, 21f, FontStyles.Bold,
+            new Color(0.30f, 0.23f, 0.13f), headerFont);
+        label.alignment = TextAlignmentOptions.Center;
+        GugolUi.Stretch(label.rectTransform);
+        return button;
+    }
+
+    // Legacy plus/minus builder retained as a compatibility fallback but is no
+    // longer created by the approved browsing hierarchy.
     void BuildZoomControl()
     {
         var group = new GameObject("ZoomControl", typeof(RectTransform));
@@ -1024,4 +1293,34 @@ public class GugolMapUI : MonoBehaviour
                 owner._card.Hide();
         }
     }
+
+#if UNITY_EDITOR
+    public int ValidationFeatureVisualCount => _featurePresenter?.ActiveVisualCount ?? 0;
+    public bool ValidationContextCardOpen => _contextCard != null && _contextCard.IsOpen;
+    public bool ValidationHasWordmark => _root != null && _root.transform.Find("Wordmark") != null;
+
+    public bool ValidationOpenStreet(string streetId)
+    {
+        if (_knowledge == null || !_knowledge.TryGet(GugolMapFeatureKind.Street, streetId, out var record))
+            return false;
+        OnStreetClicked(record.street);
+        return CurrentView == GugolMapViewKind.Street && FocusedStreetId == streetId;
+    }
+
+    public bool ValidationOpenFeature(GugolMapFeatureKind kind, string featureId)
+    {
+        if (_knowledge == null || !_knowledge.TryGet(kind, featureId, out var record)) return false;
+        OnMapFeatureClicked(record);
+        return true;
+    }
+
+    public GugolMapFeatureRecord ValidationSearchFirst(string query)
+    {
+        var results = _searchIndex?.Query(query, 1);
+        return results != null && results.Count > 0 ? results[0] : null;
+    }
+
+    public void ValidationSetLayer(MapLevel layer) => SetLayer(layer);
+    public void ValidationExitStreet() => ExitStreetView();
+#endif
 }

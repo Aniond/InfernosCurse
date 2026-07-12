@@ -10,6 +10,7 @@ using UnityEngine;
 public sealed class LimboCrierPlayModeProbe : MonoBehaviour
 {
     const string AgentId = "limbo_crier_mercato_01";
+    public bool exitEditorOnComplete = true;
 
     IEnumerator Start()
     {
@@ -26,7 +27,8 @@ public sealed class LimboCrierPlayModeProbe : MonoBehaviour
             catch (Exception exception)
             {
                 Debug.LogError("[LimboCrierPlayModeVerifier] FAIL: " + exception.Message + "\n" + exception.StackTrace);
-                UnityEditor.EditorApplication.Exit(1);
+                if (exitEditorOnComplete) UnityEditor.EditorApplication.Exit(1);
+                else UnityEditor.EditorApplication.isPlaying = false;
                 yield break;
             }
 
@@ -35,7 +37,8 @@ public sealed class LimboCrierPlayModeProbe : MonoBehaviour
         }
 
         Debug.Log("[LimboCrierPlayModeVerifier] PASS: hidden discovery gate -> player interaction -> 1 Crier + 2 frontliners -> stain apply/refresh/restore -> persistent victory cleanup; spam did not duplicate the encounter.");
-        UnityEditor.EditorApplication.Exit(0);
+        if (exitEditorOnComplete) UnityEditor.EditorApplication.Exit(0);
+        else UnityEditor.EditorApplication.isPlaying = false;
     }
 
     IEnumerator Walkthrough()
@@ -52,6 +55,8 @@ public sealed class LimboCrierPlayModeProbe : MonoBehaviour
         Require(player != null, "Player-tagged exploration actor did not load.");
         var interactor = player.GetComponent<PlayerWorldInteractor>();
         Require(interactor != null, "Mercato player has no PlayerWorldInteractor.");
+        SeamlessInteriorModule inn = FindFirstObjectByType<SeamlessInteriorModule>();
+        Require(inn != null && inn.ProtectedSocialInterior, "protected seamless inn is missing from Mercato");
 
         var actor = FindFirstObjectByType<WorldAgentEncounterActor>();
         Require(actor != null, "Persistent Crier world actor did not materialize.");
@@ -81,6 +86,8 @@ public sealed class LimboCrierPlayModeProbe : MonoBehaviour
         Require(interactor.DebugInteractNearest(), "Player interaction path did not select the discovered Crier.");
         ZoneEncounterTrigger trigger = FindFirstObjectByType<ZoneEncounterTrigger>();
         Require(trigger != null && trigger.BattleRunning, "Crier interaction did not start an in-place battle.");
+        Require(inn.BattleLocked && inn.Portal != null && inn.Portal.BattleLocked,
+            "outdoor battle did not lock the protected inn threshold");
         BattleManager battle = trigger.ActiveBattleManager;
         Require(battle != null, "BattleManager was not handed back by the zone encounter.");
         Require(battle.Enemies.Count == 3, $"Expected 3 enemies, got {battle.Enemies.Count}.");
@@ -123,6 +130,8 @@ public sealed class LimboCrierPlayModeProbe : MonoBehaviour
                 afterVictory.activityState == CrierActivityState.Defeated,
             "Victory did not permanently defeat the persistent Crier record.");
         Require(!trigger.BattleRunning, "Exploration was not restored after victory.");
+        Require(!inn.BattleLocked && inn.Portal != null && !inn.Portal.BattleLocked,
+            "victory cleanup did not reopen the protected inn threshold");
         Require(FindObjectsByType<WorldAgentEncounterActor>(FindObjectsInactive.Include).Length == 0,
             "Defeated Crier world actor remained materialized.");
     }

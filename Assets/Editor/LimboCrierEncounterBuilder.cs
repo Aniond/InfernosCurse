@@ -19,9 +19,9 @@ public static class LimboCrierEncounterBuilder
     const string FrontlinePath = "Assets/Data/Combatants/Enemy_Cursebearer.asset";
     const string BillboardMaterialPath = "Assets/Prefabs/Battle/Maps/Materials/BillboardUnit.mat";
 
-    static readonly Vector2 MercatoOrigin = new(-31f, -19f);
-    const int MercatoWidth = 53;
-    const int MercatoHeight = 36;
+    static readonly Vector2 MercatoOrigin = new(-50f, -32f);
+    const int MercatoWidth = 90;
+    const int MercatoHeight = 64;
     const float MercatoGroundY = 0.05f;
 
     [MenuItem("InfernosCurse/Narrative/Rebuild Limbo Crier World Encounter")]
@@ -167,6 +167,7 @@ public static class LimboCrierEncounterBuilder
         zone.zoneTerrain = null;
         zone.terrainProfile = null;
         zone.zoneExits = SceneComponents<ZoneExit>(scene).ToArray();
+        zone.protectedInteriors = SceneComponents<SeamlessInteriorModule>(scene).ToArray();
         zone.explorationOnlyRoots = Array.Empty<GameObject>();
         zone.battleOnlyRoots = Array.Empty<GameObject>();
 
@@ -327,14 +328,18 @@ public static class LimboCrierEncounterValidator
                 zone.encounterTrigger == null || zone.battleKitPrefab == null)
                 errors.Add("Mercato hybrid references are incomplete.");
             if (authoring == null) return;
-            if (authoring.width != 53 || authoring.height != 36 ||
-                authoring.worldOriginXZ != new Vector2(-31f, -19f) || authoring.applyOnAwake)
+            if (authoring.width != 90 || authoring.height != 64 ||
+                authoring.worldOriginXZ != new Vector2(-50f, -32f) || authoring.applyOnAwake)
                 errors.Add("Mercato grid dimensions, origin, or exploration-safe apply mode drifted.");
             if (authoring.blockedCells == null || authoring.blockedCells.Count < 20)
                 errors.Add("Mercato collider-to-grid obstruction authoring is unexpectedly sparse.");
             PlayerController player = SceneComponents<PlayerController>(scene).FirstOrDefault();
             if (player == null || player.GetComponent<PlayerWorldInteractor>() == null)
                 errors.Add("Mercato player is missing the shared world interaction path.");
+            if (zone.protectedInteriors == null || zone.protectedInteriors.Length != 1 ||
+                zone.protectedInteriors[0] == null ||
+                zone.protectedInteriors[0].SubLocationId != "albergo_fiorentino_floor1")
+                errors.Add("Mercato protected seamless-inn battle contract is missing.");
 
             var blocked = new HashSet<Vector2Int>(authoring.blockedCells ?? new List<Vector2Int>());
             foreach (WorldAgentSite site in SceneComponents<WorldAgentSite>(scene))

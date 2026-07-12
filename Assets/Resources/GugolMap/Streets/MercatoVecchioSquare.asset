@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2f9f4b6a45db2d43b657266d0955cf1, type: 3}
+  m_Name: MercatoVecchioSquare
+  m_EditorClassIdentifier: Assembly-CSharp::GugolStreetDefinition
+  streetId: mercato_vecchio_square
+  displayName: Mercato Vecchio
+  parentCityId: firenze
+  districtIds:
+  - mercato
+  discoveryId:
+  minimumVisibleStage: 1
+  rumorLabel: A street spoken of in Florence
+  cityCenterline:
+  - {x: 0.32, y: 0.66}
+  - {x: 0.4, y: 0.62}
+  - {x: 0.49, y: 0.58}
+  cityHitWidth: 0.035
+  labelPriority: 100
+  streetViewBounds:
+    serializedVersion: 2
+    x: 0.28
+    y: 0.5
+    width: 0.34
+    height: 0.25
+  streetViewBackground: {fileID: 0}
+  venueIds:
+  - albergo_fiorentino
+  - mercato_public_stalls
+  - mercato_records
+  routeFallbackPosition: {x: 0.31, y: 0.63}

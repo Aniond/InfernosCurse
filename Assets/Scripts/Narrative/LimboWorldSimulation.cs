@@ -32,6 +32,7 @@ public enum NpcRecoveryState
 public sealed class PersistentWorldAgentRecord
 {
     public string agentId;
+    public string territoryId;
     public string districtId;
     public string currentSiteId;
     public string[] availableSiteIds = Array.Empty<string>();
@@ -50,6 +51,8 @@ public sealed class NpcMemoryRecord
 {
     public string npcId;
     public string homeDistrictId;
+    public string homeTerritoryId;
+    public NpcCircleRelevanceLayer relevanceLayer = NpcCircleRelevanceLayer.LocalWitness;
     [Range(0.5f, 1.5f)] public float susceptibility = 1f;
     [Range(0f, 100f)] public float exposure;
     public NpcMemoryStage stage;
@@ -57,6 +60,9 @@ public sealed class NpcMemoryRecord
     public string originalScheduleId;
     public string originalRelationshipId;
     public string[] overlappingPreachingSiteIds = Array.Empty<string>();
+    public string[] relevantSiteIds = Array.Empty<string>();
+    public string[] erasedMemoryIds = Array.Empty<string>();
+    public string[] rememberedMemoryIds = Array.Empty<string>();
     public bool essentialService;
     public bool questCritical;
     public bool forgottenPool;
@@ -69,6 +75,7 @@ public sealed class NpcMemoryRecord
 
 public static class PersistentLimboWorldState
 {
+    public const float PermanentMemoryErosionInfluence = 0.75f;
     static readonly Dictionary<string, WorldAgentDefinition> AgentDefinitions = new(StringComparer.Ordinal);
     static readonly Dictionary<string, NpcMemoryDefinition> NpcDefinitions = new(StringComparer.Ordinal);
     static readonly Dictionary<string, PersistentWorldAgentRecord> Agents = new(StringComparer.Ordinal);
@@ -98,9 +105,10 @@ public static class PersistentLimboWorldState
     {
         error = null;
         if (definition == null || string.IsNullOrWhiteSpace(definition.agentId) ||
+            string.IsNullOrWhiteSpace(definition.territoryId) ||
             string.IsNullOrWhiteSpace(definition.districtId) || string.IsNullOrWhiteSpace(definition.startingSiteId))
         {
-            error = "World-agent definition requires stable agent, district, and starting-site IDs.";
+            error = "World-agent definition requires stable agent, territory, district, and starting-site IDs.";
             return false;
         }
         if (AgentDefinitions.TryGetValue(definition.agentId, out var existing) && existing != definition)
@@ -118,9 +126,10 @@ public static class PersistentLimboWorldState
         error = null;
         if (definition == null || string.IsNullOrWhiteSpace(definition.npcId) ||
             string.IsNullOrWhiteSpace(definition.homeDistrictId) ||
-            definition.susceptibility < 0.5f || definition.susceptibility > 1.5f)
+            definition.susceptibility < 0.5f || definition.susceptibility > 1.5f ||
+            !Enum.IsDefined(typeof(NpcCircleRelevanceLayer), definition.relevanceLayer))
         {
-            error = "NPC memory definition requires stable IDs and susceptibility within 0.5..1.5.";
+            error = "NPC memory definition requires stable IDs, a relevance layer, and susceptibility within 0.5..1.5.";
             return false;
         }
         if (NpcDefinitions.TryGetValue(definition.npcId, out var existing) && existing != definition)
@@ -195,6 +204,7 @@ public static class PersistentLimboWorldState
             foreach (var record in agents) Agents[record.agentId] = PersistentWorldAgentRecord.Clone(record);
         if (npcs != null)
             foreach (var record in npcs) Npcs[record.npcId] = NpcMemoryRecord.Clone(record);
+        MergeCurrentAuthoring();
         return true;
     }
 
@@ -238,7 +248,8 @@ public static class PersistentLimboWorldState
                     record.exposure < 0f || record.exposure > 100f ||
                     record.susceptibility < 0.5f || record.susceptibility > 1.5f ||
                     !Enum.IsDefined(typeof(NpcMemoryStage), record.stage) ||
-                    !Enum.IsDefined(typeof(NpcRecoveryState), record.recoveryState))
+                    !Enum.IsDefined(typeof(NpcRecoveryState), record.recoveryState) ||
+                    !Enum.IsDefined(typeof(NpcCircleRelevanceLayer), record.relevanceLayer))
                 {
                     error = $"NPC memory record {i} is malformed.";
                     return false;
@@ -438,6 +449,49 @@ public static class PersistentLimboWorldState
             record.recoveryState = NpcRecoveryState.Returned;
     }
 
+    public static void UpdatePermanentSiteMemories(NpcMemoryRecord record, ILimboWorldSimulationSink sink)
+    {
+        if (record == null || sink == null) return;
+        record.erasedMemoryIds ??= Array.Empty<string>();
+        record.rememberedMemoryIds ??= Array.Empty<string>();
+        foreach (string siteId in record.relevantSiteIds ?? Array.Empty<string>())
+        {
+            foreach (var outcome in SiteOutcomeState.QuerySite(siteId))
+            {
+                if (outcome == null || outcome.recovered ||
+                    outcome.permanence != NarrativePermanence.CampaignPermanent)
+                    continue;
+                string memoryId = SiteMemoryId(outcome.siteId, outcome.outcomeId);
+                if (outcome.remembered)
+                {
+                    record.erasedMemoryIds = Remove(record.erasedMemoryIds, memoryId);
+                    record.rememberedMemoryIds = AddUnique(record.rememberedMemoryIds, memoryId);
+                }
+                else if (record.stage >= NpcMemoryStage.Unmoored &&
+                         sink.GetLimboInfluence(siteId) >= PermanentMemoryErosionInfluence &&
+                         !Contains(record.rememberedMemoryIds, memoryId))
+                {
+                    record.erasedMemoryIds = AddUnique(record.erasedMemoryIds, memoryId);
+                }
+            }
+        }
+    }
+
+    public static void ApplyAuthoredRemembrance(string siteId, string outcomeId)
+    {
+        LoadResourceDefinitions();
+        string memoryId = SiteMemoryId(siteId, outcomeId);
+        foreach (var record in Npcs.Values)
+        {
+            if (!Contains(record.relevantSiteIds, siteId)) continue;
+            record.erasedMemoryIds = Remove(record.erasedMemoryIds, memoryId);
+            record.rememberedMemoryIds = AddUnique(record.rememberedMemoryIds, memoryId);
+        }
+    }
+
+    public static string SiteMemoryId(string siteId, string outcomeId) =>
+        (siteId ?? string.Empty) + "/" + (outcomeId ?? string.Empty);
+
     public static void SelectNextSite(PersistentWorldAgentRecord record)
     {
         if (record?.availableSiteIds == null || record.availableSiteIds.Length == 0) return;
@@ -453,6 +507,7 @@ public static class PersistentLimboWorldState
         return new PersistentWorldAgentRecord
         {
             agentId = definition.agentId,
+            territoryId = definition.territoryId,
             districtId = definition.districtId,
             currentSiteId = definition.startingSiteId,
             availableSiteIds = sites,
@@ -465,10 +520,15 @@ public static class PersistentLimboWorldState
     {
         npcId = definition.npcId,
         homeDistrictId = definition.homeDistrictId,
+        homeTerritoryId = definition.homeTerritoryId,
+        relevanceLayer = definition.relevanceLayer,
         susceptibility = definition.susceptibility,
         originalScheduleId = definition.originalScheduleId,
         originalRelationshipId = definition.originalRelationshipId,
         overlappingPreachingSiteIds = CloneStrings(definition.overlappingPreachingSiteIds),
+        relevantSiteIds = CloneStrings(definition.relevantSiteIds),
+        erasedMemoryIds = Array.Empty<string>(),
+        rememberedMemoryIds = Array.Empty<string>(),
         essentialService = definition.essentialService,
         questCritical = definition.questCritical,
         stage = NpcMemoryStage.Grounded,
@@ -482,6 +542,25 @@ public static class PersistentLimboWorldState
         foreach (var definition in NpcDefinitions.Values) Npcs[definition.npcId] = CreateNpcRecord(definition);
     }
 
+    static void MergeCurrentAuthoring()
+    {
+        foreach (var pair in Agents)
+            if (AgentDefinitions.TryGetValue(pair.Key, out var definition))
+            {
+                pair.Value.territoryId = definition.territoryId;
+                pair.Value.districtId = definition.districtId;
+            }
+        foreach (var pair in Npcs)
+            if (NpcDefinitions.TryGetValue(pair.Key, out var definition))
+            {
+                pair.Value.homeTerritoryId = definition.homeTerritoryId;
+                pair.Value.relevanceLayer = definition.relevanceLayer;
+                pair.Value.relevantSiteIds = CloneStrings(definition.relevantSiteIds);
+                pair.Value.erasedMemoryIds ??= Array.Empty<string>();
+                pair.Value.rememberedMemoryIds ??= Array.Empty<string>();
+            }
+    }
+
     static string[] CloneStrings(string[] values)
     {
         if (values == null || values.Length == 0) return Array.Empty<string>();
@@ -489,10 +568,39 @@ public static class PersistentLimboWorldState
         Array.Copy(values, copy, values.Length);
         return copy;
     }
+
+    static bool Contains(string[] values, string target)
+    {
+        foreach (string value in values ?? Array.Empty<string>())
+            if (string.Equals(value, target, StringComparison.Ordinal)) return true;
+        return false;
+    }
+
+    static string[] AddUnique(string[] values, string value)
+    {
+        values ??= Array.Empty<string>();
+        if (Contains(values, value)) return values;
+        var result = new string[values.Length + 1];
+        Array.Copy(values, result, values.Length);
+        result[^1] = value;
+        return result;
+    }
+
+    static string[] Remove(string[] values, string value)
+    {
+        values ??= Array.Empty<string>();
+        int index = Array.FindIndex(values, candidate => string.Equals(candidate, value, StringComparison.Ordinal));
+        if (index < 0) return values;
+        var result = new string[values.Length - 1];
+        if (index > 0) Array.Copy(values, 0, result, 0, index);
+        if (index + 1 < values.Length) Array.Copy(values, index + 1, result, index, values.Length - index - 1);
+        return result;
+    }
 }
 
 public interface ILimboWorldSimulationSink
 {
+    string ResolveTerritoryId(string locationId);
     float GetSanctity(string districtId);
     float GetLimboInfluence(string districtId);
     float LimboSanctityResistance { get; }
@@ -507,9 +615,12 @@ public sealed class UnityLimboWorldSimulationSink : ILimboWorldSimulationSink
     public float LimboSanctityResistance =>
         HubMap.Instance?.GetCircleDefinition(CircleId.Limbo)?.sanctityResistance ?? 0.7f;
 
-    public float GetSanctity(string districtId) => HubMap.Instance?.GetNode(districtId)?.sanctity ?? 0f;
+    public string ResolveTerritoryId(string locationId) =>
+        HubMap.Instance?.ResolveInfluenceTerritoryId(locationId) ?? string.Empty;
+    public float GetSanctity(string districtId) =>
+        HubMap.Instance?.ResolveInfluenceTerritory(districtId)?.sanctity ?? 0f;
     public float GetLimboInfluence(string districtId) =>
-        HubMap.Instance?.GetNode(districtId)?.GetInfluence(CircleId.Limbo) ?? 0f;
+        HubMap.Instance?.GetInfluence(districtId, CircleId.Limbo) ?? 0f;
     public bool IsSanctuary(string districtId) => HubMap.Instance?.GetNode(districtId)?.isSanctuarySite ?? false;
     public void AddLimboInfluence(string districtId, float amount) =>
         HubMap.Instance?.ApplyLedgerInfluenceDelta(districtId, CircleId.Limbo, amount);
@@ -520,14 +631,16 @@ public sealed class LimboWorldDayResult
     public int agentsProcessed;
     public int npcsProcessed;
     public float totalInfluenceAdded;
-    public readonly Dictionary<string, float> districtInfluence = new(StringComparer.Ordinal);
+    public readonly Dictionary<string, float> territoryInfluence = new(StringComparer.Ordinal);
+    public Dictionary<string, float> districtInfluence => territoryInfluence;
 }
 
 public static class LimboWorldDailySimulation
 {
     public const float CautiousDailyInfluence = 0.0025f;
     public const float ActiveDailyInfluence = 0.0075f;
-    public const float DistrictDailyCap = 0.02f;
+    public const float TerritoryDailyCap = 0.02f;
+    public const float DistrictDailyCap = TerritoryDailyCap;
     public const float ExposurePerOverlap = 12f;
     public const float DailyExposureCap = 24f;
     public const float OrdinaryRecovery = 8f;
@@ -545,7 +658,7 @@ public static class LimboWorldDailySimulation
         npcs ??= Array.Empty<NpcMemoryRecord>();
 
         var result = new LimboWorldDayResult();
-        var rawByDistrict = new Dictionary<string, float>(StringComparer.Ordinal);
+        var rawByTerritory = new Dictionary<string, float>(StringComparer.Ordinal);
         var eligibleAgents = new List<PersistentWorldAgentRecord>();
         var activeDistricts = new HashSet<string>(StringComparer.Ordinal);
 
@@ -567,20 +680,23 @@ public static class LimboWorldDailySimulation
                 agent.activityState = CrierActivityState.Travel;
 
             float contribution = agent.discovered ? ActiveDailyInfluence : CautiousDailyInfluence;
-            rawByDistrict[agent.districtId] = rawByDistrict.TryGetValue(agent.districtId, out float current)
+            string territoryId = sink.ResolveTerritoryId(
+                string.IsNullOrWhiteSpace(agent.territoryId) ? agent.districtId : agent.territoryId);
+            if (string.IsNullOrEmpty(territoryId)) continue;
+            rawByTerritory[territoryId] = rawByTerritory.TryGetValue(territoryId, out float current)
                 ? current + contribution
                 : contribution;
         }
 
-        foreach (var pair in rawByDistrict)
+        foreach (var pair in rawByTerritory)
         {
-            float raw = Mathf.Min(DistrictDailyCap, pair.Value);
+            float raw = Mathf.Min(TerritoryDailyCap, pair.Value);
             float block = 1f - Mathf.Clamp01(sink.GetSanctity(pair.Key)) *
                 Mathf.Clamp01(sink.LimboSanctityResistance);
             float applied = raw * Mathf.Clamp01(block);
             if (applied <= 0f) continue;
             sink.AddLimboInfluence(pair.Key, applied);
-            result.districtInfluence[pair.Key] = applied;
+            result.territoryInfluence[pair.Key] = applied;
             result.totalInfluenceAdded += applied;
         }
 
@@ -600,9 +716,14 @@ public static class LimboWorldDailySimulation
                     npc.recoveryState = NpcRecoveryState.Returned;
                     npc.rescueRequestedDayKey = string.Empty;
                 }
+                PersistentLimboWorldState.UpdatePermanentSiteMemories(npc, sink);
                 continue;
             }
-            if (npc.forgottenPool) continue;
+            if (npc.forgottenPool)
+            {
+                PersistentLimboWorldState.UpdatePermanentSiteMemories(npc, sink);
+                continue;
+            }
 
             float overlapWeight = 0f;
             foreach (var agent in eligibleAgents)
@@ -630,6 +751,7 @@ public static class LimboWorldDailySimulation
                     : OrdinaryRecovery;
                 PersistentLimboWorldState.SetExposure(npc, npc.exposure - recovery);
             }
+            PersistentLimboWorldState.UpdatePermanentSiteMemories(npc, sink);
         }
 
         return result;
@@ -648,9 +770,8 @@ public static class LimboWorldDailySimulation
 public sealed class LimboWorldSimulationDirector : MonoBehaviour
 {
     public static LimboWorldSimulationDirector Instance { get; private set; }
+    // Retained only to migrate v5 day keys into CircleWorldSimulationDirector.
     public string AppliedDayKey { get; private set; } = string.Empty;
-
-    GameCalendar _subscribedCalendar;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void EnsureRuntimeDirector()
@@ -676,43 +797,14 @@ public sealed class LimboWorldSimulationDirector : MonoBehaviour
     void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        if (_subscribedCalendar != null) _subscribedCalendar.OnDayChanged -= OnDayChanged;
-        _subscribedCalendar = null;
     }
 
-    void Update()
-    {
-        var calendar = GameCalendar.Instance;
-        if (calendar == null) return;
-        if (_subscribedCalendar != calendar)
-        {
-            if (_subscribedCalendar != null) _subscribedCalendar.OnDayChanged -= OnDayChanged;
-            calendar.OnDayChanged += OnDayChanged;
-            _subscribedCalendar = calendar;
-        }
-        Tick(calendar);
-    }
+    void OnDestroy() { if (Instance == this) Instance = null; }
 
     public void RestoreDayKey(string dayKey) => AppliedDayKey = dayKey ?? string.Empty;
 
-    void OnDayChanged(GameCalendar calendar) => Tick(calendar);
-
-    void Tick(GameCalendar calendar)
+    public LimboWorldDayResult ProcessClosedDay(string closedDayKey)
     {
-        string key = calendar.Year + ":" + calendar.DayOfYear;
-        if (key == AppliedDayKey) return;
-        bool firstSight = string.IsNullOrEmpty(AppliedDayKey);
-        if (firstSight || !GameFeatures.CorruptionEnabled)
-        {
-            AppliedDayKey = key;
-            return;
-        }
-
-        // The date that just closed is processed at dawn. This lets a sermon
-        // disrupted during that day suppress its contribution before commit.
-        string closedDayKey = AppliedDayKey;
-        AppliedDayKey = key;
-
         var result = LimboWorldDailySimulation.ProcessDay(
             closedDayKey,
             PersistentLimboWorldState.MutableAgents(),
@@ -720,6 +812,7 @@ public sealed class LimboWorldSimulationDirector : MonoBehaviour
             UnityLimboWorldSimulationSink.Instance);
         Debug.Log($"[LimboWorld] {closedDayKey}: {result.agentsProcessed} agent(s), " +
                   $"{result.npcsProcessed} NPC(s), +{result.totalInfluenceAdded * 100f:0.##} Limbo points.");
+        return result;
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode) => PersistentCrierMaterializer.MaterializeCurrentScene();

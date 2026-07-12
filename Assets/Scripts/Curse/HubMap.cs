@@ -28,6 +28,7 @@ public class HubMap : MonoBehaviour
 
     // Runtime graph
     private List<HubNode>      _nodes = new();
+    private bool _hasExplicitTerritoryAuthoring;
 
     // ── Events ────────────────────────────────────────────────────────────────
     public event System.Action<HubNode> OnNodeChanged;
@@ -60,21 +61,40 @@ public class HubMap : MonoBehaviour
                 mapLevel    = nd.mapLevel,
                 discoveryId = nd.discoveryId,
                 minimumDiscoveryStage = nd.minimumDiscoveryStage,
+                influenceTerritoryId = nd.influenceTerritoryId,
+                parentRegionId = nd.parentRegionId,
+                territoryKind = nd.territoryKind,
+                regionalWeight = Mathf.Max(0f, nd.regionalWeight),
+                ownsCircleState = nd.ownsCircleState,
+                aggregateOnly = nd.aggregateOnly,
+                nonStateNode = nd.nonStateNode,
                 nativeCircle = nd.nativeCircle,
                 sanctity    = nd.startingSanctity,
                 population  = nd.population,
                 isRitualSite   = nd.isRitualSite,
                 isSanctuarySite = nd.isSanctuarySite,
             };
+            if (nd.routeStrengthOverrides != null)
+            {
+                foreach (var route in nd.routeStrengthOverrides)
+                {
+                    if (route == null) continue;
+                    node.routeStrengthOverrides.Add(new CircleRouteStrength
+                    {
+                        neighborId = route.neighborId,
+                        strength = Mathf.Clamp01(route.strength),
+                    });
+                }
+            }
             if (nd.startingInfluences != null && nd.startingInfluences.Count > 0)
             {
                 foreach (var seed in nd.startingInfluences)
-                    if (seed != null) node.SetInfluence(seed.circle, seed.value);
+                    if (seed != null) node.SetOwnedInfluence(seed.circle, seed.value);
             }
             else
             {
                 // Legacy authored Florence data becomes native-Circle influence.
-                node.SetInfluence(nd.nativeCircle, nd.startingCurseLevel);
+                node.SetOwnedInfluence(nd.nativeCircle, nd.startingCurseLevel);
             }
             CircleInfluenceLedger.Normalize(node.circleInfluence);
             _nodes.Add(node);
@@ -94,6 +114,42 @@ public class HubMap : MonoBehaviour
                     dst.neighbors.Add(src);
                 }
             }
+        }
+
+        WireInfluenceTerritories();
+    }
+
+    void WireInfluenceTerritories()
+    {
+        _hasExplicitTerritoryAuthoring = _nodes.Exists(node => node.HasTerritoryContract);
+        foreach (var node in _nodes)
+        {
+            if (!_hasExplicitTerritoryAuthoring)
+            {
+                // One-version compatibility for a prefab that has not yet run
+                // the idempotent Gugol territory authoring pass.
+                node.influenceTerritory = node;
+                continue;
+            }
+
+            node.influenceTerritory = null;
+            if (node.ownsCircleState)
+            {
+                node.influenceTerritory = node;
+            }
+            else if (!node.aggregateOnly && !node.nonStateNode &&
+                     !string.IsNullOrEmpty(node.influenceTerritoryId))
+            {
+                HubNode owner = _nodes.Find(candidate => candidate.id == node.influenceTerritoryId);
+                if (owner != null && owner.ownsCircleState)
+                    node.influenceTerritory = owner;
+                else
+                    Debug.LogError(
+                        $"[CircleTerritory] '{node.id}' references invalid owner '{node.influenceTerritoryId}'.");
+            }
+
+            if (node.influenceTerritory != node)
+                node.circleInfluence.Clear();
         }
     }
 
@@ -117,6 +173,87 @@ public class HubMap : MonoBehaviour
 
     public List<HubNode> AllNodes => _nodes;
 
+    public string ResolveInfluenceTerritoryId(string locationId)
+    {
+        HubNode owner = ResolveInfluenceTerritory(locationId);
+        return owner != null ? owner.id : string.Empty;
+    }
+
+    public HubNode ResolveInfluenceTerritory(string locationId)
+    {
+        HubNode node = GetNode(locationId);
+        return node != null ? node.influenceTerritory : null;
+    }
+
+    public List<HubNode> GetInfluenceTerritories()
+    {
+        EnsureGraphBuilt();
+        var owners = new List<HubNode>();
+        foreach (var node in _nodes)
+            if (node.IsInfluenceOwner) owners.Add(node);
+        return owners;
+    }
+
+    public float GetRegionalInfluence(string regionId, CircleId circle)
+    {
+        if (!GameFeatures.CircleWorldEnabled || string.IsNullOrEmpty(regionId)) return 0f;
+        EnsureGraphBuilt();
+        float weightedTotal = 0f;
+        float totalWeight = 0f;
+        foreach (var owner in _nodes)
+        {
+            if (!owner.IsInfluenceOwner || owner.parentRegionId != regionId || owner.regionalWeight <= 0f)
+                continue;
+            weightedTotal += owner.GetOwnedInfluence(circle) * owner.regionalWeight;
+            totalWeight += owner.regionalWeight;
+        }
+        return totalWeight > 0f ? weightedTotal / totalWeight : 0f;
+    }
+
+    public List<CircleTerritoryRoute> GetInfluenceRoutes(HubNode sourceOwner)
+    {
+        var routes = new Dictionary<HubNode, float>();
+        if (sourceOwner == null || !sourceOwner.IsInfluenceOwner) return new List<CircleTerritoryRoute>();
+
+        var bestTraversalStrength = new Dictionary<HubNode, float> { [sourceOwner] = 1f };
+        var queue = new Queue<HubNode>();
+        queue.Enqueue(sourceOwner);
+
+        while (queue.Count > 0)
+        {
+            HubNode current = queue.Dequeue();
+            float currentStrength = bestTraversalStrength[current];
+            foreach (HubNode neighbor in current.neighbors)
+            {
+                if (neighbor == null || neighbor.aggregateOnly) continue;
+                float edgeStrength = Mathf.Min(
+                    current.GetRouteStrength(neighbor.id),
+                    neighbor.GetRouteStrength(current.id));
+                float pathStrength = Mathf.Min(currentStrength, edgeStrength);
+                if (pathStrength <= 0f) continue;
+
+                HubNode neighborOwner = neighbor.influenceTerritory;
+                if (neighborOwner != null && neighborOwner != sourceOwner)
+                {
+                    if (!routes.TryGetValue(neighborOwner, out float prior) || pathStrength > prior)
+                        routes[neighborOwner] = pathStrength;
+                    continue;
+                }
+
+                if (bestTraversalStrength.TryGetValue(neighbor, out float visited) && visited >= pathStrength)
+                    continue;
+                bestTraversalStrength[neighbor] = pathStrength;
+                queue.Enqueue(neighbor);
+            }
+        }
+
+        var result = new List<CircleTerritoryRoute>();
+        foreach (var pair in routes)
+            result.Add(new CircleTerritoryRoute(pair.Key, pair.Value));
+        result.Sort((left, right) => string.CompareOrdinal(left.Target.id, right.Target.id));
+        return result;
+    }
+
     public CurseDefinition GetCircleDefinition(CircleId circle)
     {
         if (circleDefinitions != null)
@@ -128,25 +265,25 @@ public class HubMap : MonoBehaviour
 
     public float GetInfluence(string nodeId, CircleId circle)
     {
-        if (!GameFeatures.CorruptionEnabled) return 0f;
-        return GetNode(nodeId)?.GetInfluence(circle) ?? 0f;
+        if (!GameFeatures.CircleWorldEnabled) return 0f;
+        return ResolveInfluenceTerritory(nodeId)?.GetOwnedInfluence(circle) ?? 0f;
     }
 
     public bool SetInfluence(string nodeId, CircleId circle, float value)
     {
-        if (!GameFeatures.CorruptionEnabled) return false;
-        var node = GetNode(nodeId);
-        if (node == null || !node.SetInfluence(circle, value)) return false;
-        OnNodeChanged?.Invoke(node);
+        if (!GameFeatures.CircleWorldEnabled) return false;
+        var owner = ResolveInfluenceTerritory(nodeId);
+        if (owner == null || !owner.SetOwnedInfluence(circle, value)) return false;
+        OnNodeChanged?.Invoke(owner);
         return true;
     }
 
     public bool AddInfluence(string nodeId, CircleId circle, float amount)
     {
-        if (!GameFeatures.CorruptionEnabled || Mathf.Approximately(amount, 0f)) return false;
-        var node = GetNode(nodeId);
-        if (node == null || !node.AddInfluence(circle, amount)) return false;
-        OnNodeChanged?.Invoke(node);
+        if (!GameFeatures.CircleWorldEnabled || Mathf.Approximately(amount, 0f)) return false;
+        var owner = ResolveInfluenceTerritory(nodeId);
+        if (owner == null || !owner.AddOwnedInfluence(circle, amount)) return false;
+        OnNodeChanged?.Invoke(owner);
         return true;
     }
 
@@ -154,48 +291,48 @@ public class HubMap : MonoBehaviour
     // temporary corruption presentation feature gate is parked.
     public bool ApplyLedgerInfluenceDelta(string nodeId, CircleId circle, float amount)
     {
-        var node = GetNode(nodeId);
-        if (node == null) return false;
-        if (node.AddInfluence(circle, amount)) OnNodeChanged?.Invoke(node);
+        var owner = ResolveInfluenceTerritory(nodeId);
+        if (owner == null) return false;
+        if (owner.AddOwnedInfluence(circle, amount)) OnNodeChanged?.Invoke(owner);
         return true; // A clamped no-op is still an idempotently applied effect.
     }
 
     public bool ApplyLedgerBaseline(string nodeId, CircleId circle, float value, bool clearOtherCircles)
     {
-        var node = GetNode(nodeId);
-        if (node == null) return false;
-        if (clearOtherCircles) node.circleInfluence.Clear();
-        node.SetInfluence(circle, value);
-        OnNodeChanged?.Invoke(node);
+        var owner = ResolveInfluenceTerritory(nodeId);
+        if (owner == null) return false;
+        if (clearOtherCircles) owner.circleInfluence.Clear();
+        owner.SetOwnedInfluence(circle, value);
+        OnNodeChanged?.Invoke(owner);
         return true;
     }
 
     public bool ApplyLedgerSanctityDelta(string nodeId, float amount)
     {
-        var node = GetNode(nodeId);
-        if (node == null) return false;
-        float next = Mathf.Clamp01(node.sanctity + amount);
-        if (!Mathf.Approximately(next, node.sanctity))
+        var owner = ResolveInfluenceTerritory(nodeId);
+        if (owner == null) return false;
+        float next = Mathf.Clamp01(owner.sanctity + amount);
+        if (!Mathf.Approximately(next, owner.sanctity))
         {
-            node.sanctity = next;
-            OnNodeChanged?.Invoke(node);
+            owner.sanctity = next;
+            OnNodeChanged?.Invoke(owner);
         }
         return true;
     }
 
     public bool CleanseInfluence(string nodeId, CircleId circle, float amount, bool addSanctity = true)
     {
-        if (!GameFeatures.CorruptionEnabled || amount <= 0f) return false;
-        var node = GetNode(nodeId);
-        if (node == null) return false;
-        bool changed = node.AddInfluence(circle, -amount);
+        if (!GameFeatures.CircleWorldEnabled || amount <= 0f) return false;
+        var owner = ResolveInfluenceTerritory(nodeId);
+        if (owner == null) return false;
+        bool changed = owner.AddOwnedInfluence(circle, -amount);
         if (addSanctity)
         {
-            float next = Mathf.Clamp01(node.sanctity + amount * 0.3f);
-            changed |= !Mathf.Approximately(next, node.sanctity);
-            node.sanctity = next;
+            float next = Mathf.Clamp01(owner.sanctity + amount * 0.3f);
+            changed |= !Mathf.Approximately(next, owner.sanctity);
+            owner.sanctity = next;
         }
-        if (changed) OnNodeChanged?.Invoke(node);
+        if (changed) OnNodeChanged?.Invoke(owner);
         return changed;
     }
 
@@ -240,6 +377,7 @@ public class HubMap : MonoBehaviour
         int count = 0;
         foreach (var node in _nodes)
         {
+            if (!node.IsInfluenceOwner) continue;
             CircleInfluenceLedger.Normalize(node.circleInfluence);
             if (node.circleInfluence != null)
                 foreach (var state in node.circleInfluence)
@@ -252,6 +390,7 @@ public class HubMap : MonoBehaviour
         int index = 0;
         foreach (var node in _nodes)
         {
+            if (!node.IsInfluenceOwner) continue;
             if (node.circleInfluence == null) continue;
             CircleInfluenceLedger.Normalize(node.circleInfluence);
             foreach (var state in node.circleInfluence)
@@ -289,15 +428,16 @@ public class HubMap : MonoBehaviour
         EnsureGraphBuilt();
         foreach (var node in _nodes)
         {
+            if (!node.IsInfluenceOwner) continue;
             if (node.circleInfluence.Count > 0) changed.Add(node);
             node.circleInfluence.Clear();
         }
 
         for (int i = 0; i < locationIds.Length; i++)
         {
-            var node = GetNode(locationIds[i]);
-            if (node == null) continue; // Authored graph may have changed since the save.
-            if (node.SetInfluence((CircleId)circleIds[i], values[i])) changed.Add(node);
+            var owner = ResolveInfluenceTerritory(locationIds[i]);
+            if (owner == null) continue; // Authored graph may have changed since the save.
+            if (owner.SetOwnedInfluence((CircleId)circleIds[i], values[i])) changed.Add(owner);
         }
 
         foreach (var node in _nodes)
@@ -311,12 +451,13 @@ public class HubMap : MonoBehaviour
     public void ExportSanctityStates(out string[] ids, out float[] sanctity)
     {
         EnsureGraphBuilt();
-        ids = new string[_nodes.Count];
-        sanctity = new float[_nodes.Count];
-        for (int i = 0; i < _nodes.Count; i++)
+        var owners = GetInfluenceTerritories();
+        ids = new string[owners.Count];
+        sanctity = new float[owners.Count];
+        for (int i = 0; i < owners.Count; i++)
         {
-            ids[i] = _nodes[i].id;
-            sanctity[i] = Mathf.Clamp01(_nodes[i].sanctity);
+            ids[i] = owners[i].id;
+            sanctity[i] = Mathf.Clamp01(owners[i].sanctity);
         }
     }
 
@@ -325,7 +466,7 @@ public class HubMap : MonoBehaviour
         if (ids == null || sanctity == null || ids.Length != sanctity.Length) return;
         for (int i = 0; i < ids.Length; i++)
         {
-            var node = GetNode(ids[i]);
+            var node = ResolveInfluenceTerritory(ids[i]);
             if (node == null || float.IsNaN(sanctity[i]) || float.IsInfinity(sanctity[i])) continue;
             float next = Mathf.Clamp01(sanctity[i]);
             if (Mathf.Approximately(next, node.sanctity)) continue;
@@ -339,9 +480,9 @@ public class HubMap : MonoBehaviour
         if (ids == null || curse == null || ids.Length != curse.Length) return;
         for (int i = 0; i < ids.Length; i++)
         {
-            var node = GetNode(ids[i]);
+            var node = ResolveInfluenceTerritory(ids[i]);
             if (node == null) continue; // node list changed since the save — skip
-            node.curseLevel = Mathf.Clamp01(curse[i]);
+            node.SetOwnedInfluence(CircleId.Limbo, Mathf.Clamp01(curse[i]));
             if (sanctity != null && sanctity.Length == ids.Length)
                 node.sanctity = Mathf.Clamp01(sanctity[i]);
             OnNodeChanged?.Invoke(node);
@@ -351,7 +492,7 @@ public class HubMap : MonoBehaviour
     // Called when a ritual is completed
     public void ActivateRitual(string nodeId)
     {
-        if (!GameFeatures.CorruptionEnabled) return;
+        if (!GameFeatures.CircleWorldEnabled) return;
         var node = GetNode(nodeId);
         if (node == null) return;
         bool newlyActivated = !node.isRitualSite;
@@ -369,12 +510,12 @@ public class HubMap : MonoBehaviour
 
     public void NudgeGlobalInfluence(CircleId circle, float delta, string reason)
     {
-        if (!GameFeatures.CorruptionEnabled || Mathf.Approximately(delta, 0f)) return;
+        if (!GameFeatures.CircleWorldEnabled || Mathf.Approximately(delta, 0f)) return;
         EnsureGraphBuilt();
         foreach (var node in _nodes)
         {
-            if (node.kind == NodeKind.Waypoint) continue;
-            if (node.AddInfluence(circle, delta)) OnNodeChanged?.Invoke(node);
+            if (!node.IsInfluenceOwner) continue;
+            if (node.AddOwnedInfluence(circle, delta)) OnNodeChanged?.Invoke(node);
         }
         Debug.Log($"[CircleInfluence] {circle}: {reason} ({(delta >= 0 ? "+" : "")}{delta * 100f:0.#}%)");
     }
@@ -384,10 +525,9 @@ public class HubMap : MonoBehaviour
     // The zone's node falls fully corrupted AND all Florence pays the tithe.
     public void LoseZone(string nodeId, string reason)
     {
-        if (!GameFeatures.CorruptionEnabled) return;
-        var node = GetNode(nodeId);
-        if (node != null)
-            SetInfluence(nodeId, CircleId.Limbo, 1f);
+        if (!GameFeatures.CircleWorldEnabled) return;
+        var node = ResolveInfluenceTerritory(nodeId);
+        if (node != null) SetInfluence(node.id, CircleId.Limbo, 1f);
         NudgeGlobalCurse(0.05f, reason);
     }
 
@@ -399,14 +539,14 @@ public class HubMap : MonoBehaviour
 
     public float GlobalInfluence(CircleId circle)
     {
-        if (!GameFeatures.CorruptionEnabled) return 0f;
+        if (!GameFeatures.CircleWorldEnabled) return 0f;
         EnsureGraphBuilt();
         float sum = 0f;
         int count = 0;
         foreach (var n in _nodes)
         {
-            if (n.kind == NodeKind.Waypoint) continue;
-            sum += n.GetInfluence(circle);
+            if (!n.IsInfluenceOwner) continue;
+            sum += n.GetOwnedInfluence(circle);
             count++;
         }
         return count == 0 ? 0f : sum / count;
@@ -418,9 +558,7 @@ public class HubMap : MonoBehaviour
 
     public float GetBattleSeedInfluence(string nodeId, CircleId circle)
     {
-        if (!GameFeatures.CorruptionEnabled) return 0f;
-        var node = GetNode(nodeId);
-        return node?.GetInfluence(circle) ?? 0f;
+        return GetInfluence(nodeId, circle);
     }
 }
 
@@ -450,6 +588,21 @@ public class HubNodeData
     public string discoveryId;
     [Tooltip("Exact pin/travel access appears only at this monotonic discovery stage.")]
     public DiscoveryStage minimumDiscoveryStage = DiscoveryStage.Discovered;
+    [Header("Circle Territory")]
+    [Tooltip("State-owner ID for a site. Empty on owners, aggregates, and non-state nodes.")]
+    public string influenceTerritoryId;
+    [Tooltip("Read-only aggregate region containing this state owner.")]
+    public string parentRegionId;
+    public TerritoryKind territoryKind = TerritoryKind.None;
+    [Min(0f)] public float regionalWeight;
+    [Tooltip("This node owns a mutable per-Circle ledger.")]
+    public bool ownsCircleState;
+    [Tooltip("This node is a read-only regional aggregate.")]
+    public bool aggregateOnly;
+    [Tooltip("This node participates in routing but cannot own Circle state.")]
+    public bool nonStateNode;
+    [Tooltip("Optional Circle-propagation strength overrides keyed by travel neighbor ID.")]
+    public List<CircleRouteStrength> routeStrengthOverrides = new();
     [Tooltip("The Circle native to this location. Florence nodes use Limbo.")]
     public CircleId nativeCircle = CircleId.Limbo;
     [Tooltip("Explicit multi-Circle starting values. Empty uses startingCurseLevel as native-Circle legacy data.")]

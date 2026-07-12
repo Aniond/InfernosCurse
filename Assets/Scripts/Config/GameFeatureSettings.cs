@@ -3,8 +3,20 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "GameFeatureSettings", menuName = "InfernosCurse/Game Feature Settings")]
 public sealed class GameFeatureSettings : ScriptableObject
 {
-    [Tooltip("Master switch for the world-corruption economy, presentation, encounter influence, and battle propagation.")]
+    [Tooltip("Legacy serialized switch retained for save/project migration only. Runtime code uses the independent controls below.")]
     public bool corruptionEnabled;
+
+    [Header("Circle Influence")]
+    [Tooltip("Enables hidden territory Circle state, sources, warnings, NPC effects, and world encounters.")]
+    public bool circleWorldEnabled = true;
+    [Tooltip("Enables Circle-specific terrain and automata inside tactical battles. Tactical fog remains independent.")]
+    public bool circleBattlePresentationEnabled;
+
+    [Header("Player Insanity")]
+    [Tooltip("Enables Benidito's loadout-derived Insanity calculation and deterministic combat penalties.")]
+    public bool playerInsanityEnabled = true;
+    [Tooltip("Enables personal audiovisual Insanity presentation. Calculation and penalties remain independent.")]
+    public bool insanityPresentationEnabled;
 }
 
 /// <summary>
@@ -17,7 +29,7 @@ public static class GameFeatures
     static GameFeatureSettings _settings;
     static bool _loaded;
 
-    public static bool CorruptionEnabled
+    static GameFeatureSettings Settings
     {
         get
         {
@@ -26,9 +38,20 @@ public static class GameFeatures
                 _settings = Resources.Load<GameFeatureSettings>(ResourcePath);
                 _loaded = true;
             }
-            return _settings != null && _settings.corruptionEnabled;
+            return _settings;
         }
     }
+
+    public static bool CircleWorldEnabled => Settings != null && Settings.circleWorldEnabled;
+    public static bool CircleBattlePresentationEnabled =>
+        Settings != null && Settings.circleBattlePresentationEnabled;
+    public static bool PlayerInsanityEnabled => Settings != null && Settings.playerInsanityEnabled;
+    public static bool InsanityPresentationEnabled =>
+        Settings != null && Settings.insanityPresentationEnabled;
+
+    // Temporary source-compatibility alias while the remaining Circle callers
+    // migrate. It no longer reads the legacy serialized master switch.
+    public static bool CorruptionEnabled => CircleWorldEnabled;
 
 #if UNITY_EDITOR
     public static void ReloadForEditorTests()

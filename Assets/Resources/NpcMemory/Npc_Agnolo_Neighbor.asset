@@ -14,11 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NpcMemoryDefinition
   npcId: npc_agnolo_neighbor
   homeDistrictId: mercato
+  homeTerritoryId: firenze
+  relevanceLayer: 0
   susceptibility: 1.1
   originalScheduleId: schedule_agnolo_home_market
   originalRelationshipId: relationship_agnolo_lifelong_neighbor
   overlappingPreachingSiteIds:
   - mercato_crier_sermon_fountain
   - mercato_crier_sermon_south_gate
+  relevantSiteIds:
+  - mercato
   essentialService: 0
   questCritical: 0

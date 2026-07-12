@@ -13,3 +13,7 @@ MonoBehaviour:
   m_Name: GameFeatureSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameFeatureSettings
   corruptionEnabled: 0
+  circleWorldEnabled: 1
+  circleBattlePresentationEnabled: 0
+  playerInsanityEnabled: 1
+  insanityPresentationEnabled: 0

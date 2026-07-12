@@ -38,9 +38,20 @@ public class GugolRouteRenderer : MonoBehaviour
         Clear();
         if (path == null || path.Count < 2 || mapRect == null) return;
 
-        _points = new List<Vector2>(path.Count);
+        var normalized = new List<Vector2>(path.Count);
         foreach (var node in path)
-            _points.Add(NormalizedToAnchored(node.mapImagePosition));
+            normalized.Add(node.mapImagePosition);
+        ShowNormalizedRoute(normalized);
+    }
+
+    public void ShowNormalizedRoute(IReadOnlyList<Vector2> normalizedPoints)
+    {
+        Clear();
+        if (normalizedPoints == null || normalizedPoints.Count < 2 || mapRect == null) return;
+
+        _points = new List<Vector2>(normalizedPoints.Count);
+        for (int i = 0; i < normalizedPoints.Count; i++)
+            _points.Add(NormalizedToAnchored(normalizedPoints[i]));
 
         _totalLength = 0f;
         for (int i = 1; i < _points.Count; i++)

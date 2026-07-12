@@ -75,21 +75,17 @@ public static class EncounterRoll
         }
     }
 
-    // Carried corruption makes the road's predators more certain where you
-    // are (David 7/08: insanity raises random-battle chance while traveling).
-    // Insanity is a 0-100 PERCENT: at full madness this adds +15 percentage
-    // points of encounter chance. Balance knob.
-    const float InsanityPull = 0.0015f;
-
     public static bool ShouldTrigger(HubNode node, float baseChance, float curseScale, float maxChance)
     {
         if (node == null) return false;
         if (_resolved.Contains(DaySeed() + ":" + node.id)) return false;
 
-        float corruptionPull = GameFeatures.CorruptionEnabled
-            ? node.curseLevel * curseScale + InsanityState.Current() * InsanityPull
+        // World encounters read hidden Circle state only. Benidito's private
+        // Insanity cannot change travel odds.
+        float circlePull = GameFeatures.CircleWorldEnabled
+            ? node.curseLevel * curseScale
             : 0f;
-        float chance = Mathf.Clamp(baseChance + corruptionPull, 0f, maxChance);
+        float chance = Mathf.Clamp(baseChance + circlePull, 0f, maxChance);
         var rng = new System.Random(DaySeed() ^ NodeSalt(node.id));
         return rng.NextDouble() < chance;
     }

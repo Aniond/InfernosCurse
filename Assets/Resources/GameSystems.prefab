@@ -61,10 +61,10 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0b8e870af6e5ddc48acde662855fd5d2, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::HubMap
   activeCurse: {fileID: 11400000, guid: a3fadcf8f369fbc4e983610ef7b4574d, type: 2}
-  tickInterval: 60
+  circleDefinitions: []
   nodeData:
   - id: duomo
     displayName: Cathedral of Santa Maria del Fiore
@@ -79,6 +79,18 @@ MonoBehaviour:
     microClimate: 3
     kind: 0
     mapLevel: 0
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
     startingCurseLevel: 0
     startingSanctity: 0.85
     population: 0.6
@@ -95,13 +107,25 @@ MonoBehaviour:
     blurb: The striking white-and-green marble facade of this Dominican basilica
       stands as a beacon of learning and piety, its twin spires piercing the evening
       sky.
-    sceneName: 
-    entryId: 
+    sceneName:
+    entryId:
     previewImage: {fileID: 21300000, guid: 8454453cfd36e764ab715988565a56be, type: 3}
     microClimate: 0
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.05
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0.5
     population: 0.5
     isRitualSite: 0
@@ -122,7 +146,19 @@ MonoBehaviour:
     microClimate: 2
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.3
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0
     population: 0.95
     isRitualSite: 0
@@ -145,7 +181,19 @@ MonoBehaviour:
     microClimate: 2
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.15
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0.2
     population: 0.7
     isRitualSite: 0
@@ -168,7 +216,19 @@ MonoBehaviour:
     microClimate: 1
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.4
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0
     population: 0.6
     isRitualSite: 1
@@ -183,13 +243,25 @@ MonoBehaviour:
     blurb: Across the river lies the humble Oltrarno district, a labyrinth of narrow
       crooked streets filled with artisans, laborers, and the everyday struggles
       of Florence's working class.
-    sceneName: 
-    entryId: 
+    sceneName:
+    entryId:
     previewImage: {fileID: 21300000, guid: 06e9ffc7e6942bf44a5a07a6faa892fe, type: 3}
     microClimate: 1
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.55
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0
     population: 0.5
     isRitualSite: 0
@@ -202,12 +274,24 @@ MonoBehaviour:
     mapImagePosition: {x: 0.87, y: 0.33}
     blurb: "The Franciscan basilica rises over the dyers' quarter, its unfinished
       fa\xE7ade watching workshops stain the Arno every shade of penance."
-    sceneName: 
-    entryId: 
+    sceneName:
+    entryId:
     previewImage: {fileID: 0}
     microClimate: 0
     kind: 0
     mapLevel: 0
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
     startingCurseLevel: 0
     startingSanctity: 0
     population: 0.5
@@ -221,12 +305,24 @@ MonoBehaviour:
     mapImagePosition: {x: 0.44, y: 0.79}
     blurb: "The old market parish north of the Duomo \u2014 stalls crowd one of the
       city's oldest churches, and the Medici pews sit conspicuously near the altar."
-    sceneName: 
-    entryId: 
+    sceneName:
+    entryId:
     previewImage: {fileID: 0}
     microClimate: 0
     kind: 0
     mapLevel: 0
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
     startingCurseLevel: 0
     startingSanctity: 0
     population: 0.65
@@ -242,12 +338,28 @@ MonoBehaviour:
     mapImagePosition: {x: 0.54, y: 0.56}
     blurb: "The city itself \u2014 wool, florins, factions, and a curse working through
       its parishes. Zoom in to walk its districts."
-    sceneName: 
-    entryId: 
+    sceneName:
+    entryId:
     previewImage: {fileID: 0}
     microClimate: 0
     kind: 3
     mapLevel: 1
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId:
+    parentRegionId: toscana
+    territoryKind: 1
+    regionalWeight: 8
+    ownsCircleState: 1
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides:
+    - neighborId: wp_mugnone
+      strength: 0.75
+    nativeCircle: 0
+    startingInfluences:
+    - circle: 0
+      value: 0.08
     startingCurseLevel: 0
     startingSanctity: 0
     population: 1
@@ -259,13 +371,25 @@ MonoBehaviour:
     displayName: Ponte a Mugnone
     mapPosition: {x: 0, y: 0}
     mapImagePosition: {x: 0.58, y: 0.635}
-    blurb: 
-    sceneName: 
-    entryId: 
+    blurb:
+    sceneName:
+    entryId:
     previewImage: {fileID: 0}
     microClimate: 0
     kind: 2
     mapLevel: 1
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId:
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 1
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
     startingCurseLevel: 0
     startingSanctity: 0
     population: 0.05
@@ -288,6 +412,22 @@ MonoBehaviour:
     microClimate: 4
     kind: 1
     mapLevel: 1
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId:
+    parentRegionId: toscana
+    territoryKind: 2
+    regionalWeight: 1
+    ownsCircleState: 1
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides:
+    - neighborId: wp_mugnone
+      strength: 0.75
+    nativeCircle: 0
+    startingInfluences:
+    - circle: 0
+      value: 0.05
     startingCurseLevel: 0
     startingSanctity: 0
     population: 0.3
@@ -301,12 +441,24 @@ MonoBehaviour:
     mapImagePosition: {x: 0.43, y: 0.64}
     blurb: "Wool towns, hill roads, and the Arno valley \u2014 and beneath its quiet
       days, the first circle of something worse."
-    sceneName: 
-    entryId: 
+    sceneName:
+    entryId:
     previewImage: {fileID: 0}
     microClimate: 0
     kind: 3
     mapLevel: 2
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId:
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 1
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
     startingCurseLevel: 0
     startingSanctity: 0
     population: 1
@@ -325,7 +477,19 @@ MonoBehaviour:
     microClimate: 4
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.05
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0.6
     population: 0.15
     isRitualSite: 0
@@ -345,7 +509,19 @@ MonoBehaviour:
     microClimate: 3
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.3
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0.2
     population: 0.7
     isRitualSite: 0
@@ -364,7 +540,19 @@ MonoBehaviour:
     microClimate: 2
     kind: 0
     mapLevel: 0
-    startingCurseLevel: 0.25
+    discoveryId:
+    minimumDiscoveryStage: 3
+    influenceTerritoryId: firenze
+    parentRegionId:
+    territoryKind: 0
+    regionalWeight: 0
+    ownsCircleState: 0
+    aggregateOnly: 0
+    nonStateNode: 0
+    routeStrengthOverrides: []
+    nativeCircle: 0
+    startingInfluences: []
+    startingCurseLevel: 0
     startingSanctity: 0.05
     population: 0.8
     isRitualSite: 0
@@ -382,7 +570,7 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e8ca4ae5fe34ea148a9bcf8b712d67c9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GameSystemsRoot
 --- !u!114 &7820961972506139969
 MonoBehaviour:
@@ -394,7 +582,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1241c605f823042408485eb417c11cb4, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GameCalendar
   daysPerMonth: 4
   startYear: 1299
@@ -413,7 +601,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4a7cfcc6f4b320745aeac4210321cdac, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::FastTravelMenu
   hotkey: 0
   hotkeyLegacy: 0
@@ -434,7 +622,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c59a1e3027e80aa4eac642a53a36e0a8, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::FlorenceWeather
   climateJson: {fileID: 4900000, guid: 2353e72491df07c47b428deb1cf7c5d3, type: 3}
   transitionSeconds: 20
@@ -449,7 +637,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a72097fea01a2f4e95f7e2f9f6e6bd8, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::CozySceneAdapter
   blockedScenes:
   - Battle
@@ -464,7 +652,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 683aa5c1d326b7e4db9f01564fd8c6a2, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GuildSystem
   guilds:
   - {fileID: 11400000, guid: e9fe5b150f42cb449b87b6a5b0a90016, type: 2}
@@ -487,11 +675,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c0f05bed97d0423428808216a9b239b9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::DailyCurseDrift
-  riverNodeIds:
-  - pontevecchio
-  - oltrarno
 --- !u!114 &3991163463977817704
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -502,7 +687,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a718034fc9fbe5b4a8e308c3c82326bf, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GuildInteractionSpawner
   entries:
   - sceneName: MercatoVecchio
@@ -675,7 +860,7 @@ MonoBehaviour:
     isGuildInn: 0
   - sceneName: SaloneDelleArti
     kind: 4
-    guildId: 
+    guildId:
     label: Guild Standings
     position: {x: 3.2, y: 1, z: 12.8}
     triggerSize: {x: 2.2, y: 2, z: 2}
@@ -699,7 +884,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5033f2ee7f5f3204885b9dc7ca8cc404, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GuildPanelUI
   hotkey: 21
   hotkeyLegacy: 103
@@ -719,7 +904,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b2dd263267814484dab60f8a554a90a8, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::RestMenuUI
   hotkey: 32
   hotkeyLegacy: 114
@@ -739,7 +924,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 96bc71c98250b1b4e875904be68a283a, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GugolMapUI
   hotkey: 27
   hotkeyLegacy: 109
@@ -767,8 +952,8 @@ MonoBehaviour:
   iconSnow: {fileID: 21300000, guid: d6b6d87fbb484254fb6503bf5dcf323a, type: 3}
   iconFlood: {fileID: 21300000, guid: 8504b57f057b13a4085defd57cfaaf25, type: 3}
   fallbackPreview: {fileID: 0}
-  headerFont: {fileID: 11400000, guid: 76be3f0f08802eb4c99dbec53fa14193, type: 2}
-  bodyFont: {fileID: 11400000, guid: 2e1d36bd33f227741ba92d7b3d3afc17, type: 2}
+  headerFont: {fileID: 0}
+  bodyFont: {fileID: 0}
   minutesPerMapUnit: 45
   gameTimeMultiplier: 4
   walkDuration: 1.5
@@ -796,7 +981,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 13e1f29ec110a6c4b80f71cd58c3baf3, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::PartyRoster
   beniditoJob: {fileID: 11400000, guid: 64a15f4213e76cd4390afb63047ff9f8, type: 2}
   beniditoPortrait: {fileID: 21300000, guid: 1be84c113ab81224e9a6c69f6d56674b, type: 3}
@@ -813,7 +998,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da4a90bf08f9fd0478d195d08f3cc3c3, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::AssetRegistry
   allSkills:
   - {fileID: 11400000, guid: d7bf72395eb1483daf0f0ea3b646ca8b, type: 2}
@@ -835,12 +1020,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab9c7488c397fce4c8e62dfcb5e8eeaa, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::InsanityPresenter
-  darkenAt: 3
-  redWaterAt: 6
-  whispersAt: 9
-  fullEffectAt: 15
+  darkenAt: 15
+  redWaterAt: 35
+  whispersAt: 55
+  fullEffectAt: 85
   maxVignette: 0.55
   bloodShallow: {r: 0.45, g: 0.02, b: 0.02, a: 1}
   bloodDeep: {r: 0.25, g: 0, b: 0, a: 1}
@@ -857,7 +1042,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ed255de44e93574f80d395526b01f01, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::SkillOrbMenu
   headerFont: {fileID: 11400000, guid: 76be3f0f08802eb4c99dbec53fa14193, type: 2}
   bodyFont: {fileID: 11400000, guid: 2e1d36bd33f227741ba92d7b3d3afc17, type: 2}
@@ -871,7 +1056,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0903cc85a9c038544adada1c389844e0, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::WeatherSurfaceController
   wetnessRisePerSecond: 0.35
   wetnessDryPerSecond: 0.045
@@ -885,7 +1070,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f6f60c696eab4ac49824a64b5daefd2c, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: sc.stylizedgrass.runtime::sc.stylizedgrass.runtime.WindController
   windZone: {fileID: 0}
   windAmbientMultiplier: 1
@@ -900,7 +1085,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 568f02955fc24a86bf7cbea9a3904d47, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: sc.stylizedgrass.runtime::sc.stylizedgrass.runtime.WeatherShadingController
   wetness: 0
   snowAmount: 0

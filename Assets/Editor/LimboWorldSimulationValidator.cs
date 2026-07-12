@@ -212,6 +212,7 @@ public static class LimboWorldSimulationValidator
         PersistentLimboWorldState.LoadResourceDefinitions();
         var agentDefinition = ScriptableObject.CreateInstance<WorldAgentDefinition>();
         agentDefinition.agentId = "validator_crier";
+        agentDefinition.territoryId = "firenze";
         agentDefinition.districtId = "mercato";
         agentDefinition.startingSiteId = "site_a";
         agentDefinition.availableSiteIds = new[] { "site_a", "site_b" };
@@ -226,7 +227,13 @@ public static class LimboWorldSimulationValidator
         if (!PersistentLimboWorldState.RegisterNpcDefinition(npcDefinition, out error))
             errors.Add("NPC definition registration failed: " + error);
 
-        PersistentLimboWorldState.TryGetNpc("validator_npc", out var npc);
+        if (!PersistentLimboWorldState.TryGetNpc("validator_npc", out var npc) || npc == null)
+        {
+            errors.Add("Registered validator NPC could not be resolved.");
+            UnityEngine.Object.DestroyImmediate(agentDefinition);
+            UnityEngine.Object.DestroyImmediate(npcDefinition);
+            return;
+        }
         PersistentLimboWorldState.SetExposure(npc, 60f);
         PersistentLimboWorldState.CleanseDistrict("mercato", 20f, out _);
         ExpectNear(npc.exposure, 40f, "district cleanse amount", errors);
@@ -238,7 +245,13 @@ public static class LimboWorldSimulationValidator
 
         Expect(PersistentLimboWorldState.MarkAgentDiscovered("validator_crier", out _),
             "Agent discovery failed.", errors);
-        PersistentLimboWorldState.TryGetAgent("validator_crier", out var agent);
+        if (!PersistentLimboWorldState.TryGetAgent("validator_crier", out var agent) || agent == null)
+        {
+            errors.Add("Registered validator Crier could not be resolved.");
+            UnityEngine.Object.DestroyImmediate(agentDefinition);
+            UnityEngine.Object.DestroyImmediate(npcDefinition);
+            return;
+        }
         string firstSite = agent.currentSiteId;
         Expect(PersistentLimboWorldState.DisruptAgent("validator_crier", "1265:130", out _),
             "Agent disruption failed.", errors);
@@ -330,10 +343,14 @@ public static class LimboWorldSimulationValidator
             Expect(pair.Value >= 0.02f && pair.Value <= 0.15f,
                 $"Opening baseline '{pair.Key}' is outside the approved low-burn range.", errors);
         }
-        ExpectNear(FlorenceOpeningBaseline.LimboByLocation["mercato"], 0.15f,
-            "Mercato troubled opening baseline", errors);
-        Expect(FlorenceOpeningBaseline.LimboByLocation["duomo"] <= 0.10f,
-            "Stable Duomo opening baseline is too high.", errors);
+        Expect(FlorenceOpeningBaseline.LimboByLocation.Count == 2,
+            "Opening baseline should seed only mutable owner territories.", errors);
+        Expect(FlorenceOpeningBaseline.LimboByLocation.TryGetValue("firenze", out float firenze) &&
+               Mathf.Approximately(firenze, 0.08f),
+            "Firenze owner opening baseline changed from the approved subtle value.", errors);
+        Expect(FlorenceOpeningBaseline.LimboByLocation.TryGetValue("fiesole", out float fiesole) &&
+               Mathf.Approximately(fiesole, 0.05f),
+            "Fiesole owner opening baseline changed from the approved subtle value.", errors);
     }
 
     static void ValidateRegisteredEffects(List<string> errors)
@@ -456,6 +473,7 @@ public static class LimboWorldSimulationValidator
         public float resistance = 0.7f;
 
         public float LimboSanctityResistance => resistance;
+        public string ResolveTerritoryId(string locationId) => locationId;
         public float GetSanctity(string districtId) => sanctity.TryGetValue(districtId, out float value) ? value : 0f;
         public float GetLimboInfluence(string districtId) => Influence(districtId);
         public bool IsSanctuary(string districtId) => sanctuary.Contains(districtId);

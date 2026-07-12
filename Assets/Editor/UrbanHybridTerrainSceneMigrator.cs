@@ -82,6 +82,13 @@ public static class UrbanHybridTerrainSceneMigrator
         AssetDatabase.SaveAssets();
     }
 
+    public static void ApplyMercatoSurface(Scene scene)
+    {
+        EnsureFolder(ProductionMeshRoot);
+        ApplySurface(scene, Mercato);
+        AssetDatabase.SaveAssets();
+    }
+
     public static void ApplyDuomoSurface(Scene scene)
     {
         EnsureFolder(ProductionMeshRoot);

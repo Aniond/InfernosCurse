@@ -23,6 +23,7 @@ public sealed class ZoneBattleAuthoring : MonoBehaviour
     public GameObject[] explorationOnlyRoots = System.Array.Empty<GameObject>();
     public GameObject[] battleOnlyRoots = System.Array.Empty<GameObject>();
     public ZoneExit[] zoneExits = System.Array.Empty<ZoneExit>();
+    public SeamlessInteriorModule[] protectedInteriors = System.Array.Empty<SeamlessInteriorModule>();
 
     void Reset() => ResolveLocalReferences();
 
@@ -38,6 +39,8 @@ public sealed class ZoneBattleAuthoring : MonoBehaviour
         if (zoneTerrain == null) zoneTerrain = Object.FindFirstObjectByType<Terrain>();
         if (zoneExits == null || zoneExits.Length == 0)
             zoneExits = Object.FindObjectsByType<ZoneExit>(FindObjectsSortMode.None);
+        if (protectedInteriors == null || protectedInteriors.Length == 0)
+            protectedInteriors = Object.FindObjectsByType<SeamlessInteriorModule>(FindObjectsSortMode.None);
     }
 
     public bool TryValidate(out string message)
@@ -53,6 +56,10 @@ public sealed class ZoneBattleAuthoring : MonoBehaviour
             findings.Add("grid dimensions are invalid");
         if (mapAuthoring != null && (mapAuthoring.partySpawns == null || mapAuthoring.partySpawns.Count == 0))
             findings.Add("party spawn suggestions are missing");
+        if (protectedInteriors != null)
+            foreach (var interior in protectedInteriors)
+                if (interior != null && !interior.TryValidateRuntime(out string interiorError))
+                    findings.Add($"protected interior '{interior.name}' is invalid: {interiorError}");
         if (zoneTerrain != null)
         {
             if (terrainProfile == null) findings.Add("hybrid terrain profile is missing");

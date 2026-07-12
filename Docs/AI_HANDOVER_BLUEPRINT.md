@@ -19,7 +19,7 @@ Facts LLMs most commonly get wrong about this repo. Internalize before generatin
 | 4 | **The pipeline asset binds through QualitySettings, not GraphicsSettings.** `ProjectSettings/GraphicsSettings.asset` `m_CustomRenderPipeline` is `{fileID: 0}`. The single quality level "PC" → `Assets/Settings/PC_RPAsset.asset` (Forward+, Depth+Opaque ON, SSAO + StylizedWater render features on `PC_Renderer.asset`). `Mobile_RPAsset`/`Mobile_Renderer` exist but are **unreferenced and featureless** — switching to them silently kills water rendering and SSAO. | `ProjectSettings/QualitySettings.asset` |
 | 5 | **`HD2D_PostProcessing.asset` is an empty trap** (six `{fileID: 0}` components, referenced by nothing). The real post stack is `Assets/Settings/SampleSceneProfile.asset` — used **both** as the pipeline default volume profile **and** as the HD2D_CameraKit Global Volume profile. Editing it changes every scene at once. | `Assets/Settings/` |
 | 6 | **There is no NPC dialogue system.** All "interaction" is walk-into trigger zones (`GuildInteractionZone`) opening self-built panels. Do not invent a dialogue manager. | grep `dialog\|dialogue` → 0 hits |
-| 7 | **`WorldMapUI` / `MapNodeView` / `MapNodeDetailPanel` / WorldMap.unity are LEGACY**, superseded by `GugolMapUI` as the travel surface. Don't extend them. | `Assets/Scripts/Map/WorldMapUI.cs:17` |
+| 7 | **`WorldMapUI` / `MapNodeView` / `MapNodeDetailPanel` / WorldMap.unity are LEGACY**, superseded by the masthead-free `GugolMapUI` and its presenters/services. Extend Street View through `Assets/Resources/GugolMap` definitions, not the legacy scene. | `Assets/Scripts/Map/GugolMapUI.cs` |
 | 8 | **Skills/jobs do NOT load from `Resources/`.** Save-game restore goes through `AssetRegistry` (name→asset arrays on GameSystems prefab, populated by editor menu). | `Assets/Scripts/Data/AssetRegistry.cs` |
 | 9 | **`BUG_AUDIT.md` is historical/closed** (all items `[x]`, references deleted files). **`NIGHT_AUDIT_2026-07-04.md` is the live bug menu** (P0s fixed 7/05 commit `2efaa40`; P1–P3 open). See [§7](#7-document-registry--staleness-map). | root `*.md` |
 | 10 | **Game code asks time only via `GameClock`** (static facade over COZY). Never call `CozyWeather.instance.timeModule` from gameplay code. | `WEATHER_SYSTEM.md` |
@@ -282,11 +282,11 @@ TASK RULES (runtime C#):
 - APPEND-ONLY enums: MicroClimate, NodeKind, MapLevel (serialized as ints on
   GameSystems.prefab). Never reorder or remove members.
 - New zone registration = HubNodeData via GugolMappeSetup.WireNodes/AddTeaserNode
-  (editor menu), NOT a new ScriptableObject type. Pin visibility = scene present in
-  Build Settings; there is no separate unlock flag system yet.
-- Adding a saved field: bump nothing unless shape changes; default value must mean
-  "absent in old save"; extend SaveData with parallel arrays; restore in ApplySave
-  respecting the documented order.
+  (editor menu). Street View frontage is separate authoring: stable street, venue,
+  NPC, presentation, and expression assets under Assets/Resources/GugolMap.
+- Adding a saved field requires an explicit migration decision. Save v8 includes
+  player-known NPC map sightings; old saves initialize an empty ledger and fall
+  back to authored usual locations. Restore in ApplySave in documented order.
 - Never load a scene from inside a death/event callback chain (wait ≥1s realtime —
   see EncounterBootstrap.VictoryFlow).
 - Menus/overlays: Resume()/restore timeScale BEFORE handing off or loading scenes;
@@ -501,6 +501,8 @@ Resolution-log schema (what the trailer must encode):
 ---
 
 ## 6. EDITOR TOOLING & ASSET PIPELINE
+
+Gugol Mappe refined workflow: `GugolMappeRefinedAuthoringBuilder` idempotently authors the presentation profile and pilot definitions. Add future street, venue, NPC, and expression assets under `Assets/Resources/GugolMap`; then run `Validation/Validate Gugol Mappe Refined Authoring` and `Run Gugol Mappe Play Mode Probe`. The map is masthead-free, save v8 stores player-known NPC sightings, and neither numeric Circle influence nor player Sanity may enter map presentation.
 
 ### 6.1 Menu-driven zone workflows (numbers = execution order)
 

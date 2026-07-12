@@ -299,17 +299,6 @@ public class CombatantData : ScriptableObject
         currentSP  = stats.spMax;
     }
 
-    // Insanity as a PERCENTAGE 0-100 (David 7/08) — the sum of equipped
-    // unrefined orbs' costs, clamped. A storytelling value, never shown to
-    // the player; InsanityPresenter turns it into a darkening world.
-    public int CurrentInsanity()
-    {
-        int total = 0;
-        foreach (var orb in equippedSkills.absorbed)
-            if (orb != null) total += orb.GetInsanityCost();
-        return Mathf.Clamp(total, 0, 100);
-    }
-
     // ── Absorb (Benidito) ────────────────────────────────────────────────────────
 
     public AbsorbedSkillInstance Absorb(SkillDefinition skill)

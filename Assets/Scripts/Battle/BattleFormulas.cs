@@ -133,7 +133,8 @@ public static class BattleFormulas
     public static float CTGainPerTick(BattleUnit unit)
     {
         var stats = unit.GetEffectiveStats();
-        return stats.speed * unit.Status.CombinedSpeedMultiplier(unit);
+        float insanityMultiplier = PlayerInsanityModifiers.For(unit.Data).CtGainMultiplier;
+        return stats.speed * unit.Status.CombinedSpeedMultiplier(unit) * insanityMultiplier;
     }
 
     // Charge ticks before a queued action fires

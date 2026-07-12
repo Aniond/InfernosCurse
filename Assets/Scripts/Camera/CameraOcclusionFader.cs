@@ -1,14 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
-// HD-2D interior occlusion fix (Duomo). The follow camera sits south of the
-// player looking north, so at the entrance and at every throat turn a wall can
-// sit between the lens and the player. Each frame this spherecasts from the
-// camera to the player and hides ONLY architecture segments on that sightline
-// (dollhouse-style), restoring them the moment the line clears. Piers are left
-// alone on purpose — they're thin and sweeping past them reads naturally.
+// HD-2D dollhouse occlusion. The camera spherecasts toward the player and
+// hides only approved architecture. Seamless interiors can keep hidden roofs
+// and walls casting shadows so exterior sunlight never ignores the building.
 public class CameraOcclusionFader : MonoBehaviour
 {
+    public enum OccluderHideMode
+    {
+        DisableRenderer,
+        ShadowsOnly,
+    }
+
     [Header("Target")]
     [Tooltip("Player to keep visible. Auto-finds by tag if empty.")]
     public Transform target;
@@ -17,18 +21,31 @@ public class CameraOcclusionFader : MonoBehaviour
     public float targetHeight = 1.2f;
 
     [Header("What counts as occluding architecture")]
-    [Tooltip("Only objects whose name starts with one of these fade out. " +
-             "Walls yes, piers no (thin, momentary occlusion reads fine).")]
+    [Tooltip("Objects whose name starts with one of these may be hidden.")]
     public string[] wallPrefixes = { "Oct_", "Nave_Wall_", "Nave_Stub_", "Facade_", "Throat_", "Trib_" };
-    [Tooltip("Radius of the sightline probe — catches walls that graze the line.")]
+    [Tooltip("Explicit renderers that may occlude the player, independent of naming.")]
+    public Renderer[] explicitOccluders = System.Array.Empty<Renderer>();
+    [Tooltip("Radius of the sightline probe.")]
     public float probeRadius = 0.6f;
+    [Tooltip("ShadowsOnly is recommended for seamless interiors.")]
+    public OccluderHideMode hideMode = OccluderHideMode.DisableRenderer;
 
-    readonly HashSet<Renderer> hidden = new HashSet<Renderer>();
-    readonly HashSet<Renderer> stillBlocking = new HashSet<Renderer>();
-    // pier colliders live on hidden placeholder cylinders; the visible mesh is a
-    // sibling named PierModel_<cylinder name>. Cache the mapping per collider.
-    readonly Dictionary<Collider, Renderer[]> pierMap = new Dictionary<Collider, Renderer[]>();
+    readonly Dictionary<Renderer, RendererState> hidden = new();
+    readonly HashSet<Renderer> stillBlocking = new();
+    readonly Dictionary<Collider, Renderer[]> pierMap = new();
     static readonly RaycastHit[] hits = new RaycastHit[32];
+
+    readonly struct RendererState
+    {
+        public readonly bool enabled;
+        public readonly ShadowCastingMode shadowCastingMode;
+
+        public RendererState(Renderer renderer)
+        {
+            enabled = renderer.enabled;
+            shadowCastingMode = renderer.shadowCastingMode;
+        }
+    }
 
     void Start()
     {
@@ -51,58 +68,107 @@ public class CameraOcclusionFader : MonoBehaviour
         dir /= dist;
 
         stillBlocking.Clear();
-        int n = Physics.SphereCastNonAlloc(from, probeRadius, dir, hits, dist, ~0, QueryTriggerInteraction.Ignore);
-        for (int i = 0; i < n; i++)
+        int count = Physics.SphereCastNonAlloc(
+            from, probeRadius, dir, hits, dist, ~0, QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < count; i++)
         {
-            var col = hits[i].collider;
-            if (col == null || col.transform == target) continue;
-            var cn = col.gameObject.name;
+            Collider collider = hits[i].collider;
+            if (collider == null || collider.transform == target) continue;
+            string colliderName = collider.gameObject.name;
 
-            if (IsWall(cn))
+            if (IsWall(colliderName) || IsExplicit(collider.transform))
             {
-                var r = col.GetComponent<Renderer>();
-                if (r == null) continue;
-                stillBlocking.Add(r);
-                if (hidden.Add(r)) r.enabled = false;
+                Renderer renderer = collider.GetComponent<Renderer>();
+                if (renderer == null) renderer = collider.GetComponentInChildren<Renderer>();
+                if (renderer == null) continue;
+                stillBlocking.Add(renderer);
+                Hide(renderer);
             }
-            else if (cn.StartsWith("Pier_") || cn.StartsWith("TribPier_"))
+            else if (colliderName.StartsWith("Pier_") || colliderName.StartsWith("TribPier_"))
             {
-                if (!pierMap.TryGetValue(col, out var prs))
+                if (!pierMap.TryGetValue(collider, out Renderer[] pierRenderers))
                 {
-                    var model = GameObject.Find("PierModel_" + cn);
-                    prs = model != null ? model.GetComponentsInChildren<Renderer>() : new Renderer[0];
-                    pierMap[col] = prs;
+                    var model = GameObject.Find("PierModel_" + colliderName);
+                    pierRenderers = model != null
+                        ? model.GetComponentsInChildren<Renderer>()
+                        : System.Array.Empty<Renderer>();
+                    pierMap[collider] = pierRenderers;
                 }
-                foreach (var r in prs)
+                foreach (Renderer renderer in pierRenderers)
                 {
-                    if (r == null) continue;
-                    stillBlocking.Add(r);
-                    if (hidden.Add(r)) r.enabled = false;
+                    if (renderer == null) continue;
+                    stillBlocking.Add(renderer);
+                    Hide(renderer);
                 }
             }
         }
 
-        // restore anything we hid that no longer blocks the sightline
-        hidden.RemoveWhere(r =>
+        var restore = new List<Renderer>();
+        foreach (var pair in hidden)
         {
-            if (r == null) return true;
-            if (stillBlocking.Contains(r)) return false;
-            r.enabled = true;
-            return true;
-        });
+            Renderer renderer = pair.Key;
+            if (renderer == null || !stillBlocking.Contains(renderer)) restore.Add(renderer);
+        }
+        foreach (Renderer renderer in restore) Restore(renderer);
     }
 
-    bool IsWall(string n)
+    bool IsWall(string objectName)
     {
-        foreach (var p in wallPrefixes)
-            if (n.StartsWith(p)) return true;
+        if (wallPrefixes == null) return false;
+        foreach (string prefix in wallPrefixes)
+            if (!string.IsNullOrEmpty(prefix) && objectName.StartsWith(prefix)) return true;
         return false;
+    }
+
+    bool IsExplicit(Transform hit)
+    {
+        if (explicitOccluders == null) return false;
+        foreach (Renderer renderer in explicitOccluders)
+        {
+            if (renderer == null) continue;
+            Transform candidate = renderer.transform;
+            if (hit == candidate || hit.IsChildOf(candidate) || candidate.IsChildOf(hit)) return true;
+        }
+        return false;
+    }
+
+    void Hide(Renderer renderer)
+    {
+        if (renderer == null || hidden.ContainsKey(renderer)) return;
+        hidden.Add(renderer, new RendererState(renderer));
+        if (hideMode == OccluderHideMode.ShadowsOnly && renderer.shadowCastingMode != ShadowCastingMode.Off)
+        {
+            renderer.enabled = true;
+            renderer.shadowCastingMode = ShadowCastingMode.ShadowsOnly;
+        }
+        else
+        {
+            renderer.enabled = false;
+        }
+    }
+
+    void Restore(Renderer renderer)
+    {
+        if (renderer == null)
+        {
+            hidden.Remove(renderer);
+            return;
+        }
+        if (!hidden.TryGetValue(renderer, out RendererState state)) return;
+        renderer.enabled = state.enabled;
+        renderer.shadowCastingMode = state.shadowCastingMode;
+        hidden.Remove(renderer);
     }
 
     void OnDisable()
     {
-        foreach (var r in hidden)
-            if (r != null) r.enabled = true;
+        foreach (var pair in hidden)
+        {
+            Renderer renderer = pair.Key;
+            if (renderer == null) continue;
+            renderer.enabled = pair.Value.enabled;
+            renderer.shadowCastingMode = pair.Value.shadowCastingMode;
+        }
         hidden.Clear();
     }
 }

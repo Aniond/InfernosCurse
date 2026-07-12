@@ -63,7 +63,11 @@ public class BattleUnit : MonoBehaviour
     public CharacterStats GetEffectiveStats()
     {
         CharacterStats stats = Data.GetTotalStats();
-        stats.faith = Mathf.Max(0, stats.faith - Mathf.RoundToInt(Status.CombinedFaithPenalty()));
+        PlayerInsanityModifierSet insanity = PlayerInsanityModifiers.For(Data);
+        stats.perception = Mathf.Max(0, stats.perception - insanity.PerceptionPenalty);
+        stats.faith = Mathf.Max(
+            0,
+            stats.faith - Mathf.RoundToInt(Status.CombinedFaithPenalty()) - insanity.FaithPenalty);
         return stats;
     }
 
