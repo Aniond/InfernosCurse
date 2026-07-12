@@ -1,7 +1,7 @@
 # Mercato Fountain Intermittent Drips Design
 
 Date: 2026-07-12
-Status: Approved direction, pending written-spec review
+Status: Approved and implemented
 
 ## Goal
 

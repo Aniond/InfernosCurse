@@ -15,6 +15,8 @@ public static class MercatoVecchioProductionKitBuilder
     const string TerracottaPath = "Assets/Environment/FlorentineInnFloor1/StructuralKit/Materials/Inn_ServiceTerracotta.mat";
     const string FountainModelPath = "Assets/Environment/MarketSquare/Props/Fountain.glb";
     const string WaterPath = "Assets/Art/Environment/WeatherSurfaces/Water/Water_Fountain.mat";
+    const string DripTexturePath = "Packages/com.distantlands.cozy.core/Content/Art/Textures/Particle/Drop.png";
+    const string SplashTexturePath = "Packages/com.distantlands.cozy.core/Content/Art/Textures/Particle/Dot.png";
     const float FountainOuterDiameter = 4.9f;
     const float FountainPlazaTop = 0.24f;
     const float FountainWaterDiameter = 3.55f;
@@ -34,6 +36,10 @@ public static class MercatoVecchioProductionKitBuilder
         Material clothOchre = MaterialAsset("Mercato_Cloth_Ochre", new Color(0.68f, 0.43f, 0.13f), 0.58f);
         Material clothGreen = MaterialAsset("Mercato_Cloth_Green", new Color(0.20f, 0.34f, 0.18f), 0.62f);
         Material darkIron = MaterialAsset("Mercato_DarkIron", new Color(0.11f, 0.10f, 0.09f), 0.28f, 0.38f);
+        Material fountainDrips = ParticleMaterialAsset("Mercato_FountainDrips",
+            new Color(0.56f, 0.78f, 0.88f, 0.68f), Require<Texture2D>(DripTexturePath));
+        Material fountainSplashes = ParticleMaterialAsset("Mercato_FountainSplashes",
+            new Color(0.64f, 0.84f, 0.94f, 0.58f), Require<Texture2D>(SplashTexturePath));
 
         Save("Mercato_Loggia", BuildLoggia(stone, plaster, timber, terracotta));
         Save("Mercato_Stall_Red", BuildStall("Mercato_Stall_Red", timber, clothRed, stone));
@@ -41,7 +47,7 @@ public static class MercatoVecchioProductionKitBuilder
         Save("Mercato_Stall_Green", BuildStall("Mercato_Stall_Green", timber, clothGreen, stone));
         Save("Mercato_InnFacade", BuildInnFacade(stone, plaster, timber, terracotta, darkIron));
         Save("Mercato_RiverWall", BuildRiverWall(stone));
-        Save("Mercato_FountainPlaza", BuildFountain(stone, darkIron));
+        Save("Mercato_FountainPlaza", BuildFountain(stone, darkIron, fountainDrips, fountainSplashes));
         MercatoCommercePolishBuilder.Build();
 
         AssetDatabase.SaveAssets();
@@ -108,7 +114,7 @@ public static class MercatoVecchioProductionKitBuilder
         return root;
     }
 
-    static GameObject BuildFountain(Material stone, Material iron)
+    static GameObject BuildFountain(Material stone, Material iron, Material dripMaterial, Material splashMaterial)
     {
         var root = new GameObject("Mercato_FountainPlaza");
         Cylinder(root.transform, "Fountain_PlazaBase", new Vector3(0f, 0.12f, 0f), 4.8f, 0.24f, stone, 16);
@@ -132,7 +138,118 @@ public static class MercatoVecchioProductionKitBuilder
             GameObject surface = Cylinder(root.transform, "Fountain_WaterSurface", new Vector3(0f, FountainWaterSurfaceY, 0f), FountainWaterDiameter * 0.5f, 0.04f, water, 32, false);
             WeatherSurfaceStandardBuilder.ConfigureWater(surface, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
         }
+        BuildFountainDrips(root.transform, dripMaterial, splashMaterial);
         return root;
+    }
+
+    static void BuildFountainDrips(Transform parent, Material dripMaterial, Material splashMaterial)
+    {
+        Transform root = new GameObject("Fountain_UpperDrips").transform;
+        root.SetParent(parent, false);
+
+        Vector3[] offsets =
+        {
+            new Vector3(0.72f, 0f, 0f),
+            new Vector3(-0.72f, 0f, 0f),
+            new Vector3(0f, 0f, 0.72f),
+            new Vector3(0f, 0f, -0.72f),
+        };
+        float[] periods = { 1.45f, 1.83f, 2.17f, 2.53f };
+        float[] delays = { 0.12f, 0.48f, 0.81f, 1.16f };
+        const float dripY = 3.08f;
+        const float travelTime = 0.68f;
+
+        for (int i = 0; i < offsets.Length; i++)
+        {
+            CreateDripEmitter(root, i + 1, offsets[i] + Vector3.up * dripY,
+                periods[i], delays[i], dripMaterial, (uint)(8301 + i));
+            CreateSplashEmitter(root, i + 1, offsets[i] + Vector3.up * (FountainWaterSurfaceY + 0.035f),
+                periods[i], delays[i] + travelTime, splashMaterial, (uint)(9301 + i));
+        }
+    }
+
+    static void CreateDripEmitter(Transform parent, int index, Vector3 position, float period,
+        float delay, Material material, uint seed)
+    {
+        GameObject go = new GameObject($"Drip_{index:00}");
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = position;
+
+        ParticleSystem particles = go.AddComponent<ParticleSystem>();
+        particles.useAutoRandomSeed = false;
+        particles.randomSeed = seed;
+        var main = particles.main;
+        main.loop = true;
+        main.duration = period;
+        main.startDelay = delay;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.64f, 0.72f);
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(0.045f, 0.075f);
+        main.startColor = new ParticleSystem.MinMaxGradient(
+            new Color(0.62f, 0.82f, 0.92f, 0.58f),
+            new Color(0.78f, 0.92f, 1f, 0.82f));
+        main.gravityModifier = 0.34f;
+        main.maxParticles = 8;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.playOnAwake = true;
+
+        var emission = particles.emission;
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 1, 1) });
+
+        var shape = particles.shape;
+        shape.enabled = false;
+        var velocity = particles.velocityOverLifetime;
+        velocity.enabled = true;
+        velocity.space = ParticleSystemSimulationSpace.Local;
+        velocity.y = -2.72f;
+
+        ParticleSystemRenderer renderer = particles.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = material;
+        renderer.renderMode = ParticleSystemRenderMode.Stretch;
+        renderer.lengthScale = 1.5f;
+        renderer.velocityScale = 0.12f;
+    }
+
+    static void CreateSplashEmitter(Transform parent, int index, Vector3 position, float period,
+        float delay, Material material, uint seed)
+    {
+        GameObject go = new GameObject($"Splash_{index:00}");
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = position;
+        go.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
+
+        ParticleSystem particles = go.AddComponent<ParticleSystem>();
+        particles.useAutoRandomSeed = false;
+        particles.randomSeed = seed;
+        var main = particles.main;
+        main.loop = true;
+        main.duration = period;
+        main.startDelay = delay;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.16f, 0.28f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.35f, 0.72f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.035f, 0.065f);
+        main.startColor = new ParticleSystem.MinMaxGradient(
+            new Color(0.58f, 0.80f, 0.92f, 0.42f),
+            new Color(0.82f, 0.94f, 1f, 0.72f));
+        main.gravityModifier = 0.72f;
+        main.maxParticles = 20;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.playOnAwake = true;
+
+        var emission = particles.emission;
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new[] { new ParticleSystem.Burst(0f, 2, 4) });
+
+        var shape = particles.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Cone;
+        shape.angle = 24f;
+        shape.radius = 0.045f;
+
+        ParticleSystemRenderer renderer = particles.GetComponent<ParticleSystemRenderer>();
+        renderer.sharedMaterial = material;
+        renderer.renderMode = ParticleSystemRenderMode.Billboard;
     }
 
     static void NormalizeModelToHorizontalDiameter(GameObject model, float targetDiameter, float groundY)
@@ -207,6 +324,34 @@ public static class MercatoVecchioProductionKitBuilder
         material.color = color;
         material.SetFloat("_Smoothness", smoothness);
         material.SetFloat("_Metallic", metallic);
+        EditorUtility.SetDirty(material);
+        return material;
+    }
+
+    static Material ParticleMaterialAsset(string name, Color color, Texture2D texture)
+    {
+        string path = $"{MaterialRoot}/{name}.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null) throw new InvalidOperationException("URP particle shader is unavailable.");
+            material = new Material(shader) { name = name };
+            AssetDatabase.CreateAsset(material, path);
+        }
+        material.color = color;
+        if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+        if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
+        if (material.HasProperty("_MainTex")) material.SetTexture("_MainTex", texture);
+        if (material.HasProperty("_Surface")) material.SetFloat("_Surface", 1f);
+        if (material.HasProperty("_SrcBlend")) material.SetFloat("_SrcBlend", 5f);
+        if (material.HasProperty("_DstBlend")) material.SetFloat("_DstBlend", 10f);
+        if (material.HasProperty("_SrcBlendAlpha")) material.SetFloat("_SrcBlendAlpha", 1f);
+        if (material.HasProperty("_DstBlendAlpha")) material.SetFloat("_DstBlendAlpha", 10f);
+        if (material.HasProperty("_ZWrite")) material.SetFloat("_ZWrite", 0f);
+        material.SetOverrideTag("RenderType", "Transparent");
+        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        material.renderQueue = 3000;
         EditorUtility.SetDirty(material);
         return material;
     }
@@ -296,7 +441,59 @@ public static class MercatoVecchioProductionKitBuilder
                 errors.Add($"Mercato fountain water is sitting too low at {waterBounds.min.y:0.00}m");
             if (Mathf.Abs(modelBounds.min.y - FountainPlazaTop) > 0.03f)
                 errors.Add($"Mercato fountain is not grounded on the plaza ({modelBounds.min.y:0.00}m)");
+            ValidateFountainDrips(root.transform, errors);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void ValidateFountainDrips(Transform fountain, List<string> errors)
+    {
+        Transform effects = fountain.Find("Fountain_UpperDrips");
+        if (effects == null)
+        {
+            errors.Add("Mercato fountain is missing Fountain_UpperDrips");
+            return;
+        }
+
+        int dripCount = 0;
+        int splashCount = 0;
+        float safeSplashRadius = FountainWaterDiameter * 0.5f - 0.2f;
+        foreach (ParticleSystem particles in effects.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            Transform emitter = particles.transform;
+            if (emitter.name.StartsWith("Drip_", StringComparison.Ordinal))
+            {
+                dripCount++;
+                if (emitter.localPosition.y < FountainWaterSurfaceY + 1.5f)
+                    errors.Add(emitter.name + " does not originate beneath the upper bowl");
+            }
+            else if (emitter.name.StartsWith("Splash_", StringComparison.Ordinal))
+            {
+                splashCount++;
+                Vector2 horizontal = new Vector2(emitter.localPosition.x, emitter.localPosition.z);
+                if (horizontal.magnitude > safeSplashRadius)
+                    errors.Add(emitter.name + " is outside the lower basin");
+                if (emitter.localPosition.y < FountainWaterSurfaceY)
+                    errors.Add(emitter.name + " is below the lower-basin waterline");
+            }
+            else errors.Add("Unexpected fountain particle emitter: " + emitter.name);
+
+            var main = particles.main;
+            if (main.simulationSpace != ParticleSystemSimulationSpace.Local)
+                errors.Add(emitter.name + " must use local simulation space");
+            if (!main.playOnAwake)
+                errors.Add(emitter.name + " must play automatically");
+        }
+
+        if (dripCount != 4) errors.Add($"Mercato fountain has {dripCount} drip emitters; expected 4");
+        if (splashCount != 4) errors.Add($"Mercato fountain has {splashCount} splash emitters; expected 4");
+        if (effects.GetComponentsInChildren<Collider>(true).Length > 0)
+            errors.Add("Mercato fountain drip effects must not have colliders");
+        if (effects.GetComponentsInChildren<Light>(true).Length > 0)
+            errors.Add("Mercato fountain drip effects must not have lights");
+        if (effects.GetComponentsInChildren<AudioSource>(true).Length > 0)
+            errors.Add("Mercato fountain drip effects must not have audio sources");
+        if (effects.GetComponentsInChildren<WeatherSurface>(true).Length > 0)
+            errors.Add("Mercato fountain drip effects must not register as weather surfaces");
     }
 }

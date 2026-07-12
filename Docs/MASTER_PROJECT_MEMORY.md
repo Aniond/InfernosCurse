@@ -391,6 +391,7 @@ Completed and runtime-verified on 2026-07-12:
 - The deterministic rebuild checks for a dirty Mercato scene before regenerating referenced prefabs, preventing its own prefab imports from creating a false dirty-scene failure.
 - Rebuilt Arno and fountain surfaces now use `WeatherSurfaceStandardBuilder.ConfigureWater`; rain impacts and shared weather-surface registration survive future Mercato rebuilds.
 - The approved fountain integration in `Docs/superpowers/specs/2026-07-12-mercato-fountain-scale-integration-design.md` (design commit `6b2b1485`) normalizes the authored fountain to a 4.90 m outer diameter. The lower-basin water is 3.55 m wide at a 1.06 m waterline so it stays contained by the stone bowl. The builder preserves the GLB's authored upright rotation, centers it from renderer bounds, grounds it at the 0.24 m plaza top, and validates the resulting orientation and containment.
+- `Docs/superpowers/specs/2026-07-12-mercato-fountain-intermittent-drips-design.md` adds four staggered intermittent droplet emitters beneath the upper bowl and four paired subtle splash emitters inside the lower basin. The deterministic local-space systems use project-owned URP particle materials, fixed seeds, low particle counts, and COZY's installed drop/dot textures; they add no collision, lighting, audio, or weather authority.
 
 ### Reusable seamless-interior camera profile
 
@@ -418,6 +419,7 @@ Completed and runtime-verified on 2026-07-12:
 - `[UrbanTerrainValidator]` passed five profile/material/mesh sets and five production surfaces with colliders retained.
 - `[WeatherSurfaceStandard]` passed with no unexplained legacy grass or water surfaces after the registered Arno/fountain correction.
 - `[MercatoProductionKitValidator]` passed the rebuilt seven-prefab kit with the authored fountain upright at 4.90 m, its contained lower-basin water at 3.55 m, and the model grounded on the plaza top.
+- The fountain validator also passed exactly four upper-bowl drip and four basin-contained splash emitters with local simulation and no forbidden components. Play Mode showed staggered falling droplets and subtle landing responses; the corrected particle velocity configuration produced zero particle-curve errors in the final runtime log.
 - Manual runtime Game-view review confirmed distinct period stall silhouettes, restrained canvas colors, open aisles, readable player scale, and the preserved locked HD-2D composition. Unity was left out of Play Mode.
 
 ## Gugol Mappe Refined Browsing and Street View
