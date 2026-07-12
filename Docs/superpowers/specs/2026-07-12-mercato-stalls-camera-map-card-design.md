@@ -14,7 +14,7 @@ The pass must preserve the locked HD-2D exploration camera identity, existing pl
 - Replace both the current primitive stall structures and their cube merchandise.
 - Prefer the existing 3D AI Studio `Florentine_Stall.glb` as the principal stall structure when its live scale, materials, and silhouette pass Unity review.
 - Populate project-owned stall variants with the imported medieval-market baskets, bread, apples, produce boxes, sacks, and lanterns.
-- 3D AI Studio is an approved production source. Generate new stalls or supporting props when the existing sources leave a visible quality, role, or silhouette gap.
+- 3D AI Studio is a primary production source for this project. Use it proactively for high-visibility stalls and supporting props that give each trade and zone a distinct authored identity.
 - Keep the camera automatic. Entering the inn blends to authored room framing; exiting restores the standard Mercato follow profile without a snap.
 - Build the camera feature as a reusable seamless-interior profile system, but author only the Florentine Inn in this pass.
 - Repair the City map location card responsively and remove the unexplained rating/review line from the player's current-location mode.
@@ -45,9 +45,9 @@ The production builder references source prefabs/models and constructs normalize
 
 ### 3D AI Studio generation policy
 
-- Credits are available and approved for environment production assets across the project.
-- Reuse is preferred when an existing asset already meets the visual role; generation targets visible gaps rather than duplicating good inventory.
-- Mercato generation candidates include a bakery-specific stall, produce display, fish/meat table, cloth merchant rack, period handcart, scales, and distinctive street furniture.
+- Credits were purchased specifically for this project and are approved for deliberate environment production batches.
+- Existing assets remain useful supporting inventory, but generation is not restricted to last-resort gap filling.
+- The first Mercato batch targets at least three high-visibility authored pieces: a bakery-specific stall/display, a produce merchant stall/display, and a dry-goods or cloth-merchant structure. Secondary candidates include a fish/meat table, period handcart, scales, racks, and distinctive street furniture.
 - Every generated asset records its task/source ID and prompt in project-owned metadata, uses PBR textures, and is imported through a normalized wrapper prefab.
 - Target ordinary market props at mobile-conscious production complexity; reserve higher detail for large hero structures that dominate the locked camera.
 - Generated assets require scale, pivot, material, collider, shadow, LOD/culling, and gameplay-camera review before placement.
