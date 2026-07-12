@@ -189,6 +189,42 @@ The first-floor prop pass was freshly rebuilt and verified on 2026-07-10:
 - Implementation: `b494bf8 Refine battle terrain and pause corruption`.
 - Latest verification: `[BattleTerrainStandard] Validation passed for 3 approved 3D map(s); corruption disabled, tactical fog retained.`
 
+## Completed Authoritative Weather and Day/Night Runtime
+
+The approved project-owned weather and time architecture is implemented and runtime-verified as of 2026-07-11.
+
+- Design: `Docs/superpowers/specs/2026-07-11-weather-day-night-cycle-design.md` (`f9f28f00`).
+- Plan: `Docs/superpowers/plans/2026-07-11-weather-day-night-cycle-plan.md` (`5cc60d25`).
+- Typed contract: `fd92f5d5`.
+- Continuous world clock: `7f0fbd92`.
+- Seasonal deterministic fronts: `56b4225c`.
+- Persistent runtime/profile/save integration: `6a37493f`.
+- Typed consumers, battle isolation, and core water correction: `7eca8a32`.
+
+### Ownership and pacing
+
+- `WorldEnvironmentDirector` is the authoritative persistent clock and typed environment snapshot. It attaches to the existing runtime `GameSystems` object without serializing another component into the already-dirty prefab.
+- COZY is presentation-only. Its time module is disabled while the director is active, and the authoritative hour is mirrored into it every frame for sun, moon, sky, fog, cloud, wind, precipitation, and lightning rendering.
+- Default full-day duration is 40 real minutes. Night advances at 1.75 times daytime speed while the integrated full cycle remains exactly 2,400 real seconds.
+- Canonical phases are Dawn 05:00-07:00, Day 07:00-18:00, Dusk 18:00-20:00, and Night 20:00-05:00.
+- The clock advances during exploration and ordinary conversations. It pauses under `Time.timeScale == 0`, explicit nested pause reasons, and blocked tactical scenes (`Battle`, `BattleArena`). Travel and rest continue to advance time explicitly; rest still advances one date and lands at 07:00.
+
+### Forecasts and typed consumers
+
+- `WorldForecastGenerator` creates two to four deterministic, gap-free fronts per day from `FlorenceClimate.json`, the Florentine calendar, the current district microclimate, and stable seeded rolls.
+- Fronts carry typed condition, precipitation, clouds, fog, wind, temperature, visibility, wetness target, lightning, and flood-risk state. Autumn multi-day Arno rain spells and deterministic flood-risk dates are preserved.
+- `FlorenceWeather` now selects the active front and presents its exact installed COZY profile; it no longer owns a separate daily string roll.
+- Tactical vision, world windows, light shafts, weather surfaces, and battle weather read typed `WorldWeatherState`. Legacy profile strings remain only at COZY/save compatibility boundaries and are centralized through `WorldWeatherClassifier`.
+- Battle weather is local and temporary. It may alter tactical visibility or Gemini-authored battle drama, but it cannot mutate the world forecast, persistent wetness, or future story weather.
+- Accumulated wetness rises and dries gradually and is persisted in save version 9. Existing earlier saves remain additive-compatible.
+
+### Surface and runtime proof
+
+- The Arno and the two main fountain basins use the shared Stylized Water 3 weather standard with rain impacts. Authored fountain streams/ripples remain decorative animation meshes, and structural river walls/walkways are explicitly excluded from water-surface detection.
+- Static validators passed for the typed contract, exact clock pacing, all installed COZY profile mappings, 48 deterministic forecast days, and all exploration weather surfaces.
+- The Mercato Play Mode probe passed after the final consumer migration: runtime authority attached to `GameSystems`; the world clock advanced and mirrored COZY; nested and `Time.timeScale` pauses froze it; current fronts were live; battle-local fog reduced tactical sight without changing the world forecast; and wetness survived save serialization.
+- The unrelated generated COZY forecast array churn in `Assets/Resources/GameSystems.prefab` remains intentionally uncommitted. Do not bundle it with this system.
+
 ## Completed Camera and Hybrid-Zone Work
 
 ### Uniform locked HD-2D exploration camera
@@ -429,9 +465,8 @@ The following remain intentionally uncommitted and must not be reset, cleaned, o
 - The approved authored-fountain pass: `Docs/superpowers/specs/2026-07-10-3d-ai-octagonal-inn-fountain-design.md`, `Docs/superpowers/plans/2026-07-10-3d-ai-octagonal-inn-fountain-plan.md`, `Assets/Environment/FlorentineInnFloor1/PropKit/Models/`, the rebuilt fountain prefab and scene, and the authored-fountain changes in `Assets/Editor/FlorentineInnPropKitBuilder.cs`.
 - The approved COZY inn-light isolation fix: `Assets/Scripts/Environment/IndoorWeatherLightingGuard.cs`, its meta file, the lighting changes in `Assets/Editor/FlorentineInnFloor1Builder.cs`, strengthened validation in `Assets/Editor/FlorentineInnPropKitBuilder.cs`, and the rebuilt inn scene.
 - The verified Limbo/Crier baseline is committed in `7383acd6`. Any later dirty changes touching its Circle/Chronicle/Gemini/NPC/discovery scripts, validators, prefab, Mercato authoring, or data remain user-owned follow-up work and must be inspected before staging; the raw PixelLab cache under `GeneratedAssets/PixelLab/LimboCrier` remains ignored.
-- The approved Gugol Mappe implementation is included in the local implementation commit immediately after `8c0574f1`: runtime contracts/presenters/services, save-v8 NPC map knowledge, deterministic refined authoring, `Assets/Resources/GugolMap`, and the authoring and Play-mode validators.
+- The approved Gugol Mappe implementation is included in the local implementation commit immediately after `8c0574f1`: runtime contracts/presenters/services, NPC map knowledge (now carried by save v9), deterministic refined authoring, `Assets/Resources/GugolMap`, and the authoring and Play-mode validators.
 - Do not accidentally bundle the unrelated COZY forecast churn in `Assets/Resources/GameSystems.prefab`; the Limbo skill registry uses Resources-backed assets and does not require that prefab change.
-- `Docs/MASTER_PROJECT_MEMORY.md` itself remains untracked until the user asks to commit this handoff update.
 - `Refrences/maps/ubuntu-24.04.4-wsl-amd64.wsl`
 - `Refrences/maps/wsl.2.7.10.0.x64.msi`
 
@@ -466,11 +501,11 @@ Treat all of these as user-owned or session-generated changes. Inspect them indi
 
 ## Recommended Next Work
 
-The refined Gugol Mappe, Circle-territory foundation, and seamless Mercato implementation are runtime-verified and committed locally immediately after design/plan commit `8c0574f1`. They have not been pushed. Unrelated inn, package, font, BattleArena, tooling, and COZY changes remain dirty and intentionally excluded.
+The refined Gugol Mappe, Circle-territory foundation, seamless Mercato implementation, and authoritative weather/day-night runtime are verified and committed locally. They have not been pushed. Unrelated inn, package, font, BattleArena, tooling, and COZY changes remain dirty and intentionally excluded.
 
 Likely sequence:
 
-1. Open Unity and allow imports/compilation to settle.
+1. Open Unity and allow imports/compilation to settle; rerun the World Environment static suite and Play Mode probe after changing clock, climate, COZY profiles, pause behavior, save data, or weather consumers.
 2. Run `InfernosCurse/Validation/Validate Gugol Mappe Refined Authoring` and `Run Gugol Mappe Play Mode Probe` after changing map definitions, search, save knowledge, Street View geometry, or map presentation.
 3. Review the Crier visually in Mercato at gameplay-camera distance when local, then tune only presentation if needed; the functional encounter already passes Play mode.
 4. Migrate the next approved urban scene from `Migration candidate` to an active hybrid battle zone, with Piazza della Signoria as the open-space counterpart to dense Mercato.
