@@ -30,7 +30,7 @@ public sealed class MercatoSeamlessPlayModeProbe : MonoBehaviour
             yield return current;
         }
 
-        Debug.Log("[MercatoSeamlessPlayModeVerifier] PASS: exterior -> inn threshold -> interior state/camera/light activation -> protected battle lock -> exterior restoration; 5 repeated crossings produced one registry module and no duplicate runtime authorities.");
+        Debug.Log("[MercatoSeamlessPlayModeVerifier] PASS: 5 exterior -> inn -> exterior crossings blended toward the authored room profile and back to the live exterior profile; one camera override owner, one registry module, active local lighting, protected battle lock, and no duplicate runtime authorities.");
         UnityEditor.EditorApplication.isPlaying = false;
     }
 
@@ -53,6 +53,9 @@ public sealed class MercatoSeamlessPlayModeProbe : MonoBehaviour
         Require(FindObjectsByType<SeamlessInteriorModule>(FindObjectsInactive.Exclude).Length == 1, "duplicate seamless interior modules loaded");
         Require(FindObjectsByType<PlayerController>(FindObjectsInactive.Exclude).Length == 1, "duplicate players loaded");
         Require(FindObjectsByType<Camera>(FindObjectsInactive.Exclude).Count(camera => camera.CompareTag("MainCamera")) == 1, "duplicate Main Cameras loaded");
+        DynamicZoom zoom = FindAnyObjectByType<DynamicZoom>();
+        Require(zoom != null, "shared DynamicZoom camera adapter is missing");
+        Require(zoom.ActiveOverrideCount == 0, "camera began with a residual interior override");
 
         var legacySave = new SaveData
         {
@@ -70,6 +73,12 @@ public sealed class MercatoSeamlessPlayModeProbe : MonoBehaviour
 
         Vector3 outside = portal.transform.TransformPoint(new Vector3(0f, -1.15f, -1.2f));
         Vector3 inside = portal.transform.TransformPoint(new Vector3(0f, -1.15f, 1.2f));
+        body.position = outside;
+        Physics.SyncTransforms();
+        yield return new WaitForSecondsRealtime(0.3f);
+        Vector3 exteriorOffset = zoom.AppliedOffset;
+        // Mirrors the inn builder's authored follow + composition offsets.
+        Vector3 authoredInteriorOffset = new Vector3(1.45f, 8.95f, -10.9f);
 
         for (int repetition = 0; repetition < 5; repetition++)
         {
@@ -78,6 +87,13 @@ public sealed class MercatoSeamlessPlayModeProbe : MonoBehaviour
             Require(SeamlessInteriorRegistry.ActiveSubLocationId == "albergo_fiorentino_floor1", $"crossing {repetition + 1}: registry did not activate the inn");
             Require(module.GetComponentsInChildren<Light>(true).Where(light => light.type != LightType.Directional).Any(light => light.intensity > 0f),
                 $"crossing {repetition + 1}: local interior lights did not activate");
+            Require(zoom.ActiveOverrideCount == 1,
+                $"crossing {repetition + 1}: interior camera override was not owned exactly once");
+            Vector3 entryOffset = zoom.AppliedOffset;
+            yield return new WaitForSecondsRealtime(0.4f);
+            Require(Vector3.Distance(zoom.AppliedOffset, authoredInteriorOffset) + 0.03f <
+                    Vector3.Distance(entryOffset, authoredInteriorOffset),
+                $"crossing {repetition + 1}: camera did not blend toward the authored inn profile");
 
             module.SetBattleLocked(true);
             Require(module.BattleLocked && portal.BattleLocked, "protected battle lock did not close the inn portal");
@@ -89,6 +105,13 @@ public sealed class MercatoSeamlessPlayModeProbe : MonoBehaviour
             Require(string.IsNullOrEmpty(SeamlessInteriorRegistry.ActiveSubLocationId), $"crossing {repetition + 1}: registry did not clear the inn");
             Require(module.GetComponentsInChildren<Light>(true).Where(light => light.type != LightType.Directional).All(light => light.intensity <= 0.001f),
                 $"crossing {repetition + 1}: local interior lights remained active outside");
+            Require(zoom.ActiveOverrideCount == 0,
+                $"crossing {repetition + 1}: camera override remained after leaving the inn");
+            Vector3 exitOffset = zoom.AppliedOffset;
+            yield return new WaitForSecondsRealtime(0.45f);
+            Require(Vector3.Distance(zoom.AppliedOffset, exteriorOffset) + 0.03f <
+                    Vector3.Distance(exitOffset, exteriorOffset),
+                $"crossing {repetition + 1}: camera did not blend back toward the live exterior profile");
         }
 
         Require(!SeamlessInteriorRegistry.TryRestore("missing_sub_location", player.transform, out _, out string missingError) &&

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "mercato-stall-bakery",
+    "name": "Mercato Bakery Stall",
+    "role": "bakery",
+    "concept": "output/concepts/mercato-commerce/mercato-stall-bakery.png",
+    "prompt": "Late-medieval Florentine bakery market stall, weathered timber booth, faded ochre-and-cream canvas awning, integrated bread shelves, counter, drawers and storage cubbies, isolated production game prop."
+  },
+  {
+    "id": "mercato-stall-produce",
+    "name": "Mercato Produce Stall",
+    "role": "produce",
+    "concept": "output/concepts/mercato-commerce/mercato-stall-produce.png",
+    "prompt": "Late-medieval Florentine produce market stall, weathered timber booth, faded olive-and-cream canvas awning, tiered basket shelves and angled produce racks, isolated production game prop."
+  },
+  {
+    "id": "mercato-stall-cloth-dry-goods",
+    "name": "Mercato Cloth and Dry Goods Stall",
+    "role": "cloth_dry_goods",
+    "concept": "output/concepts/mercato-commerce/mercato-stall-cloth-dry-goods.png",
+    "prompt": "Late-medieval Florentine cloth and dry-goods market stall, weathered timber booth, faded madder-red canvas awning, side display racks, merchant counter, drawers and storage chest, isolated production game prop."
+  },
+  {
+    "id": "mercato-handcart",
+    "name": "Mercato Merchant Handcart",
+    "role": "street_furniture",
+    "concept": "output/concepts/mercato-commerce/mercato-handcart.png",
+    "prompt": "Late-medieval Florentine two-wheeled merchant handcart, weathered oak bed, iron-rimmed wheels, paired pulling handles and rear support leg, isolated production game prop."
+  }
+]

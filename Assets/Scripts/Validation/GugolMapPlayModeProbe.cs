@@ -29,7 +29,7 @@ public sealed class GugolMapPlayModeProbe : MonoBehaviour
             yield return current;
         }
 
-        Debug.Log("[GugolMapPlayModeVerifier] PASS: masthead-free City map -> exact street search -> Mercato Street View -> 3 venues + 5 known NPC markers -> venue card -> Tuscany/Italy navigation -> close/reopen without duplicate canvases.");
+        Debug.Log("[GugolMapPlayModeVerifier] PASS: phone-width bounded current-location card without rating stats -> exact street search -> Mercato Street View -> 3 venues + 5 known NPC markers -> venue card -> Tuscany/Italy navigation -> close/reopen without duplicate canvases.");
         UnityEditor.EditorApplication.isPlaying = false;
     }
 
@@ -46,6 +46,25 @@ public sealed class GugolMapPlayModeProbe : MonoBehaviour
         Require(!map.ValidationHasWordmark, "retired Gugol Mappe wordmark exists in the browsing hierarchy");
         Require(FindObjectsByType<Canvas>().Count(canvas => canvas.name == "GugolMapCanvas") == 1,
             "map opened with a duplicate canvas");
+
+        int originalWidth = Screen.width;
+        int originalHeight = Screen.height;
+        Screen.SetResolution(390, 844, false);
+        yield return new WaitForSecondsRealtime(0.25f);
+        Require(map.ValidationShowCurrentLocationCard(), "current-location card did not open");
+        yield return null;
+        var directionsCard = FindAnyObjectByType<GugolDirectionsCard>();
+        Require(directionsCard != null && directionsCard.ValidationHasScrollViewport,
+            "current-location card has no bounded scroll viewport");
+        Require(!directionsCard.ValidationStatsVisible,
+            "current-location card still exposes destination rating/review stats");
+        RectTransform panelRect = directionsCard.ValidationPanelRect;
+        RectTransform canvasRect = panelRect != null ? panelRect.GetComponentInParent<Canvas>().transform as RectTransform : null;
+        Require(panelRect != null && canvasRect != null &&
+                panelRect.rect.width <= canvasRect.rect.width && panelRect.rect.height <= canvasRect.rect.height,
+            "current-location card exceeds the active canvas bounds");
+        Screen.SetResolution(originalWidth, originalHeight, false);
+        yield return new WaitForSecondsRealtime(0.2f);
 
         var exact = map.ValidationSearchFirst("Mercato Vecchio");
         Require(exact != null && exact.kind == GugolMapFeatureKind.Street &&

@@ -1,6 +1,6 @@
 # Inferno's Curse Master Project Memory
 
-Last updated: 2026-07-11
+Last updated: 2026-07-12
 
 ## Purpose
 
@@ -372,6 +372,51 @@ The migration preserves object transforms, colliders, overlays, paths, props, tr
 - `[LimboCrierCombatValidator]` passed exact data, status timing, targeting, forced movement, temporary-terrain restore, equipment modifiers, humanoid fallback, 228 images, portrait/icons, source metadata, and import settings.
 - `[LimboCrierEncounterValidator]` passed the discovery-gated prefab, three-enemy formation, Mercato hybrid grid, persistent victory, player interaction path, and stain lifecycle.
 - `[LimboCrierFinalValidator]` ran the complete stack in one Unity batch and exited successfully.
+
+## Mercato Commerce, Seamless Camera, and Map Card Polish
+
+Completed and runtime-verified on 2026-07-12:
+
+- Approved design: `Docs/superpowers/specs/2026-07-12-mercato-stalls-camera-map-card-design.md`.
+- Approved implementation plan: `Docs/superpowers/plans/2026-07-12-mercato-stalls-camera-map-card-plan.md`.
+- Four isolated concept images were approved, then converted through 3D AI Studio Prism 3.1 at the standard textured PBR tier. Recoverable task IDs are:
+  - Bakery stall: `1c881193-e667-4404-8aaa-b61c9f6fb827`.
+  - Produce stall: `92b0a045-02b3-415e-91e7-38edb9fff13c`.
+  - Cloth/dry-goods stall: `32e54b83-5623-4a21-8a46-e35e77824e9c`.
+  - Merchant handcart: `0f78d491-aa5c-4ede-b930-d8243ebed291`.
+- Prism returned roughly 1.4 million triangles per raw model. Raw GLBs remain in ignored `Tools/asset-gen/output`; production copies were welded and simplified with glTF Transform/meshoptimizer to approximately 69,800-73,000 triangles each, 2.7-2.9 MB, without required compression extensions.
+- Optimized GLBs and source/task metadata live under `Assets/Environment/MercatoVecchio/ProductionKit/Models/Commerce`. Credentials and raw service responses are not tracked.
+- `Assets/Editor/MercatoCommercePolishBuilder.cs` creates four reusable production roles plus the handcart: bakery, produce, dry goods, dressed general merchant, and merchant handcart. Each wrapper owns one simple gameplay collider, renderer/culling policy, and source normalization. The general merchant reuses the existing `Florentine_Stall.glb` plus imported medieval baskets, sacks, boxes, and bread.
+- `MercatoVecchioProductionBuilder` now places those four roles across the same sixteen deterministic anchors and adds two authored handcarts. Existing aisles, travel routes, battle-grid geometry, player start, and fountain placement are preserved. The old `Stall_Goods_*` cube merchandise is rejected by validation.
+- The deterministic rebuild checks for a dirty Mercato scene before regenerating referenced prefabs, preventing its own prefab imports from creating a false dirty-scene failure.
+- Rebuilt Arno and fountain surfaces now use `WeatherSurfaceStandardBuilder.ConfigureWater`; rain impacts and shared weather-surface registration survive future Mercato rebuilds.
+
+### Reusable seamless-interior camera profile
+
+- `DynamicZoom` owns temporary `CameraOverrideProfile` entries by Unity owner, with deterministic priority, idempotent replacement, follow offset, composition/pan offset, blend-in/out time, and optional room bounds.
+- The live exterior zoom calculation remains authoritative whenever no override is active. Removing the inn owner blends toward the current exterior result rather than restoring a stale hard-coded offset.
+- `SeamlessInteriorCameraZone` now owns the temporary profile while preserving its existing wall/roof occlusion switching. It never creates a second camera and logs one actionable warning if the shared camera adapter cannot be resolved.
+- The Mercato builder guarantees one active `DynamicZoom` on the existing Cinemachine camera. Exterior offsets retain the uniform locked HD-2D identity: wide `(0,13,-12)`, close `(0,10,-10)`.
+- The Albergo Fiorentino profile uses follow `(1.1,8.6,-11.8)` plus modest composition `(0.35,0.35,0.9)`, with 0.7-second entry and 0.8-second exit blends. Player follow, battle protection, local lighting, and one-Main-Camera ownership remain unchanged.
+
+### Responsive current-location card
+
+- `GugolDirectionsCard` now uses a bounded vertical `ScrollRect` viewport and responsive panel dimensions instead of an unbounded preferred-height root.
+- Width, height, title/blurb sizing, preview height, and margins respond to the active canvas. The close hit area is 44 by 44 for touch.
+- Current-location mode hides the destination rating/review row entirely. Destination and region travel cards retain their time, fare, rating, weather, button, and callback behavior.
+- The Play Mode probe explicitly switches to 390x844, verifies the card remains inside the canvas, confirms the scroll viewport and hidden current-location stats, restores the original resolution, then exercises search, Street View, venue selection, region/world navigation, and duplicate-canvas protection.
+
+### 2026-07-12 validation evidence
+
+- `[MercatoCommerceValidator]` passed four production stalls and one handcart below the 100,000-triangle repeated-prop cap, with one gameplay collider each and no primitive goods.
+- `[MercatoVecchioProductionValidator]` passed sixteen preserved stall anchors, two handcarts, landmarks, seamless inn, travel, world-state anchors, urban vertex surface, and unique runtime authorities.
+- `[FlorentineInnSeamlessModuleValidator]` passed stable IDs, protected threshold, preserved content, local lighting, and no duplicate player/camera/travel authority.
+- `[MercatoSeamlessPlayModeVerifier]` passed five exterior-to-inn-to-exterior crossings. Each crossing blended toward the authored room profile and back to the live exterior profile with one override owner; lighting, battle lock, registry, and runtime authority checks passed.
+- `[GugolMapPlayModeVerifier]` passed the 390x844 current-location card, exact street search, Mercato Street View, three venues plus five known NPC markers, venue card, Tuscany/Italy navigation, and close/reopen without duplicate canvases.
+- `[HybridZoneValidator]` classified ten scenes with zero invalid partial configurations; Mercato remained a valid 90x64 urban hybrid zone.
+- `[UrbanTerrainValidator]` passed five profile/material/mesh sets and five production surfaces with colliders retained.
+- `[WeatherSurfaceStandard]` passed with no unexplained legacy grass or water surfaces after the registered Arno/fountain correction.
+- Manual runtime Game-view review confirmed distinct period stall silhouettes, restrained canvas colors, open aisles, readable player scale, and the preserved locked HD-2D composition. Unity was left out of Play Mode.
 
 ## Gugol Mappe Refined Browsing and Street View
 

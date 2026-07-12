@@ -1299,6 +1299,14 @@ public class GugolMapUI : MonoBehaviour
     public bool ValidationContextCardOpen => _contextCard != null && _contextCard.IsOpen;
     public bool ValidationHasWordmark => _root != null && _root.transform.Find("Wordmark") != null;
 
+    public bool ValidationShowCurrentLocationCard()
+    {
+        HubNode node = _hub?.GetNode(DistrictTracker.CurrentNodeId);
+        if (node == null || _card == null) return false;
+        _card.ShowCurrent(node, CollectNearbySpots(), JumpToSpot);
+        return _card.IsOpen;
+    }
+
     public bool ValidationOpenStreet(string streetId)
     {
         if (_knowledge == null || !_knowledge.TryGet(GugolMapFeatureKind.Street, streetId, out var record))

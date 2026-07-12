@@ -107,7 +107,7 @@ public static class FlorentineInnSeamlessModuleBuilder
             .Where(renderer => renderer.name.StartsWith("InnWall_") ||
                                renderer.name.StartsWith("CourtyardLintel_"))
             .ToArray();
-        cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_" });
+        cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_" }, InnCameraProfile());
 
         var module = moduleObject.AddComponent<SeamlessInteriorModule>();
         module.Configure(
@@ -126,6 +126,19 @@ public static class FlorentineInnSeamlessModuleBuilder
         foreach (Renderer renderer in occluders)
             if (renderer.shadowCastingMode == ShadowCastingMode.Off)
                 renderer.shadowCastingMode = ShadowCastingMode.On;
+    }
+
+    public static DynamicZoom.CameraOverrideProfile InnCameraProfile()
+    {
+        return new DynamicZoom.CameraOverrideProfile
+        {
+            followOffset = new Vector3(1.1f, 8.6f, -11.8f),
+            panOffset = new Vector3(0.35f, 0.35f, 0.9f),
+            blendInDuration = 0.7f,
+            blendOutDuration = 0.8f,
+            priority = 20,
+            clampToRoomBounds = false,
+        };
     }
 
     static Transform Anchor(Transform parent, string name, Vector3 position)

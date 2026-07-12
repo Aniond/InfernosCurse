@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Unity.Cinemachine;
 
@@ -11,6 +13,41 @@ using Unity.Cinemachine;
 [RequireComponent(typeof(CinemachineCamera))]
 public class DynamicZoom : MonoBehaviour
 {
+    [Serializable]
+    public sealed class CameraOverrideProfile
+    {
+        [Tooltip("Camera follow offset while this profile owns the rig.")]
+        public Vector3 followOffset = new Vector3(0f, 8.5f, -11.5f);
+        [Tooltip("Small world-space composition shift added to the follow offset.")]
+        public Vector3 panOffset = Vector3.zero;
+        [Min(0f)] public float blendInDuration = 0.65f;
+        [Min(0f)] public float blendOutDuration = 0.75f;
+        public int priority = 10;
+        [Tooltip("Optional world-space bounds used to keep the composed target inside a room.")]
+        public bool clampToRoomBounds;
+        public Bounds roomBounds = new Bounds(Vector3.zero, new Vector3(10f, 6f, 14f));
+
+        public CameraOverrideProfile Copy()
+        {
+            return new CameraOverrideProfile
+            {
+                followOffset = followOffset,
+                panOffset = panOffset,
+                blendInDuration = blendInDuration,
+                blendOutDuration = blendOutDuration,
+                priority = priority,
+                clampToRoomBounds = clampToRoomBounds,
+                roomBounds = roomBounds,
+            };
+        }
+    }
+
+    sealed class OverrideEntry
+    {
+        public CameraOverrideProfile profile;
+        public long order;
+    }
+
     [Header("Target")]
     [Tooltip("Player to track. Auto-finds by tag if empty.")]
     public Transform target;
@@ -67,6 +104,15 @@ public class DynamicZoom : MonoBehaviour
     private Camera _mainCam;      // cached — avoids Camera.main every LateUpdate
     private float _t;             // 0 = wide, 1 = close
     private float _lastClearance; // for gizmos
+    private readonly Dictionary<UnityEngine.Object, OverrideEntry> _overrides = new();
+    private Vector3 _appliedOffset;
+    private bool _offsetInitialized;
+    private long _overrideOrder;
+    private float _lastBlendOutDuration = 0.75f;
+
+    public int ActiveOverrideCount => _overrides.Count;
+    public bool HasActiveOverride => ResolveOverride() != null;
+    public Vector3 AppliedOffset => _follow != null ? _follow.FollowOffset : _appliedOffset;
 
     // 8 compass directions, built once.
     private static readonly Vector3[] RayDirs =
@@ -89,6 +135,11 @@ public class DynamicZoom : MonoBehaviour
             _follow = gameObject.AddComponent<CinemachineFollow>();
         }
         _mainCam = Camera.main;
+        if (_follow != null)
+        {
+            _appliedOffset = _follow.FollowOffset;
+            _offsetInitialized = true;
+        }
     }
 
     void OnEnable()
@@ -128,7 +179,82 @@ public class DynamicZoom : MonoBehaviour
             }
         }
 
-        _follow.FollowOffset = currentOffset;
+        CameraOverrideProfile activeOverride = ResolveOverride();
+        Vector3 desiredOffset = activeOverride != null
+            ? ResolveOverrideOffset(activeOverride)
+            : currentOffset;
+        float blendDuration = activeOverride != null
+            ? activeOverride.blendInDuration
+            : _lastBlendOutDuration;
+
+        if (!_offsetInitialized)
+        {
+            _appliedOffset = _follow.FollowOffset;
+            _offsetInitialized = true;
+        }
+
+        float blend = blendDuration <= 0f
+            ? 1f
+            : 1f - Mathf.Exp(-4.60517f * Time.deltaTime / blendDuration);
+        _appliedOffset = Vector3.Lerp(_appliedOffset, desiredOffset, blend);
+        _follow.FollowOffset = _appliedOffset;
+    }
+
+    public void PushOverride(UnityEngine.Object owner, CameraOverrideProfile profile)
+    {
+        if (owner == null || profile == null) return;
+        if (_overrides.TryGetValue(owner, out OverrideEntry existing))
+        {
+            existing.profile = profile.Copy();
+            return;
+        }
+
+        _overrides.Add(owner, new OverrideEntry
+        {
+            profile = profile.Copy(),
+            order = ++_overrideOrder,
+        });
+    }
+
+    public void RemoveOverride(UnityEngine.Object owner)
+    {
+        if (owner == null || !_overrides.TryGetValue(owner, out OverrideEntry removed)) return;
+        _lastBlendOutDuration = removed.profile.blendOutDuration;
+        _overrides.Remove(owner);
+    }
+
+    CameraOverrideProfile ResolveOverride()
+    {
+        CameraOverrideProfile best = null;
+        long bestOrder = long.MinValue;
+        foreach (OverrideEntry entry in _overrides.Values)
+        {
+            if (entry?.profile == null) continue;
+            if (best == null || entry.profile.priority > best.priority ||
+                (entry.profile.priority == best.priority && entry.order > bestOrder))
+            {
+                best = entry.profile;
+                bestOrder = entry.order;
+            }
+        }
+        return best;
+    }
+
+    Vector3 ResolveOverrideOffset(CameraOverrideProfile profile)
+    {
+        Vector3 pan = profile.panOffset;
+        if (profile.clampToRoomBounds && target != null)
+        {
+            Vector3 composedTarget = target.position + pan;
+            Vector3 min = profile.roomBounds.min;
+            Vector3 max = profile.roomBounds.max;
+            Vector3 clamped = new Vector3(
+                Mathf.Clamp(composedTarget.x, min.x, max.x),
+                Mathf.Clamp(composedTarget.y, min.y, max.y),
+                Mathf.Clamp(composedTarget.z, min.z, max.z));
+            pan = clamped - target.position;
+        }
+        return profile.followOffset + pan;
     }
 
     // ── Zoom drivers ──────────────────────────────────────────────────────────

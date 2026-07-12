@@ -38,11 +38,12 @@ public static class MercatoVecchioProductionKitBuilder
         Save("Mercato_InnFacade", BuildInnFacade(stone, plaster, timber, terracotta, darkIron));
         Save("Mercato_RiverWall", BuildRiverWall(stone));
         Save("Mercato_FountainPlaza", BuildFountain(stone, darkIron));
+        MercatoCommercePolishBuilder.Build();
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Validate();
-        Debug.Log("[MercatoProductionKit] Rebuilt 7 reusable production prefabs.");
+        Debug.Log("[MercatoProductionKit] Rebuilt the structural kit plus five authored commerce prefabs.");
     }
 
     static GameObject BuildLoggia(Material stone, Material plaster, Material timber, Material terracotta)
@@ -123,7 +124,10 @@ public static class MercatoVecchioProductionKitBuilder
 
         Material water = AssetDatabase.LoadAssetAtPath<Material>(WaterPath);
         if (water != null)
-            Cylinder(root.transform, "Fountain_WaterSurface", new Vector3(0f, 0.92f, 0f), 2.15f, 0.04f, water, 32, false);
+        {
+            GameObject surface = Cylinder(root.transform, "Fountain_WaterSurface", new Vector3(0f, 0.92f, 0f), 2.15f, 0.04f, water, 32, false);
+            WeatherSurfaceStandardBuilder.ConfigureWater(surface, StandardWaterProfile.Fountain, WeatherSurfaceExposure.Outdoor);
+        }
         return root;
     }
 
@@ -216,6 +220,7 @@ public static class MercatoVecchioProductionKitBuilder
         }
         foreach (string error in errors) Debug.LogError("[MercatoProductionKitValidator] " + error);
         if (errors.Count > 0) throw new InvalidOperationException($"Mercato production kit validation failed with {errors.Count} error(s).");
+        MercatoCommercePolishBuilder.Validate();
         Debug.Log("[MercatoProductionKitValidator] Validation passed for 7 reusable production prefabs.");
     }
 }

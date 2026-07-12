@@ -1,0 +1,42 @@
+{
+  "generatedAtUtc": "2026-07-12T15:58:24Z",
+  "generator": "3D AI Studio Prism 3.1",
+  "textureProfile": "standard textured PBR",
+  "productionOptimization": {
+    "tool": "glTF Transform 4.x meshoptimizer simplifier",
+    "welded": true,
+    "targetVertexRatio": 0.05,
+    "maximumError": 0.02,
+    "extensionsRequired": []
+  },
+  "assets": [
+    {
+      "id": "mercato-stall-bakery",
+      "taskId": "1c881193-e667-4404-8aaa-b61c9f6fb827",
+      "triangles": 71232,
+      "vertices": 55671,
+      "role": "bakery"
+    },
+    {
+      "id": "mercato-stall-produce",
+      "taskId": "92b0a045-02b3-415e-91e7-38edb9fff13c",
+      "triangles": 70763,
+      "vertices": 51510,
+      "role": "produce"
+    },
+    {
+      "id": "mercato-stall-cloth-dry-goods",
+      "taskId": "32e54b83-5623-4a21-8a46-e35e77824e9c",
+      "triangles": 69818,
+      "vertices": 54599,
+      "role": "cloth_dry_goods"
+    },
+    {
+      "id": "mercato-handcart",
+      "taskId": "0f78d491-aa5c-4ede-b930-d8243ebed291",
+      "triangles": 73012,
+      "vertices": 52598,
+      "role": "street_furniture"
+    }
+  ]
+}

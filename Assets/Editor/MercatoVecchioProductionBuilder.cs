@@ -6,6 +6,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using Unity.Cinemachine;
 
 public static class MercatoVecchioProductionBuilder
 {
@@ -30,12 +31,12 @@ public static class MercatoVecchioProductionBuilder
     [MenuItem("InfernosCurse/Mercato Vecchio/2. Rebuild Production Scene")]
     public static void Build()
     {
-        MercatoVecchioProductionKitBuilder.Build();
-        FlorentineInnSeamlessModuleBuilder.Build();
-
         Scene active = SceneManager.GetActiveScene();
         if (active.path == ScenePath && active.isDirty)
             throw new InvalidOperationException("Save or revert the currently dirty Mercato scene before a deterministic rebuild.");
+
+        MercatoVecchioProductionKitBuilder.Build();
+        FlorentineInnSeamlessModuleBuilder.Build();
 
         Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
         RemoveLegacyEnvironment(scene);
@@ -88,7 +89,7 @@ public static class MercatoVecchioProductionBuilder
 
         var environment = new GameObject("[MercatoEnvironment]").transform;
         GameObject river = Box(environment, "Arno_River", new Vector3(-5f, -0.42f, -37f), new Vector3(94f, 0.18f, 12f), water, false);
-        river.AddComponent<ScrollingWater>();
+        WeatherSurfaceStandardBuilder.ConfigureWater(river, StandardWaterProfile.River, WeatherSurfaceExposure.Outdoor);
 
         GameObject riverWall = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_RiverWall.prefab");
         for (int i = 0; i < 7; i++)
@@ -134,10 +135,11 @@ public static class MercatoVecchioProductionBuilder
     static void BuildCommerce()
     {
         var commerce = new GameObject("[MercatoCommerce]").transform;
-        GameObject red = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_Red.prefab");
-        GameObject ochre = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_Ochre.prefab");
-        GameObject green = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_Green.prefab");
-        GameObject[] variants = { red, ochre, green };
+        GameObject bakery = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_Bakery.prefab");
+        GameObject produce = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_Produce.prefab");
+        GameObject dryGoods = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_DryGoods.prefab");
+        GameObject general = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_Stall_General.prefab");
+        GameObject[] variants = { bakery, produce, dryGoods, general };
 
         int index = 0;
         foreach (float z in new[] { -12f, -6f, 8f, 14f })
@@ -147,6 +149,10 @@ public static class MercatoVecchioProductionBuilder
             Instance(variants[index % variants.Length], commerce, $"MarketStall_{index + 1:00}", new Vector3(x, 0f, z), rotation);
             index++;
         }
+
+        GameObject handcart = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_MerchantHandcart.prefab");
+        Instance(handcart, commerce, "MerchantHandcart_West", new Vector3(-23f, 0f, 12f), 18f);
+        Instance(handcart, commerce, "MerchantHandcart_River", new Vector3(24f, 0f, -19f), -28f, 0.92f);
 
         GameObject barrel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Environment/MarketSquare/Props/Barrel.glb");
         if (barrel != null)
@@ -186,7 +192,8 @@ public static class MercatoVecchioProductionBuilder
                                    renderer.name.StartsWith("CourtyardLintel_") ||
                                    renderer.name.StartsWith("InnRoof_"))
                 .ToArray();
-            cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_" });
+            cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_" },
+                FlorentineInnSeamlessModuleBuilder.InnCameraProfile());
         }
 
         GameObject facade = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_InnFacade.prefab");
@@ -226,13 +233,23 @@ public static class MercatoVecchioProductionBuilder
         player.transform.position = new Vector3(0f, player.transform.position.y, -22f);
 
         DynamicZoom zoom = SceneComponents<DynamicZoom>(scene).FirstOrDefault();
+        if (zoom == null)
+        {
+            CinemachineCamera virtualCamera = SceneComponents<CinemachineCamera>(scene).FirstOrDefault();
+            if (virtualCamera == null) throw new InvalidOperationException("Mercato has no CinemachineCamera for the shared exploration rig.");
+            zoom = virtualCamera.gameObject.AddComponent<DynamicZoom>();
+        }
         if (zoom != null)
         {
+            zoom.target = player.transform;
             zoom.useClearanceZoom = true;
             zoom.closeClearance = 3f;
             zoom.wideClearance = 12f;
             zoom.minArchitectureHeight = 2.5f;
             zoom.rayHeight = 1.2f;
+            zoom.wideOffset = new Vector3(0f, 13f, -12f);
+            zoom.closeOffset = new Vector3(0f, 10f, -10f);
+            zoom.zoomLerpSpeed = 3f;
         }
         CameraOcclusionFader fader = SceneComponents<CameraOcclusionFader>(scene).FirstOrDefault();
         if (fader != null)
@@ -354,6 +371,12 @@ public static class MercatoVecchioProductionValidator
             if (SceneComponents<ZoneExit>(scene).Count() != 2) errors.Add("scene must contain exactly two active cross-zone exits");
             if (SceneComponents<ZoneEntryPoint>(scene).Count() < 4) errors.Add("scene requires four stable entry/route anchors");
             if (SceneComponents<WorldAgentSite>(scene).Count() != 4) errors.Add("scene requires four Crier world-agent sites");
+            if (transforms.Count(transform => transform.name.StartsWith("MarketStall_", StringComparison.Ordinal)) != 16)
+                errors.Add("scene must preserve exactly sixteen market-stall anchors");
+            if (transforms.Count(transform => transform.name.StartsWith("MerchantHandcart_", StringComparison.Ordinal)) != 2)
+                errors.Add("scene must contain exactly two authored merchant handcarts");
+            if (transforms.Any(transform => transform.name.StartsWith("Stall_Goods_", StringComparison.Ordinal)))
+                errors.Add("legacy primitive stall goods remain in the production scene");
 
             SeamlessInteriorModule module = SceneComponents<SeamlessInteriorModule>(scene).FirstOrDefault();
             if (module != null && !module.TryValidateRuntime(out string moduleError)) errors.Add(moduleError);
