@@ -9,23 +9,30 @@ using DistantLands.Cozy;
 public static class GameClock
 {
     static CozyWeather Cozy => CozyWeather.instance;
+    static WorldEnvironmentDirector Director => WorldEnvironmentDirector.Instance;
 
     /// <summary>True when a clock backend exists (some scenes may run without one).</summary>
-    public static bool HasClock => Cozy != null && Cozy.timeModule != null;
+    public static bool HasClock => Director != null || (Cozy != null && Cozy.timeModule != null);
 
     /// <summary>Current in-game hour, 0-24. Falls back to noon with no backend.</summary>
-    public static float Hour => HasClock ? (float)Cozy.timeModule.currentTime * 24f : 12f;
+    public static float Hour => Director != null
+        ? Director.Hour
+        : Cozy != null && Cozy.timeModule != null
+            ? (float)Cozy.timeModule.currentTime * 24f
+            : 12f;
 
     /// <summary>Set the in-game hour (save-game restore).</summary>
     public static void SetHour(float hour)
     {
-        if (HasClock)
+        if (Director != null) Director.SetHour(hour);
+        else if (Cozy != null && Cozy.timeModule != null)
             Cozy.timeModule.currentTime = Mathf.Repeat(hour, 24f) / 24f;
     }
 
     /// <summary>Backend state dump for debugging clock issues.</summary>
     public static string Describe()
     {
+        if (Director != null) return Director.Describe();
         if (!HasClock) return "no clock backend";
         var t = Cozy.timeModule;
         var p = t.perennialProfile;
