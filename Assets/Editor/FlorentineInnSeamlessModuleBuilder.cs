@@ -103,11 +103,13 @@ public static class FlorentineInnSeamlessModuleBuilder
         var cameraObject = new GameObject("CameraZone_AlbergoFiorentino");
         cameraObject.transform.SetParent(contractRoot.transform, false);
         var cameraZone = cameraObject.AddComponent<SeamlessInteriorCameraZone>();
-        Renderer[] occluders = moduleObject.GetComponentsInChildren<Renderer>(true)
-            .Where(renderer => renderer.name.StartsWith("InnWall_") ||
-                               renderer.name.StartsWith("CourtyardLintel_"))
+        Renderer[] occluders = moduleObject.GetComponentsInChildren<Transform>(true)
+            .Where(transform => transform.name.StartsWith("InnWall_", StringComparison.Ordinal) ||
+                                transform.name.StartsWith("CourtyardLintel_", StringComparison.Ordinal))
+            .SelectMany(transform => transform.GetComponentsInChildren<Renderer>(true))
+            .Distinct()
             .ToArray();
-        cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_" }, InnCameraProfile());
+        cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_", "InnFacade_" }, InnCameraProfile());
 
         var module = moduleObject.AddComponent<SeamlessInteriorModule>();
         module.Configure(
@@ -132,8 +134,8 @@ public static class FlorentineInnSeamlessModuleBuilder
     {
         return new DynamicZoom.CameraOverrideProfile
         {
-            followOffset = new Vector3(1.1f, 8.6f, -11.8f),
-            panOffset = new Vector3(0.35f, 0.35f, 0.9f),
+            followOffset = new Vector3(0f, 8.2f, -9.2f),
+            panOffset = Vector3.zero,
             blendInDuration = 0.7f,
             blendOutDuration = 0.8f,
             priority = 20,

@@ -179,25 +179,51 @@ public static class MercatoVecchioProductionBuilder
         var interiors = new GameObject("[MercatoInteriors]").transform;
         GameObject modulePrefab = Require<GameObject>(ModulePath);
         GameObject moduleObject = Instance(modulePrefab, interiors, "AlbergoFiorentino_Interior", new Vector3(-39f, 0f, 0f), -90f);
+        Transform innFloors = moduleObject.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(transform => transform.name == "Floors");
+        if (innFloors == null) throw new InvalidOperationException("Florentine inn module has no Floors root.");
+        innFloors.localPosition += Vector3.up * 0.025f;
 
         Material terracotta = Require<Material>("Assets/Environment/FlorentineInnFloor1/StructuralKit/Materials/Inn_ServiceTerracotta.mat");
-        GameObject roofA = Box(moduleObject.transform, "InnRoof_NorthSlope", new Vector3(-5.4f, 4.7f, 0f), new Vector3(12f, 0.45f, 23f), terracotta, false, new Vector3(0f, 0f, -18f));
-        GameObject roofB = Box(moduleObject.transform, "InnRoof_SouthSlope", new Vector3(5.4f, 4.7f, 0f), new Vector3(12f, 0.45f, 23f), terracotta, false, new Vector3(0f, 0f, 18f));
+        GameObject roofA = Box(moduleObject.transform, "InnRoof_NorthSlope", new Vector3(-5.4f, 4.7f, 0f), new Vector3(12f, 0.45f, 23f), terracotta, true, new Vector3(0f, 0f, -18f));
+        GameObject roofB = Box(moduleObject.transform, "InnRoof_SouthSlope", new Vector3(5.4f, 4.7f, 0f), new Vector3(12f, 0.45f, 23f), terracotta, true, new Vector3(0f, 0f, 18f));
+
+        GameObject facadePrefab = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_InnFacade.prefab");
+        GameObject facade = Instance(facadePrefab, interiors, "AlbergoFiorentino_Facade", new Vector3(-27.65f, 0f, 0f), -90f);
 
         var cameraZone = moduleObject.GetComponentInChildren<SeamlessInteriorCameraZone>(true);
         if (cameraZone != null)
         {
-            Renderer[] occluders = moduleObject.GetComponentsInChildren<Renderer>(true)
-                .Where(renderer => renderer.name.StartsWith("InnWall_") ||
-                                   renderer.name.StartsWith("CourtyardLintel_") ||
-                                   renderer.name.StartsWith("InnRoof_"))
+            Transform[] moduleTransforms = moduleObject.GetComponentsInChildren<Transform>(true);
+            Renderer[] wallAndLintelOccluders = moduleTransforms
+                .Where(transform => transform.name.StartsWith("InnWall_", StringComparison.Ordinal) ||
+                                    transform.name.StartsWith("CourtyardLintel_", StringComparison.Ordinal))
+                .SelectMany(transform => transform.GetComponentsInChildren<Renderer>(true))
+                .Distinct()
                 .ToArray();
-            cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_" },
-                FlorentineInnSeamlessModuleBuilder.InnCameraProfile());
+            Renderer[] roofOccluders = moduleObject.GetComponentsInChildren<Renderer>(true)
+                .Where(renderer => renderer.name.StartsWith("InnRoof_", StringComparison.Ordinal))
+                .ToArray();
+            Renderer[] facadeOccluders = facade.GetComponentsInChildren<Renderer>(true);
+            Renderer[] cameraFacingWalls = moduleTransforms
+                .Where(transform => transform.name.StartsWith("InnWall_", StringComparison.Ordinal) &&
+                                    moduleObject.transform.InverseTransformPoint(transform.position).x < -0.5f)
+                .SelectMany(transform => transform.GetComponentsInChildren<Renderer>(true))
+                .Distinct()
+                .ToArray();
+            Renderer[] occluders = wallAndLintelOccluders
+                .Concat(roofOccluders)
+                .Concat(facadeOccluders)
+                .Distinct()
+                .ToArray();
+            Renderer[] forcedCutaway = roofOccluders
+                .Concat(facadeOccluders)
+                .Concat(cameraFacingWalls)
+                .Distinct()
+                .ToArray();
+            cameraZone.Configure(occluders, new[] { "InnWall_", "CourtyardLintel_", "InnRoof_", "InnFacade_" },
+                FlorentineInnSeamlessModuleBuilder.InnCameraProfile(), forcedCutaway);
         }
-
-        GameObject facade = Require<GameObject>(MercatoVecchioProductionKitBuilder.PrefabRoot + "/Mercato_InnFacade.prefab");
-        Instance(facade, interiors, "AlbergoFiorentino_Facade", new Vector3(-27.65f, 0f, 0f), -90f);
     }
 
     static void BuildWorldStateAnchors()
@@ -251,12 +277,13 @@ public static class MercatoVecchioProductionBuilder
             zoom.closeOffset = new Vector3(0f, 10f, -10f);
             zoom.zoomLerpSpeed = 3f;
         }
-        CameraOcclusionFader fader = SceneComponents<CameraOcclusionFader>(scene).FirstOrDefault();
-        if (fader != null)
-        {
-            fader.hideMode = CameraOcclusionFader.OccluderHideMode.ShadowsOnly;
-            fader.probeRadius = 0.55f;
-        }
+        Camera mainCamera = SceneComponents<Camera>(scene).FirstOrDefault(camera => camera.CompareTag("MainCamera"));
+        if (mainCamera == null) throw new InvalidOperationException("Mercato has no tagged Main Camera for occlusion fading.");
+        CameraOcclusionFader fader = mainCamera.GetComponent<CameraOcclusionFader>();
+        if (fader == null) fader = mainCamera.gameObject.AddComponent<CameraOcclusionFader>();
+        fader.target = player.transform;
+        fader.hideMode = CameraOcclusionFader.OccluderHideMode.ShadowsOnly;
+        fader.probeRadius = 0.55f;
     }
 
     static void Entry(Transform parent, string name, string id, string label, Vector3 position, Vector2 facing, bool fastTravel)
@@ -365,7 +392,10 @@ public static class MercatoVecchioProductionValidator
                 if (!transforms.Any(transform => transform.name == name)) errors.Add("missing " + name);
 
             if (SceneComponents<PlayerController>(scene).Count() != 1) errors.Add("scene must contain exactly one PlayerController");
-            if (SceneComponents<Camera>(scene).Count(camera => camera.CompareTag("MainCamera")) != 1) errors.Add("scene must contain exactly one Main Camera");
+            Camera[] mainCameras = SceneComponents<Camera>(scene).Where(camera => camera.CompareTag("MainCamera")).ToArray();
+            if (mainCameras.Length != 1) errors.Add("scene must contain exactly one Main Camera");
+            else if (mainCameras[0].GetComponent<CameraOcclusionFader>() == null)
+                errors.Add("Main Camera is missing the shared camera occlusion fader");
             if (SceneComponents<EventSystem>(scene).Count() != 1) errors.Add("scene must contain exactly one EventSystem");
             if (SceneComponents<SeamlessInteriorModule>(scene).Count() != 1) errors.Add("scene must contain exactly one seamless interior module");
             if (SceneComponents<ZoneExit>(scene).Count() != 2) errors.Add("scene must contain exactly two active cross-zone exits");
@@ -381,10 +411,79 @@ public static class MercatoVecchioProductionValidator
             SeamlessInteriorModule module = SceneComponents<SeamlessInteriorModule>(scene).FirstOrDefault();
             if (module != null && !module.TryValidateRuntime(out string moduleError)) errors.Add(moduleError);
 
+            SeamlessInteriorCameraZone cameraZone = SceneComponents<SeamlessInteriorCameraZone>(scene).FirstOrDefault();
+            Transform facade = transforms.FirstOrDefault(transform => transform.name == "AlbergoFiorentino_Facade");
+            Renderer[] facadeRenderers = facade != null
+                ? facade.GetComponentsInChildren<Renderer>(true)
+                : Array.Empty<Renderer>();
+            Renderer[] colliderlessInnRoofs = transforms
+                .Where(transform => transform.name.StartsWith("InnRoof_", StringComparison.Ordinal))
+                .Select(transform => transform.GetComponent<Renderer>())
+                .Where(renderer => renderer != null && renderer.GetComponent<Collider>() == null)
+                .ToArray();
+            if (colliderlessInnRoofs.Length > 0)
+                errors.Add($"inn roof occluders require colliders for camera sightline detection: {string.Join(", ", colliderlessInnRoofs.Select(renderer => renderer.name))}");
+            if (cameraZone == null)
+            {
+                errors.Add("seamless inn camera zone is missing");
+            }
+            else if (facadeRenderers.Length == 0)
+            {
+                errors.Add("Albergo Fiorentino facade has no renderers to protect player visibility");
+            }
+            else
+            {
+                var serializedCameraZone = new SerializedObject(cameraZone);
+                SerializedProperty occluders = serializedCameraZone.FindProperty("interiorOccluders");
+                var configuredOccluders = new HashSet<Renderer>();
+                if (occluders != null)
+                {
+                    for (int i = 0; i < occluders.arraySize; i++)
+                    {
+                        if (occluders.GetArrayElementAtIndex(i).objectReferenceValue is Renderer renderer)
+                            configuredOccluders.Add(renderer);
+                    }
+                }
+
+                Renderer[] missingFacadeOccluders = facadeRenderers
+                    .Where(renderer => !configuredOccluders.Contains(renderer))
+                    .ToArray();
+                SerializedProperty prefixes = serializedCameraZone.FindProperty("interiorWallPrefixes");
+                bool hasFacadePrefix = false;
+                if (prefixes != null)
+                {
+                    for (int i = 0; i < prefixes.arraySize; i++)
+                    {
+                        if (prefixes.GetArrayElementAtIndex(i).stringValue == "InnFacade_")
+                        {
+                            hasFacadePrefix = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (missingFacadeOccluders.Length > 0 && !hasFacadePrefix)
+                    errors.Add($"seamless inn camera zone is missing facade coverage for {missingFacadeOccluders.Length} renderer(s)");
+            }
+
             Transform floor = transforms.FirstOrDefault(transform => transform.name == "Floor_Cobblestone");
             MeshFilter filter = floor != null ? floor.GetComponent<MeshFilter>() : null;
             if (filter == null || filter.sharedMesh == null || filter.sharedMesh.colors.Length != filter.sharedMesh.vertexCount)
                 errors.Add("production urban floor has no vertex-color mesh");
+
+            Renderer cityFloorRenderer = floor != null ? floor.GetComponent<Renderer>() : null;
+            Renderer[] coplanarInnFloors = module != null && cityFloorRenderer != null
+                ? module.GetComponentsInChildren<Transform>(true)
+                    .Where(transform => transform.name.StartsWith("Floor_", StringComparison.Ordinal) &&
+                                        transform.name != "Floor_Base" &&
+                                        transform.name != "Floor_StreetApron")
+                    .Select(transform => transform.GetComponent<Renderer>())
+                    .Where(renderer => renderer != null &&
+                                       renderer.bounds.max.y - cityFloorRenderer.bounds.max.y < 0.01f)
+                    .ToArray()
+                : Array.Empty<Renderer>();
+            if (coplanarInnFloors.Length > 0)
+                errors.Add($"inn finish floors overlap the city floor and will z-fight: {string.Join(", ", coplanarInnFloors.Select(renderer => renderer.name))}");
 
             foreach (string legacy in new[] { "SouthExit", "WestWall", "NorthWall", "[Props_Clutter]", "TopFade" })
                 if (transforms.Any(transform => transform.name == legacy)) errors.Add("legacy test-zone object remains: " + legacy);

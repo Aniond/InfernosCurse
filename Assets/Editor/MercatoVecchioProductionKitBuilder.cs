@@ -14,6 +14,7 @@ public static class MercatoVecchioProductionKitBuilder
     const string TimberPath = "Assets/Environment/FlorentineInnFloor1/StructuralKit/Materials/Inn_StructuralTimber.mat";
     const string TerracottaPath = "Assets/Environment/FlorentineInnFloor1/StructuralKit/Materials/Inn_ServiceTerracotta.mat";
     const string FountainModelPath = "Assets/Environment/MarketSquare/Props/Fountain.glb";
+    const string InnSignModelPath = Root + "/Models/AlbergoFiorentinoSign.glb";
     const string WaterPath = "Assets/Art/Environment/WeatherSurfaces/Water/Water_Fountain.mat";
     const string DripTexturePath = "Packages/com.distantlands.cozy.core/Content/Art/Textures/Particle/Drop.png";
     const string SplashTexturePath = "Packages/com.distantlands.cozy.core/Content/Art/Textures/Particle/Dot.png";
@@ -21,6 +22,13 @@ public static class MercatoVecchioProductionKitBuilder
     const float FountainPlazaTop = 0.24f;
     const float FountainWaterDiameter = 3.55f;
     const float FountainWaterSurfaceY = 1.06f;
+    static readonly string[] RequiredInnSignParts =
+    {
+        "InnFacade_SignMedallion", "InnFacade_SignRim",
+        "InnFacade_SignBracket", "InnFacade_SignHanger_Left", "InnFacade_SignHanger_Right",
+        "InnFacade_SignLily_North", "InnFacade_SignLily_South",
+        "InnFacade_SignText_North", "InnFacade_SignText_South",
+    };
 
     [MenuItem("InfernosCurse/Mercato Vecchio/1. Rebuild Production Kit")]
     public static void Build()
@@ -99,8 +107,8 @@ public static class MercatoVecchioProductionKitBuilder
         for (int i = 0; i < 4; i++)
             Box(root.transform, $"InnFacade_Shutter_{i + 1:00}", new Vector3(-5.8f + i * 3.9f, 4.9f, -0.42f), new Vector3(1.6f, 1.9f, 0.16f), timber, Vector3.zero, false);
         Box(root.transform, "InnFacade_Roof", new Vector3(0f, 7.3f, 0.7f), new Vector3(17f, 0.5f, 5f), terracotta, new Vector3(12f, 0f, 0f));
-        Box(root.transform, "InnFacade_SignBracket", new Vector3(2.1f, 5.0f, -0.85f), new Vector3(0.16f, 0.16f, 1.4f), iron, Vector3.zero, false);
-        Box(root.transform, "InnFacade_Sign", new Vector3(2.1f, 4.45f, -1.5f), new Vector3(1.8f, 1.2f, 0.16f), timber, Vector3.zero, false);
+        GameObject sign = InstanceModel(root.transform, "InnFacade_SignAssembly", InnSignModelPath, new Vector3(2.1f, 4.35f, -1.55f));
+        sign.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
         return root;
     }
 
@@ -283,6 +291,16 @@ public static class MercatoVecchioProductionKitBuilder
         finally { UnityEngine.Object.DestroyImmediate(root); }
     }
 
+    static GameObject InstanceModel(Transform parent, string name, string path, Vector3 position)
+    {
+        GameObject source = Require<GameObject>(path);
+        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(source);
+        instance.name = name;
+        instance.transform.SetParent(parent, false);
+        instance.transform.localPosition = position;
+        return instance;
+    }
+
     static GameObject Box(Transform parent, string name, Vector3 position, Vector3 scale, Material material,
         Vector3 rotation = default, bool collider = true)
     {
@@ -393,10 +411,34 @@ public static class MercatoVecchioProductionKitBuilder
                 errors.Add(name + " has no colliders");
         }
         ValidateFountain(errors);
+        ValidateInnSign(errors);
         foreach (string error in errors) Debug.LogError("[MercatoProductionKitValidator] " + error);
         if (errors.Count > 0) throw new InvalidOperationException($"Mercato production kit validation failed with {errors.Count} error(s).");
         MercatoCommercePolishBuilder.Validate();
         Debug.Log("[MercatoProductionKitValidator] Validation passed for 7 reusable production prefabs.");
+    }
+
+    static void ValidateInnSign(List<string> errors)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents($"{PrefabRoot}/Mercato_InnFacade.prefab");
+        try
+        {
+            Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+            foreach (string name in RequiredInnSignParts)
+            {
+                Transform part = Array.Find(transforms, transform => transform.name == name);
+                if (part == null) errors.Add("inn medallion sign is missing " + name);
+                else if (part.GetComponentsInChildren<Renderer>(true).Length == 0)
+                    errors.Add(name + " has no renderer");
+            }
+            Transform medallion = Array.Find(transforms, transform => transform.name == "InnFacade_SignMedallion");
+            Transform bracket = Array.Find(transforms, transform => transform.name == "InnFacade_SignBracket");
+            if (medallion != null && bracket != null && bracket.position.z <= medallion.position.z)
+                errors.Add("inn sign bracket extends away from the facade instead of mounting back toward it");
+            if (Array.Exists(transforms, transform => transform.name == "InnFacade_Sign"))
+                errors.Add("legacy rectangular inn sign remains");
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
     static void ValidateFountain(List<string> errors)

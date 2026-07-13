@@ -11,10 +11,12 @@ public sealed class SeamlessInteriorCameraZone : MonoBehaviour
 {
     [SerializeField] CameraOcclusionFader occlusionFader;
     [SerializeField] Renderer[] interiorOccluders = Array.Empty<Renderer>();
+    [SerializeField] Renderer[] interiorForcedOccluders = Array.Empty<Renderer>();
     [SerializeField] string[] interiorWallPrefixes = Array.Empty<string>();
     [SerializeField] DynamicZoom.CameraOverrideProfile interiorProfile = new();
 
     Renderer[] _defaultOccluders;
+    Renderer[] _defaultForcedOccluders;
     string[] _defaultPrefixes;
     DynamicZoom _dynamicZoom;
     bool _captured;
@@ -27,6 +29,7 @@ public sealed class SeamlessInteriorCameraZone : MonoBehaviour
         {
             CaptureDefaults();
             occlusionFader.explicitOccluders = inside ? interiorOccluders : _defaultOccluders;
+            occlusionFader.forcedOccluders = inside ? interiorForcedOccluders : _defaultForcedOccluders;
             occlusionFader.wallPrefixes = inside ? interiorWallPrefixes : _defaultPrefixes;
         }
         if (_dynamicZoom != null)
@@ -56,15 +59,17 @@ public sealed class SeamlessInteriorCameraZone : MonoBehaviour
     {
         if (_captured || occlusionFader == null) return;
         _defaultOccluders = occlusionFader.explicitOccluders ?? Array.Empty<Renderer>();
+        _defaultForcedOccluders = occlusionFader.forcedOccluders ?? Array.Empty<Renderer>();
         _defaultPrefixes = occlusionFader.wallPrefixes ?? Array.Empty<string>();
         _captured = true;
     }
 
 #if UNITY_EDITOR
     public void Configure(Renderer[] occluders, string[] prefixes,
-        DynamicZoom.CameraOverrideProfile profile = null)
+        DynamicZoom.CameraOverrideProfile profile = null, Renderer[] forcedOccluders = null)
     {
         interiorOccluders = occluders ?? Array.Empty<Renderer>();
+        interiorForcedOccluders = forcedOccluders ?? Array.Empty<Renderer>();
         interiorWallPrefixes = prefixes ?? Array.Empty<string>();
         if (profile != null) interiorProfile = profile.Copy();
     }

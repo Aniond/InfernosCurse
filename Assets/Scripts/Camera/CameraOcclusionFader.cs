@@ -25,6 +25,8 @@ public class CameraOcclusionFader : MonoBehaviour
     public string[] wallPrefixes = { "Oct_", "Nave_Wall_", "Nave_Stub_", "Facade_", "Throat_", "Trib_" };
     [Tooltip("Explicit renderers that may occlude the player, independent of naming.")]
     public Renderer[] explicitOccluders = System.Array.Empty<Renderer>();
+    [Tooltip("Renderers kept hidden for the active dollhouse cutaway, even when they do not cross the narrow player sightline.")]
+    public Renderer[] forcedOccluders = System.Array.Empty<Renderer>();
     [Tooltip("Radius of the sightline probe.")]
     public float probeRadius = 0.6f;
     [Tooltip("ShadowsOnly is recommended for seamless interiors.")]
@@ -47,6 +49,15 @@ public class CameraOcclusionFader : MonoBehaviour
         }
     }
 
+    public bool IsExplicitOccluder(Renderer renderer) =>
+        renderer != null && IsExplicit(renderer.transform);
+
+    public bool IsApprovedOccluder(Renderer renderer) =>
+        renderer != null && (IsWall(renderer.name) || IsExplicit(renderer.transform) || IsForced(renderer));
+
+    public bool IsRendererHidden(Renderer renderer) =>
+        renderer != null && hidden.ContainsKey(renderer);
+
     void Start()
     {
         if (target == null)
@@ -68,6 +79,15 @@ public class CameraOcclusionFader : MonoBehaviour
         dir /= dist;
 
         stillBlocking.Clear();
+        if (forcedOccluders != null)
+        {
+            foreach (Renderer renderer in forcedOccluders)
+            {
+                if (renderer == null) continue;
+                stillBlocking.Add(renderer);
+                Hide(renderer);
+            }
+        }
         int count = Physics.SphereCastNonAlloc(
             from, probeRadius, dir, hits, dist, ~0, QueryTriggerInteraction.Ignore);
         for (int i = 0; i < count; i++)
@@ -129,6 +149,14 @@ public class CameraOcclusionFader : MonoBehaviour
             Transform candidate = renderer.transform;
             if (hit == candidate || hit.IsChildOf(candidate) || candidate.IsChildOf(hit)) return true;
         }
+        return false;
+    }
+
+    bool IsForced(Renderer candidate)
+    {
+        if (candidate == null || forcedOccluders == null) return false;
+        foreach (Renderer renderer in forcedOccluders)
+            if (renderer == candidate) return true;
         return false;
     }
 
